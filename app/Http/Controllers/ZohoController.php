@@ -23,8 +23,8 @@ class ZohoController extends Controller
             "access_type" => "offline"
         ]);
 
-       $oAuthClient = ZohoOAuth::getClientInstance();
-        $refreshToken = "1000.89ade64aa0e71969aa029ae5c9fa6d83.d26f4542c39df303b08e54b4d8a5b26f";
+        $oAuthClient = ZohoOAuth::getClientInstance();
+        $refreshToken = "1000.9a6e53ae8b40e27e7c5d092c66a19b8d.45fc664d39ebd3e75c2b9672fc212d2a";
         $userIdentifier = "copyzoho.custom@gmail.com";
         $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier);
     }
@@ -62,6 +62,6 @@ class ZohoController extends Controller
             dump($e);
         }
 
-        return ($answer);
+        return response()->json($answer);
     }
 }
