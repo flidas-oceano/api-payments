@@ -16,13 +16,13 @@ class ZohoController extends Controller
             "client_id" => env('ZOHO_API_PAYMENTS_TEST_CLIENT_ID'),
             "client_secret" => env('ZOHO_API_PAYMENTS_TEST_CLIENT_SECRECT'),
             "redirect_uri" => 'https://www.zoho.com',
-            "token_persistence_path" => Storage::path("zoho/php_sdk_token.txt"),
+            "token_persistence_path" => Storage::path("zoho"),
             "persistence_handler_class" => "ZohoOAuthPersistenceByFile",
             "currentUserEmail" => 'copyzoho.custom@gmail.com'
         ]);
 
         $oAuthClient = ZohoOAuth::getClientInstance();
-        $refreshToken = "1000.da4922971697983c0bead183bbea807b.58fc905d3bf96071f010e1cca2c2b133";
+        $refreshToken = "1000.9a6e53ae8b40e27e7c5d092c66a19b8d.45fc664d39ebd3e75c2b9672fc212d2a";
         $userIdentifier = "copyzoho.custom@gmail.com";
         $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier);
     }
@@ -60,6 +60,6 @@ class ZohoController extends Controller
             dump($e);
         }
 
-        return ($answer);
+        return response()->json($answer);
     }
 }
