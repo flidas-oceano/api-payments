@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Exception;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Http;
 use Stripe;
 use Stripe\StripeClient;
 use Throwable;
@@ -56,9 +56,8 @@ class StripePaymentController extends Controller
     public function subscriptionPayment(Request $request)
     {
         $subscriptionPlanId = self::getPlanIdByCountry("ch", env("APP_DEBUG"));
-        $paymentMethod = $this->stripe->paymentMethods->retrieve($request->paymentMethodId,[]);
+        $paymentMethod = $this->stripe->paymentMethods->retrieve($request->paymentMethodId, []);
 
-        //dd($paymentMethod->id);
         $customer = $this->findOrCreateCustomerByEmail($request->email, $request->contact, $paymentMethod);
 
         $paymentMethod->attach(['customer' => $customer->id]);
@@ -85,22 +84,35 @@ class StripePaymentController extends Controller
             'payment_behavior' => 'error_if_incomplete'
         ]);
 
+
+        $bodyUpdateZoho = [
+            'mail' => $request->email,
+            'amount' => $installment_amount,
+            'total' => $request->amount,
+            'installments' => $request->installments,
+            'sub_id' => $stripeSubscription->id,
+            'contract_id' => $request->contractId
+        ];
+
+        $cakeResponse = Http::post("https://www.oceanomedicina.com.ar/suscripciontest/remote/updateZohoStripe", $bodyUpdateZoho)->json();
+
         return response()->json($stripeSubscription);
     }
 
-    private static function generateMetadataArray($requestData, $stripeMetadataData){
+    private static function generateMetadataArray($requestData, $stripeMetadataData)
+    {
         $metadata = array('origin' => 'Pasarela Cobros Stripe');
-       // dd($requestData->sale);
+        // dd($requestData->sale);
         $metadata["SO_Number"] = $requestData->sale['SO_Number'];
         $metadataTotalAmount = 0;
 
-        foreach($requestData->products as $i => $product){
+        foreach ($requestData->products as $i => $product) {
             $metadataTotalAmount += intval($product['price']);
-            $metadata[$i."_name"] = $product['name'];
-            $metadata[$i."_sku"] = $product['id'];
-            $metadata[$i."_quantity"] = $product['quantity'];
-            $metadata[$i."_total"] = $product['price'];
-            $metadata[$i."_discount_percentage"] = $requestData->sale['Descuento_Plataforma_Pagos'] == NULL ? 0 : $requestData->sale['Descuento_Plataforma_Pagos'];
+            $metadata[$i . "_name"] = $product['name'];
+            $metadata[$i . "_sku"] = $product['id'];
+            $metadata[$i . "_quantity"] = $product['quantity'];
+            $metadata[$i . "_total"] = $product['price'];
+            $metadata[$i . "_discount_percentage"] = $requestData->sale['Descuento_Plataforma_Pagos'] == NULL ? 0 : $requestData->sale['Descuento_Plataforma_Pagos'];
         }
 
         $metadata['cuotas'] = $stripeMetadataData['installments'];
@@ -120,10 +132,10 @@ class StripePaymentController extends Controller
             foreach ($customers->data as $customer) {
                 return $this->stripe->customers->retrieve($customer->id);
             }
-        }else{
+        } else {
             $newCustomer = $this->stripe->customers->create([
                 'email' => $email,
-                'name' => $contact->name,
+                'name' => $contact['Full_Name'],
                 'payment_method' => $currentPaymentMetohd->id,
             ]);
 
