@@ -23,7 +23,7 @@ class CreateLeadsTable extends Migration
             $table->string('source_lead');
             $table->string('lead_source');
 
-            $table->foreignId('method_contact_id_fk')
+            $table->foreignId('method_contacts_id_fk')
                     ->references('id')
                     ->on('method_contacts');
             $table->foreignId('contact_id_fk')
@@ -32,6 +32,8 @@ class CreateLeadsTable extends Migration
             $table->foreignId('addresses_id_fk')
                     ->references('id')
                     ->on('addresses');
+
+
             // $table->timestamps();
         });
     }

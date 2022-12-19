@@ -18,14 +18,14 @@ class CreatePurchasingProcessesTable extends Migration
 
             $table->string('title');
 
-            // $table->timestamps();
             $table->foreignId('country_id_fk')
                     ->references('id')
                     ->on('countries');
             $table->foreignId('lead_id_fk')
                     ->references('id')
                     ->on('leads');
-            $table->timestamps();
+
+            // $table->timestamps();
 
         });
     }

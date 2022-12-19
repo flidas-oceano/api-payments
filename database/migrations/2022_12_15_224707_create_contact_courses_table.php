@@ -22,7 +22,7 @@ class CreateContactCoursesTable extends Migration
                 ->references('id')
                 ->on('contacts');
 
-            $table->timestamps();
+            // $table->timestamps();
         });
     }
 
