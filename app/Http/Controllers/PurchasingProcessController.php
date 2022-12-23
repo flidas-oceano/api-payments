@@ -19,12 +19,12 @@ class PurchasingProcessController extends Controller
     {
         // $procceses = DB::table('purchasing_proccess')->get();
 
-        // $procceses = DB::table('purchasing_proccess as pp')
-        //                     ->join('leads as l','l.id','=','pp.lead_id_fk')
-        //                     ->select('pp.*','l.*')
-        //                     ->get();
+        $procceses = DB::table('purchasing_processes as pp')
+                            ->join('leads as l','l.id','=','pp.lead_id_fk')
+                            ->select('pp.*','l.*')
+                            ->get();
 
-        $procceses = PurchasingProcess::with(['leads'])->get();
+        // $procceses = PurchasingProcess::with(['leads'])->get();
         // $procceses = Lead::with('purchasingProcesses')->get();
 
         return $procceses;

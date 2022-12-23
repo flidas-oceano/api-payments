@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-
+use Illuminate\Support\Facades\DB;
 class MethodContactSeeder extends Seeder
 {
     /**
@@ -13,6 +13,8 @@ class MethodContactSeeder extends Seeder
      */
     public function run()
     {
-        //
+        DB::table('method_contacts')->insert([
+            'name' => 'Telefono',
+        ]);
     }
 }
