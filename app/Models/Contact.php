@@ -9,10 +9,20 @@ class Contact extends Model
 {
     use HasFactory;
     protected $table = 'contacts';
-    protected $fillable = ['entity_id_crm','username','date_of_birth','registration_number','training_interest'];
-
+    protected $fillable = [
+        'entity_id_crm',
+        'username',
+        'date_of_birth',
+        'registration_number',
+        'training_interest',
+        'email'
+    ];
+    public $timestamps = false;
     public function lead(){
-        $lead = $this->hasOneThrough(PurchasingProcess::class,Lead::class,'contact_id_fk','lead_id_fk','id');
-        return $lead;
+        // $lead = Lead::where('contact_id_fk', $this->id)->first();
+        // $lead = $this->belongsTo(Lead::class,'id','leads');
+        $lead = $this->hasOne(Lead::class,'contact_id_fk');
+         return $lead;
+        // return $lead;
     }
 }

@@ -11,7 +11,7 @@ class PurchasingProcess extends Model
 {
     use HasFactory;
 
-    protected $table = 'purchasing_proccess';
+    protected $table = 'purchasing_process';
     protected $fillable = ['lead_id_fk'];
 
     public function leads(){
