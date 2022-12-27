@@ -2,12 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Lead;
 use App\Http\Requests\StoreLeadRequest;
 use App\Http\Requests\UpdateLeadRequest;
+use App\Models\{PurchasingProcess,Lead,Contact,MethodContact,Address};
 
 class LeadController extends Controller
 {
+    public function getLeads()
+    {
+        $lead = Lead::all();
+        return json_encode(['lead'=> $lead]);
+    }
+    
     /**
      * Display a listing of the resource.
      *
@@ -15,7 +21,6 @@ class LeadController extends Controller
      */
     public function index()
     {
-        return 'hola';
     }
 
     /**
@@ -25,7 +30,7 @@ class LeadController extends Controller
      */
     public function create()
     {
-        //
+    
     }
 
     /**
