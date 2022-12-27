@@ -15,21 +15,29 @@ class CreateLeadsTable extends Migration
     {
         Schema::create('leads', function (Blueprint $table) {
             $table->id();
-            $table->string('entity_id_crm');
-            $table->string('name');
-            $table->string('username');
-            $table->string('telephone');
-            $table->string('lead_status');
-            $table->string('source_lead');
-            $table->string('lead_source');
+            $table->string('entity_id_crm')->nullable();
+            $table->string('name')->nullable();
+            $table->string('username')->nullable();
+            $table->string('telephone')->nullable();
+            $table->string('lead_status')->nullable();
+            $table->string('source_lead')->nullable();
+            $table->string('lead_source')->nullable();
+            $table->string('area_of_work')->nullable();
+            $table->string('profession')->nullable();
+            $table->string('specialty')->nullable();
+            $table->string('dni')->nullable();
+            $table->string('sex')->nullable();
 
-            $table->foreignId('method_contacts_id_fk')
+            $table->foreignId('method_contact_id_fk')
+                    ->nullable()        
                     ->references('id')
                     ->on('method_contacts');
             $table->foreignId('contact_id_fk')
+                    ->nullable()        
                     ->references('id')
                     ->on('contacts');
             $table->foreignId('addresses_id_fk')
+                    ->nullable()        
                     ->references('id')
                     ->on('addresses');
 

@@ -19,6 +19,7 @@ class CreateContactCoursesTable extends Migration
             $table->string('woocommerce_course_id_crm');
         
             $table->foreignId('contacts_id_fk')
+                ->nullable()        
                 ->references('id')
                 ->on('contacts');
 

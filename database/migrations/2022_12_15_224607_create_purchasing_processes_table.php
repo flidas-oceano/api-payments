@@ -19,9 +19,11 @@ class CreatePurchasingProcessesTable extends Migration
             $table->string('title');
 
             $table->foreignId('country_id_fk')
+                    ->nullable()        
                     ->references('id')
                     ->on('countries');
             $table->foreignId('lead_id_fk')
+                    ->nullable()        
                     ->references('id')
                     ->on('leads');
 
