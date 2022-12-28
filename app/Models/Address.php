@@ -12,8 +12,8 @@ class Address extends Model
     protected $fillable = [
         'type_of_address',
         'province_state',
-        'postal_code',
         'country',
+        'postal_code',
         'street',
         'locality',
     ];

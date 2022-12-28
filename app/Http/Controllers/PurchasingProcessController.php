@@ -7,6 +7,7 @@ use App\Http\Requests\StorePurchasingProcessRequest;
 use App\Http\Requests\UpdatePurchasingProcessRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class PurchasingProcessController extends Controller
 {
@@ -116,7 +117,30 @@ class PurchasingProcessController extends Controller
             }
         }
         */
+        // return json_encode(['request' => $request->all()]);
+        
+        // $validator = Validator::make($request->all(),[
+            //     "lead.name"=>"required",
+            //     "lead.email"=>"required|email|min:8|",
+            //     "lead.userame"=>"required|email|min:8|",
+            //     "lead.telephone"=>"required|email|min:8|",
+            //     "lead.proffesion"=>"required|email|min:8|",
+            //     "lead.speciality"=>"required|email|min:8|",
+            // ],[
+            //     "lead.name.required"=>"Name Should be filled",
+            //     "lead.email.min"=>" Email length should be more than 8"
+            // ]);
 
+            // if($validator->fails()){
+            //     return json_encode(
+            //         ['message' => 'fail',
+            //         'validator' => $validator]);
+            // }else{
+            //     return json_encode([
+            //         'message' => 'success',
+            //         'validator' => $validator]);
+
+        // }
         $contact = $request->request->get('contact');
         $lead = $request->request->get('lead');
 
@@ -234,7 +258,6 @@ class PurchasingProcessController extends Controller
             }
         }
         */
-
         $contact = $request->request->get('contact');
         $lead = $request->request->get('lead');
         $address = $request->request->get('address');
