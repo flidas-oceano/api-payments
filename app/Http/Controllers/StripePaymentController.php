@@ -55,7 +55,7 @@ class StripePaymentController extends Controller
 
     public function subscriptionPayment(Request $request)
     {
-        $subscriptionPlanId = self::getPlanIdByCountry("ch", env("APP_DEBUG"));
+        $subscriptionPlanId = self::getPlanIdByCountry($request->country, env("APP_DEBUG"));
         $paymentMethod = $this->stripe->paymentMethods->retrieve($request->paymentMethodId, []);
 
         $customer = $this->findOrCreateCustomerByEmail($request->email, $request->contact, $paymentMethod);
@@ -86,15 +86,21 @@ class StripePaymentController extends Controller
 
 
         $bodyUpdateZoho = [
-            'mail' => $request->email,
+                'mail' => $request->email,
             'amount' => $installment_amount,
             'total' => $request->amount,
             'installments' => $request->installments,
             'sub_id' => $stripeSubscription->id,
-            'contract_id' => $request->contractId
+            'contract_id' => $request->contractId,
+            'address' => $request->address,
+            'dni' => $request->dni,
+            'phone' => $request->phone,
+            'fullname' => $request->fullname,
+            'is_suscri' => $request->is_suscri
         ];
 
         $cakeResponse = Http::post("https://www.oceanomedicina.com.ar/suscripciontest/remote/updateZohoStripe", $bodyUpdateZoho)->json();
+        dd($bodyUpdateZoho,$cakeResponse);
 
         return response()->json($stripeSubscription);
     }
@@ -168,7 +174,7 @@ class StripePaymentController extends Controller
                     $answer = $is_test_environment ? 'plan_HHVXws46gijnOU' : 'plan_HIlqECniUZ2kFb';
                     break;
                 } //Uruguay
-            case 'ch': {
+            case 'CL': {
                     $answer = $is_test_environment ? 'plan_HHVYpZ6DNzgawx' : 'price_1Gxl0JBZ0DURRH2FdpW5kUuL';
                     break;
                 } //Chile
