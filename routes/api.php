@@ -29,7 +29,7 @@ Route::get("/stripe/customer/search/{email}",[StripePaymentController::class, 'f
 Route::get("/db",[PurchasingProcessController::class, 'index']);
 Route::get("/db/getLead",[LeadController::class, 'index']);
 Route::post("/db/stepCreateLead",[PurchasingProcessController::class, 'stepCreateLead']);
-Route::post("/db/stepCreateContact",[PurchasingProcessController::class, 'stepCreateContact']);
+Route::post("/db/stepConversionContact",[PurchasingProcessController::class, 'stepConversionContact']);
 
 
 

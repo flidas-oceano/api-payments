@@ -208,7 +208,7 @@ public function stepCreateLead(Request $request){
     Lead : areatrabajo x
     Contact: interesformacion x
 */
-public function stepCreateContact(Request $request){
+public function stepConversionContact(Request $request){
       /* Datos de prueba al postman
     {
         "contact": {
@@ -232,8 +232,10 @@ public function stepCreateContact(Request $request){
         }
     }
     */
+    $dataJson = json_decode($request->input('dataJson'), true);
     
-    $validator = Validator::make($request->all(),[
+
+    $validator = Validator::make($dataJson,[
         // "contact.contact_id"=> "required",
         // "contact.entity_id_crm"=> "required",
         "contact.dni"=> "required",
@@ -257,51 +259,55 @@ public function stepCreateContact(Request $request){
     ]);
 
     if($validator->fails()){
-    return json_encode(
-                    ['message' => 'fail',
-        'validator' => $validator]);
-    }else{
-                return json_encode([
-                    'message' => 'success',
-                    'validator' => $validator]);
+        return response()->json([
+            'message' => 'fail',
+            'validator' => $validator
+        ]);
     }
 
-    $address = $request->request->get('address');
-    $contact = $request->request->get('contact');
+    $dataJson = json_decode($request->input('dataJson'));
+
+    // $address = $request->request->get('address');
+    // $contact = $request->request->get('contact');
 
     $newAddress = new Address();
     /*region address */
-        $newAddress->id = isset($address['address_id']) ? $address['address_id']:null;
-        $newAddress->country = $address['country'];
-        $newAddress->province_state = $address['province_state'];
-        $newAddress->postal_code = $address['postal_code'];
-        $newAddress->street = $address['street'];
-        $newAddress->locality = $address['locality'];
+        $newAddress->id = isset($dataJson->address->address_id) ? $dataJson->address->address_id:null;
+        $newAddress->country = $dataJson->address->country;
+        $newAddress->province_state = $dataJson->address->province_state;
+        $newAddress->postal_code = $dataJson->address->postal_code;
+        $newAddress->street = $dataJson->address->street;
+        $newAddress->locality = $dataJson->address->locality;
 
-        isset($address['address_id']) ? 
+        isset($dataJson->address->address_id) ? 
             $newAddress->update():
             $newAddress->save();
     /*end region address */
 
     $newContact = new Contact();
     /* region contacto */
-        $newContact->id = isset($contact['contact_id']) ? $contact['contact_id']:null;
+        $newContact->id = isset($dataJson->contact->contact_id) ? $dataJson->contact->contact_id:null;
 
-        $newContact->entity_id_crm = isset($lead['entity_id_crm']);
-        $newContact->dni = $contact['dni'];
-        $newContact->sex = $contact['sex'];
-        $newContact->date_of_birth = $contact['date_of_birth'];
-        $newContact->addresses_id_fk = $contact['addresses_id_fk'];
-        $newContact->registration_number = $contact['registration_number'];
-        $newContact->area_of_work = $contact['area_of_work'];
-        $newContact->training_interest = $contact['training_interest'];
+        // $newContact->entity_id_crm = isset($leadentity_id_crm);
+        $newContact->dni = $dataJson->contact->dni;
+        $newContact->sex = $dataJson->contact->sex;
+        $newContact->date_of_birth = $dataJson->contact->date_of_birth;
+        $newContact->addresses_id_fk =  isset($newAddress['id']) ? $newAddress['id']:null;
+        $newContact->registration_number = $dataJson->contact->registration_number;
+        $newContact->area_of_work = $dataJson->contact->area_of_work;
+        $newContact->training_interest = $dataJson->contact->training_interest;
             
-        isset($contact['contact_id']) ? 
+        isset($dataJson->contact->contact_id) ? 
             $newContact->update():
             $newContact->save();
     /*end region contacto */
     
-    return json_encode(['newContact' => $newContact,'newAddress' => $newAddress]);
+    return response()->json([
+        'message' => 'success',
+        'newContact' => $newContact,
+        'newAddress' => $newAddress,
+        'validator' => $validator
+    ]);
 }
     // step1: pais
 public function stepCreateLeadOld(Request $request){
