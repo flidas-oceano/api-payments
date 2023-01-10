@@ -17,11 +17,17 @@ class CreateContactsTable extends Migration
             $table->id();
 
             $table->string('entity_id_crm')->nullable();
-            $table->string('username')->nullable();
+            $table->string('dni')->nullable();
+            $table->string('sex')->nullable();
             $table->string('date_of_birth')->nullable();
             $table->string('registration_number')->nullable();
+            $table->string('area_of_work')->nullable();
             $table->string('training_interest')->nullable();
-            $table->string('email')->nullable();
+
+            $table->foreignId('addresses_id_fk')
+                    ->nullable()        
+                    ->references('id')
+                    ->on('addresses');
 
             // $table->timestamps();
         });

@@ -11,11 +11,13 @@ class Contact extends Model
     protected $table = 'contacts';
     protected $fillable = [
         'entity_id_crm',
-        'username',
+        'dni',
+        'sex',
         'date_of_birth',
+        'addresses_id_fk',
         'registration_number',
+        'area_of_work',
         'training_interest',
-        'email'
     ];
     public $timestamps = false;
     public function lead(){

@@ -12,20 +12,17 @@ class Lead extends Model
     protected $table = 'leads';
     protected $fillable = [
         'entity_id_crm',
-        'name',
-        'username',
-        'telephone',
         'lead_status',
         'source_lead',
         'lead_source',
-        'method_contact_id_fk',
+        'name',
+        'username',
+        'email',
+        'telephone',
         'contact_id_fk',
-        'addresses_id_fk',
-        'area_of_work',
+        'method_contact_id_fk',
         'profession',
-        'specialty',
-        'dni',
-        'sex',
+        'speciality'
     ];
     public $timestamps = false;
 
