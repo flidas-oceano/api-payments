@@ -17,32 +17,31 @@ use zcrmsdk\crm\exception\ZCRMException;
 class ZohoController extends Controller
 {
 
-   public $emi_owner;
+    public $emi_owner;
 
-   public function __construct()
+    public function __construct()
     {
-       // dd(gettype(Storage::path("zoho")));
+        // dd(gettype(Storage::path("zoho")));
 
-       try{
-           ZCRMRestClient::initialize([
-               "client_id" => env('ZOHO_API_PAYMENTS_TEST_CLIENT_ID'),
-               "client_secret" => env('ZOHO_API_PAYMENTS_TEST_CLIENT_SECRECT'),
-               "redirect_uri" => 'https://www.zoho.com',
-               "token_persistence_path" => Storage::path("zoho"),
-               "persistence_handler_class" => "ZohoOAuthPersistenceByFile",
-               "currentUserEmail" => 'copyzoho.custom@gmail.com',
-               "accounts_url" => 'https://accounts.zoho.com',
-               "access_type" => "offline"
-           ]);
+        try {
+            ZCRMRestClient::initialize([
+                "client_id" => env('ZOHO_API_PAYMENTS_TEST_CLIENT_ID'),
+                "client_secret" => env('ZOHO_API_PAYMENTS_TEST_CLIENT_SECRECT'),
+                "redirect_uri" => 'https://www.zoho.com',
+                "token_persistence_path" => Storage::path("zoho"),
+                "persistence_handler_class" => "ZohoOAuthPersistenceByFile",
+                "currentUserEmail" => 'copyzoho.custom@gmail.com',
+                "accounts_url" => 'https://accounts.zoho.com',
+                "access_type" => "offline"
+            ]);
 
-          /*  $oAuthClient = ZohoOAuth::getClientInstance();
+            /*  $oAuthClient = ZohoOAuth::getClientInstance();
            $refreshToken = "1000.9a6e53ae8b40e27e7c5d092c66a19b8d.45fc664d39ebd3e75c2b9672fc212d2a";
            $userIdentifier = "copyzoho.custom@gmail.com";
            $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier); */
-       }catch(Exception $e){
+        } catch (Exception $e) {
             dd($e);
-       }
-
+        }
     }
 
     public function fetchRecordWithValue($module, $field, $value)
@@ -126,8 +125,7 @@ class ZohoController extends Controller
                 $answer['result'] = 'ok';
                 $answer['id'] = $id;
             }
-        } catch (\Exception $e) 
-		{
+        } catch (\Exception $e) {
             $this->log(print_r($e, true));
         }
 
@@ -139,17 +137,19 @@ class ZohoController extends Controller
 
         $data = $request->all();
 
+        dd($request);
+
         $leadData = $this->processLeadData($data);
 
         $leadIsDuplicate = $this->updateFetchDuplicateLeads($leadData['Email']);
 
-        if($leadIsDuplicate)
+
+        if ($leadIsDuplicate)
             $leadData['Lead_Duplicado'] = true;
 
         $newLead =  $this->createNewRecord('Leads', $leadData);
 
-        return(json_encode($newLead));
-
+        return (json_encode($newLead));
     }
 
     private function processLeadData($data)
