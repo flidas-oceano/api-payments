@@ -4,14 +4,22 @@ namespace App\Http\Controllers;
 
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
 use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
 use zcrmsdk\oauth\ZohoOAuth;
+use zcrmsdk\crm\setup\org\ZCRMOrganization;
+use zcrmsdk\crm\crud\ZCRMRecord;
+use zcrmsdk\crm\crud\ZCRMInventoryLineItem;
+use zcrmsdk\crm\crud\ZCRMModule;
+use zcrmsdk\crm\exception\ZCRMException;
 
 class ZohoController extends Controller
 {
 
-    public function __construct()
+   public $emi_owner;
+
+   public function __construct()
     {
        // dd(gettype(Storage::path("zoho")));
 
@@ -72,18 +80,126 @@ class ZohoController extends Controller
         return response()->json($answer);
     }
 
-    public function createLead(){
-        $req = request()->validate([
-            'nombre' => 'required|max:191',
-            'apellido' => 'required|max:191',
-            'email' => 'required|email|max:191',
-            'area' => 'required|min:2|max:5',
-            'telefono' => 'required|min:2|max:14',
-            'direccion' => 'required|max:191',
-            'pais' => 'required|max:80|min:1'
-        ]);
-        
-       
-        return response()->json($req);
+    //trae records en base a condiciones
+    private function fetchRecords($module, $conditions, $log = false)
+    {
+        $answer = array();
+
+
+
+        try {
+            $moduleIns = ZCRMRestClient::getInstance()->getModuleInstance($module);  //To get module instance
+            $response = $moduleIns->searchRecordsByCriteria($conditions);
+            $records = $response->getData();  //To get response data
+
+            $answer = $records;
+        } catch (\Exception $e) {
+            if ($log) {
+                $this->log($e);
+            }
+        }
+
+        return ($answer);
+    }
+
+    //actualiza un record, le pasas el id separado
+    private function updateRecord($type, $data, $id, $workflow = true)
+    {
+        $answer = array();
+
+        $answer['result'] = 'error';
+        $answer['id'] = '';
+
+        try {
+            $zcrmRecordIns = ZCRMRecord::getInstance($type, $id);
+
+            foreach ($data as $k => $v)
+                $zcrmRecordIns->setFieldValue($k, $v);
+
+            //workflow?
+            if ($workflow)
+                $apiResponse = $zcrmRecordIns->update();
+            else
+                $apiResponse = $zcrmRecordIns->update(array());
+
+            if ($apiResponse->getCode() == 'SUCCESS') {
+                $answer['result'] = 'ok';
+                $answer['id'] = $id;
+            }
+        } catch (\Exception $e) 
+		{
+            $this->log(print_r($e, true));
+        }
+
+        return ($answer);
+    }
+
+    public function createLead(Request $request)
+    {
+
+        $data = $request->all();
+
+        $leadData = $this->processLeadData($data);
+
+        $leadIsDuplicate = $this->updateFetchDuplicateLeads($leadData['Email']);
+
+        if($leadIsDuplicate)
+            $leadData['Lead_Duplicado'] = true;
+
+        $newLead =  $this->createNewRecord('Leads', $leadData);
+
+        return(json_encode($newLead));
+
+    }
+
+    private function processLeadData($data)
+    {
+        //hay contactos?
+        if ($this->fetchRecordWithValue('Contacts', 'Email', $data["email"]) == "error") {
+            $leadData['Es_Contacto'] = false;
+        } else {
+            $leadData['Es_Contacto'] = true;
+        }
+
+        $leadData['First_Name']         = $data["name"];
+        $leadData['Last_Name']             = $data["surname"];
+        $leadData['Phone']                 = $data["phone"];
+        $leadData['Email']                 = $data["email"];
+        $leadData['Lead_Status']        = "Contacto urgente";
+        //$leadData['Leads_manual']         = "Compra rechazada";
+        $leadData['Pais']                 = $data["country"];
+        $leadData['*owner']             = $this->emi_owner;
+
+        return $leadData;
+    }
+
+    private function updateFetchDuplicateLeads($mail)
+    {
+        //hay leads con ese mail?
+        $searchBy              =  "((Email:equals:" . $mail . ")and(Lead_Status:equals:Contacto urgente))";
+        $sameUserLeads       =  $this->fetchRecords('Leads', $searchBy); //<-- busca records para saber si el usuario ya intentó comprar anteriormente
+
+        if (count($sameUserLeads) == 0) {
+            //no encontró nada, entonces no tiene que actualizar y no hay duplicados
+            return false;
+        }
+
+        //si llegó acá es porque hay > 0 leads con mismo mail
+        //vamos a actualizar SÓLO UNO de ellos qe tenga lead_duplicado = false
+
+        $leadK = -1;
+
+        foreach ($sameUserLeads as $k => $s) {
+            if (!$s->getFieldValue('Lead_Duplicado')) {
+                $leadK = $k;
+                break;
+            }
+        }
+
+        //o sea, que uno de ellos tiene lead_duplicado = false -> lo actualizamos
+        if ($leadK != -1)
+            $this->updateRecord('Leads', array('Lead_Duplicado' => true), $sameUserLeads[$leadK]->getEntityId(), false);
+
+        return true;
     }
 }

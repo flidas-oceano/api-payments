@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\{StripePaymentController,LeadController,PurchasingProcessController, ZohoController};
+use App\Http\Controllers\{StripePaymentController,LeadController,PurchasingProcessController,ZohoController};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -32,7 +32,7 @@ Route::get("/db/getLead",[LeadController::class, 'index']);
 Route::post("/db/stepCreateLead",[PurchasingProcessController::class, 'stepCreateLead']);
 Route::post("/db/stepConversionContact",[PurchasingProcessController::class, 'stepConversionContact']);
 
-
+Route::post('/createLead',[ZohoController::class, 'createLead']);
 
 // http://localhost:8000/api/zcrm/createLead
 
