@@ -121,7 +121,9 @@ class StripePaymentController extends Controller
             ];
 
             //	dd($bodyUpdateZoho);
-            $cakeResponse = Http::post("https://www.oceanomedicina.com.ar/suscripciontest/remote/updateZohoStripe", $bodyUpdateZoho)->json();
+            
+            $zc = new ZohoController();
+            $cakeResponse = $zc->updateZohoStripe($request);
 
             $frontResponse = [$cakeResponse, $stripeSubscription];
             return response()->json($frontResponse);
