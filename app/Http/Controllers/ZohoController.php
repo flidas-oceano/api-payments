@@ -17,9 +17,9 @@ use zcrmsdk\crm\exception\ZCRMException;
 class ZohoController extends Controller
 {
 
-   public $emi_owner;
+    public $emi_owner;
 
-   public function __construct()
+    public function __construct()
     {
        try{
             $this->emi_owner = '2712674000000899001';
@@ -41,8 +41,7 @@ class ZohoController extends Controller
            $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier); 
        }catch(Exception $e){
             dd($e);
-       }
-
+        }
     }
 
     public function fetchRecordWithValue($module, $field, $value)
@@ -194,8 +193,7 @@ class ZohoController extends Controller
                 $answer['result'] = 'ok';
                 $answer['id'] = $id;
             }
-        } catch (\Exception $e) 
-		{
+        } catch (\Exception $e) {
             $this->log(print_r($e, true));
         }
 
@@ -287,17 +285,19 @@ class ZohoController extends Controller
 
         $data = $request->all();
 
+        dd($request);
+
         $leadData = $this->processLeadData($data);
 
         $leadIsDuplicate = $this->updateFetchDuplicateLeads($leadData['Email']);
 
-        if($leadIsDuplicate)
+
+        if ($leadIsDuplicate)
             $leadData['Lead_Duplicado'] = true;
 
         $newLead =  $this->createNewRecord('Leads', $leadData);
 
-        return(json_encode($newLead));
-
+        return (json_encode($newLead));
     }
 
     private function processLeadData($data)

@@ -19,8 +19,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post("/createLead",[ZohoController::class, 'createLead']);
-
 Route::post("/stripe/paymentIntent",[StripePaymentController::class, 'paymentIntent']);
 Route::post("/stripe/subscriptionPayment",[StripePaymentController::class, 'subscriptionPayment']);
 Route::get("/stripe/customer/search/{email}",[StripePaymentController::class, 'findCustomerByEmail']);
