@@ -200,10 +200,10 @@ class ZohoController extends Controller
         return ($answer);
     }
 
-    public function updateZohoStripe(Request $request)
+    public function updateZohoStripe($request)
 	{
 		
-		$post = $request->all();
+		$post = $request;
 		
 		$answer = 1;
 		

@@ -123,7 +123,7 @@ class StripePaymentController extends Controller
             //	dd($bodyUpdateZoho);
             
             $zc = new ZohoController();
-            $cakeResponse = $zc->updateZohoStripe($request);
+            $cakeResponse = $zc->updateZohoStripe($request->all());
 
             $frontResponse = [$cakeResponse, $stripeSubscription];
             return response()->json($frontResponse);
