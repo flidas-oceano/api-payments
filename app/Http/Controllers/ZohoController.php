@@ -25,19 +25,19 @@ class ZohoController extends Controller
             $this->emi_owner = '2712674000000899001';
 
            ZCRMRestClient::initialize([
-               "client_id" => env('ZOHO_API_PAYMENTS_TEST_CLIENT_ID'),
-               "client_secret" => env('ZOHO_API_PAYMENTS_TEST_CLIENT_SECRECT'),
-               "redirect_uri" => 'https://www.zoho.com',
+               "client_id" => env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_CLIENT_ID') : env('ZOHO_API_PAYMENTS_PROD_CLIENT_ID'),
+               "client_secret" => env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_CLIENT_SECRECT') : env('ZOHO_API_PAYMENTS_PROD_CLIENT_SECRECT'),
+               "redirect_uri" => env('APP_DEBUG') ? 'https://www.zoho.com' : 'https://www.oceanomedicina.com.ar',
                "token_persistence_path" => Storage::path("zoho"),
                "persistence_handler_class" => "ZohoOAuthPersistenceByFile",
-               "currentUserEmail" => 'copyzoho.custom@gmail.com',
+               "currentUserEmail" => env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar', //'copyzoho.custom@gmail.com',
                "accounts_url" => 'https://accounts.zoho.com',
                "access_type" => "offline"
            ]);
 
             $oAuthClient = ZohoOAuth::getClientInstance();
-           $refreshToken = "1000.9a6e53ae8b40e27e7c5d092c66a19b8d.45fc664d39ebd3e75c2b9672fc212d2a";
-           $userIdentifier = "copyzoho.custom@gmail.com";
+           $refreshToken = env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_REFRESH_TOKEN') : env('ZOHO_API_PAYMENTS_PROD_REFRESH_TOKEN');
+           $userIdentifier = env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar';
            $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier); 
        }catch(Exception $e){
             dd($e);
@@ -277,7 +277,7 @@ class ZohoController extends Controller
 		else if($answer == 2)
 			$answer = ['msg' => 'missing data', 'code' => $answer];
 		
-		return json_encode($answer);
+		return response()->json($answer);
 	}
 
     public function createLead(Request $request)
