@@ -15,10 +15,11 @@ class StripePaymentController extends Controller
     private $stripe;
     private $stripePlans;
 
-    public function __construct()
+   /*  public function __construct()
     {
-        $this->stripe = new StripeClient(env('STRIPE_OCEANO_SK_TEST'));
-    }
+        $STRIPE_SECRET = env('APP_DEBUG') ? env('STRIPE_OCEANO_SK_TEST') : env('STRIPE_OCEANO_SK');
+        $this->stripe = new StripeClient($STRIPE_SECRET);
+    } */
 
     public function paymentIntent(Request $request)
     {
@@ -53,50 +54,80 @@ class StripePaymentController extends Controller
         }
     }
 
+    private function getStripeAccountByCountry($countryAlpha2Iso){
+        $stripeSK = "";
+
+        if($countryAlpha2Iso === 'MX' ){
+            $stripeSK = env('APP_DEBUG') ? env('STRIPE_MX_SK_TEST') : env('STRIPE_MX_SK_PROD');
+          }else{
+            $stripeSK = env('APP_DEBUG') ? env('STRIPE_OCEANO_SK_TEST') : env('STRIPE_OCEANO_SK_PROD');
+        }
+        
+        return  $stripeSK;
+    }
+
     public function subscriptionPayment(Request $request)
     {
-        $subscriptionPlanId = self::getPlanIdByCountry("ch", env("APP_DEBUG"));
-        $paymentMethod = $this->stripe->paymentMethods->retrieve($request->paymentMethodId, []);
+       
+        try {
 
-        $customer = $this->findOrCreateCustomerByEmail($request->email, $request->contact, $paymentMethod);
+            $stripeConfig = $this->getStripeAccountByCountry($request->country);
+            $this->stripe = new StripeClient($stripeConfig);
 
-        $paymentMethod->attach(['customer' => $customer->id]);
+            $subscriptionPlanId = self::getPlanIdByCountry($request->country, env("APP_DEBUG"));
+            $paymentMethod = $this->stripe->paymentMethods->retrieve($request->paymentMethodId, []);
 
-        $installment_amount = intval(intval($request->amount) / $request->installments);
+            $customer = $this->findOrCreateCustomerByEmail($request->email, $request->contact, $paymentMethod);
 
-        $stripeData = [
-            "installment_amount" => $installment_amount,
-            "installments" => $request->installments,
-        ];
+            $paymentMethod->attach(['customer' => $customer->id]);
 
-        $subscriptionMetadata = ($request->contact != null) ? self::generateMetadataArray($request, $stripeData) : ['origin' => 'Pasarela Cobros Stripe'];
+            $installment_amount = intval(intval($request->amount) / $request->installments);
 
-        $subscriptionFinishedAt = strtotime("+" . strval($request->installments) . " months");
-        $stripeSubscription = $this->stripe->subscriptions->create([
-            'customer' => $customer->id,
-            'items' => [[
-                'price' => $subscriptionPlanId,
-                'quantity'  => $installment_amount,
-            ],],
-            'default_payment_method' => $paymentMethod->id,
-            'cancel_at' => $subscriptionFinishedAt,
-            'metadata'  => $subscriptionMetadata,
-            'payment_behavior' => 'error_if_incomplete'
-        ]);
+            $stripeData = [
+                "installment_amount" => $installment_amount,
+                "installments" => $request->installments,
+            ];
+
+            $subscriptionMetadata = ($request->contact != null) ? self::generateMetadataArray($request, $stripeData) : ['origin' => 'Pasarela Cobros Stripe'];
+
+            $subscriptionFinishedAt = strtotime("+" . strval($request->installments) . " months");
 
 
-        $bodyUpdateZoho = [
-            'mail' => $request->email,
-            'amount' => $installment_amount,
-            'total' => $request->amount,
-            'installments' => $request->installments,
-            'sub_id' => $stripeSubscription->id,
-            'contract_id' => $request->contractId
-        ];
+            $stripeSubscription = $this->stripe->subscriptions->create([
+                'customer' => $customer->id,
+                'items' => [[
+                    'price' => $subscriptionPlanId,
+                    'quantity'  => $installment_amount,
+                ],],
+                'default_payment_method' => $paymentMethod->id,
+                'cancel_at' => $subscriptionFinishedAt,
+                'metadata'  => $subscriptionMetadata,
+                'payment_behavior' => 'error_if_incomplete'
+            ]);
 
-        $cakeResponse = Http::post("https://www.oceanomedicina.com.ar/suscripciontest/remote/updateZohoStripe", $bodyUpdateZoho)->json();
 
-        return response()->json($stripeSubscription);
+            $bodyUpdateZoho = [
+                'mail' => $request->email,
+                'amount' => $installment_amount,
+                'total' => $request->amount,
+                'installments' => $request->installments,
+                'sub_id' => $stripeSubscription->id,
+                'contract_id' => $request->contractId,
+                'address' => $request->address,
+                'dni' => $request->dni,
+                'phone' => $request->phone,
+                'fullname' => $request->fullname,
+                'is_suscri' => $request->is_suscri
+            ];
+
+            //	dd($bodyUpdateZoho);
+            $cakeResponse = Http::post("https://www.oceanomedicina.com.ar/suscripciontest/remote/updateZohoStripe", $bodyUpdateZoho)->json();
+
+            $frontResponse = [$cakeResponse, $stripeSubscription];
+            return response()->json($frontResponse);
+        } catch (Exception $e) {
+            return response()->json($e->getMessage(), 500);
+        }
     }
 
     private static function generateMetadataArray($requestData, $stripeMetadataData)
@@ -168,7 +199,7 @@ class StripePaymentController extends Controller
                     $answer = $is_test_environment ? 'plan_HHVXws46gijnOU' : 'plan_HIlqECniUZ2kFb';
                     break;
                 } //Uruguay
-            case 'ch': {
+            case 'CL': {
                     $answer = $is_test_environment ? 'plan_HHVYpZ6DNzgawx' : 'price_1Gxl0JBZ0DURRH2FdpW5kUuL';
                     break;
                 } //Chile
