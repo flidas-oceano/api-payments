@@ -92,7 +92,6 @@ class StripePaymentController extends Controller
 
             $subscriptionFinishedAt = strtotime("+" . strval($request->installments) . " months");
 
-
             $stripeSubscription = $this->stripe->subscriptions->create([
                 'customer' => $customer->id,
                 'items' => [[
@@ -106,27 +105,9 @@ class StripePaymentController extends Controller
             ]);
 
 
-            $bodyUpdateZoho = [
-                'mail' => $request->email,
-                'amount' => $installment_amount,
-                'total' => $request->amount,
-                'installments' => $request->installments,
-                'sub_id' => $stripeSubscription->id,
-                'contract_id' => $request->contractId,
-                'address' => $request->address,
-                'dni' => $request->dni,
-                'phone' => $request->phone,
-                'fullname' => $request->fullname,
-                'is_suscri' => $request->is_suscri
-            ];
 
-            //	dd($bodyUpdateZoho);
-            
-            $zc = new ZohoController();
-            $cakeResponse = $zc->updateZohoStripe($request->all());
 
-            $frontResponse = [$cakeResponse, $stripeSubscription];
-            return response()->json($frontResponse);
+            return response()->json($stripeSubscription);
         } catch (Exception $e) {
             return response()->json($e->getMessage(), 500);
         }
