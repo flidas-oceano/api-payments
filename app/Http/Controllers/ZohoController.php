@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateContractZohoRequest;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
 use zcrmsdk\oauth\ZohoOAuth;
-use zcrmsdk\crm\setup\org\ZCRMOrganization;
 use zcrmsdk\crm\crud\ZCRMRecord;
-use zcrmsdk\crm\crud\ZCRMInventoryLineItem;
-use zcrmsdk\crm\crud\ZCRMModule;
 use zcrmsdk\crm\exception\ZCRMException;
 
 class ZohoController extends Controller
@@ -21,25 +19,25 @@ class ZohoController extends Controller
 
     public function __construct()
     {
-       try{
+        try {
             $this->emi_owner = '2712674000000899001';
 
-           ZCRMRestClient::initialize([
-               "client_id" => env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_CLIENT_ID') : env('ZOHO_API_PAYMENTS_PROD_CLIENT_ID'),
-               "client_secret" => env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_CLIENT_SECRECT') : env('ZOHO_API_PAYMENTS_PROD_CLIENT_SECRECT'),
-               "redirect_uri" => env('APP_DEBUG') ? 'https://www.zoho.com' : 'https://www.oceanomedicina.com.ar',
-               "token_persistence_path" => Storage::path("zoho"),
-               "persistence_handler_class" => "ZohoOAuthPersistenceByFile",
-               "currentUserEmail" => env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar', //'copyzoho.custom@gmail.com',
-               "accounts_url" => 'https://accounts.zoho.com',
-               "access_type" => "offline"
-           ]);
+            ZCRMRestClient::initialize([
+                "client_id" => env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_CLIENT_ID') : env('ZOHO_API_PAYMENTS_PROD_CLIENT_ID'),
+                "client_secret" => env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_CLIENT_SECRECT') : env('ZOHO_API_PAYMENTS_PROD_CLIENT_SECRECT'),
+                "redirect_uri" => env('APP_DEBUG') ? 'https://www.zoho.com' : 'https://www.oceanomedicina.com.ar',
+                "token_persistence_path" => Storage::path("zoho"),
+                "persistence_handler_class" => "ZohoOAuthPersistenceByFile",
+                "currentUserEmail" => env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar', //'copyzoho.custom@gmail.com',
+                "accounts_url" => 'https://accounts.zoho.com',
+                "access_type" => "offline"
+            ]);
 
             $oAuthClient = ZohoOAuth::getClientInstance();
-           $refreshToken = env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_REFRESH_TOKEN') : env('ZOHO_API_PAYMENTS_PROD_REFRESH_TOKEN');
-           $userIdentifier = env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar';
-           $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier); 
-       }catch(Exception $e){
+            $refreshToken = env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_REFRESH_TOKEN') : env('ZOHO_API_PAYMENTS_PROD_REFRESH_TOKEN');
+            $userIdentifier = env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar';
+            $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier);
+        } catch (Exception $e) {
             dd($e);
         }
     }
@@ -83,9 +81,6 @@ class ZohoController extends Controller
     private function fetchRecords($module, $conditions, $log = false)
     {
         $answer = array();
-
-
-
         try {
             $moduleIns = ZCRMRestClient::getInstance()->getModuleInstance($module);  //To get module instance
             $response = $moduleIns->searchRecordsByCriteria($conditions);
@@ -101,7 +96,7 @@ class ZohoController extends Controller
         return ($answer);
     }
 
- //crea un nuevo record, el que vos quieras, contacto, contrato...
+    //crea un nuevo record, el que vos quieras, contacto, contrato...
     //pero momento! si ya existe no crea nada nuevo.
     //en cualquier caso, te devuelve el id
     //exception -> reventó todo
@@ -200,92 +195,38 @@ class ZohoController extends Controller
         return ($answer);
     }
 
-    public function updateZohoStripe($request)
-	{
-		
-		$post = $request;
-		
-		$answer = 1;
-		
-		$send = [];
-		
-		$send['mail'] = '';
-		$send['amount'] = 0;
-		$send['total'] = 0;
-		$send['installments'] = 0;
-		$send['sub_id'] = '';
-		$send['contract_id'] = '';
-		$send['is_suscri'] = 0;
-		$send['fullname'] = '';
-		$send['address'] = '';
-		$send['dni'] = '';
-		$send['phone'] = '';
-		
-		$needed = ['mail','amount','total','installments','sub_id','contract_id','is_suscri',
-		'fullname','address','dni','phone'];
-		
-		//check needed values
-		foreach($needed as $n)
-			if (isset($post[$n]))
-				$send[$n] = $post[$n];
-			else
-			{
-				$answer = 2;
-				break;
-			}
-			
-		if($answer != 2)
-		{ 
-			$is_suscri = '';
-	
-			if($send['is_suscri'] == 'true')
-				$is_suscri = true;
-			else if($send['is_suscri'] == 'false')
-				$is_suscri = false;
-	
-			$dataUpdate = [
-				'Email'=> $send['mail'],
-				'Monto_de_Anticipo'=> $send['amount'],
-				'Monto_de_Saldo'=> $send['total'] - $send['amount'],
-				'Cantidad'=> $send['installments'], //Nro de cuotas
-				'Valor_Cuota'=> $send['amount'], //Costo de cada cuota
-				'Cuotas_restantes_sin_anticipo'=> $send['installments'] - 1,
-				'Fecha_de_Vto'=> date('Y-m-d'),
-				'Status'=> 'Contrato Efectivo',
-				'Modalidad_de_pago_del_Anticipo'=> 'Stripe',
-				'Medio_de_Pago'=> 'Stripe',
-				'Es_Suscri'=> $is_suscri,
-				'stripe_subscription_id' => $send['sub_id'],
-				'L_nea_nica_6' => $send['fullname'],
-				'Billing_Street' => $send['address'],
-				'L_nea_nica_3' => strval($send['dni']),
-				'Tel_fono_Facturacion' => $send['phone']
-			];
-			
-			$update = $this->updateRecord('Sales_Orders', $dataUpdate, $send['contract_id'],true);
-			
-			if($update['result'] == 'ok')
-				$answer = 1;
-			else
-				$answer = 0;
-		}
-		
-		if($answer == 0)
-			$answer = ['msg' => 'could not update zoho', 'code' => $answer];
-		else if($answer == 1)
-			$answer = ['msg' => 'ok', 'code' => $answer];
-		else if($answer == 2)
-			$answer = ['msg' => 'missing data', 'code' => $answer];
-		
-		return response()->json($answer);
-	}
+    public function updateZohoStripe(UpdateContractZohoRequest $request)
+    {
+
+        $dataUpdate = [
+            'Email' => $request->email,
+            'Monto_de_Anticipo' => $request->installment_amount,
+            'Monto_de_Saldo' => $request->amount - $request->installment_amount,
+            'Cantidad' => $request->installments, //Nro de cuotas
+            'Valor_Cuota' => $request->installment_amount, //Costo de cada cuota
+            'Cuotas_restantes_sin_anticipo' => $request->installments - 1,
+            'Fecha_de_Vto' => date('Y-m-d'),
+            'Status' => 'Contrato Efectivo',
+            'Modalidad_de_pago_del_Anticipo' => 'Stripe',
+            'Medio_de_Pago' => 'Stripe',
+            'Es_Suscri' => boolval($request->is_suscri),
+            'stripe_subscription_id' => $request->subscriptionId,
+            'L_nea_nica_6' => $request->fullname,
+            'Billing_Street' => $request->address,
+            'L_nea_nica_3' => strval($request->dni),
+            'Tel_fono_Facturacion' => $request->phone
+        ];
+
+        $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
+
+
+        return response()->json($updateContract);
+    }
 
     public function createLead(Request $request)
     {
 
         $data = $request->all();
-
-        dd($request);
 
         $leadData = $this->processLeadData($data);
 
