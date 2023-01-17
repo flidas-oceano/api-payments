@@ -40,7 +40,7 @@ class ZohoController extends Controller
            $userIdentifier = "copyzoho.custom@gmail.com";
            $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier); 
        }catch(Exception $e){
-            dd($e);
+            //dd($e);
         }
     }
 
@@ -54,7 +54,7 @@ class ZohoController extends Controller
             $records = $response->getData();  //To get response data
             $answer = $records[0];
         } catch (\Exception $e) {
-            dump($e);
+           // dump($e);
         }
         return ($answer);
     }
@@ -73,7 +73,7 @@ class ZohoController extends Controller
             } else
                 $answer = '???';
         } catch (\Exception $e) {
-            dump($e);
+           // dump($e);
         }
 
         return response()->json($answer);
@@ -94,7 +94,7 @@ class ZohoController extends Controller
             $answer = $records;
         } catch (\Exception $e) {
             if ($log) {
-                $this->log($e);
+               // $this->log($e);
             }
         }
 
@@ -141,7 +141,7 @@ class ZohoController extends Controller
                 $answer['id'] = $handle;
             } else {
                 $answer['result'] = 'error';
-                $this->log($e);
+                dd($e);
             }
         }
 
@@ -194,7 +194,7 @@ class ZohoController extends Controller
                 $answer['id'] = $id;
             }
         } catch (\Exception $e) {
-            $this->log(print_r($e, true));
+            //$this->log(print_r($e, true));
         }
 
         return ($answer);
@@ -285,12 +285,9 @@ class ZohoController extends Controller
 
         $data = $request->all();
 
-        dd($request);
-
         $leadData = $this->processLeadData($data);
 
         $leadIsDuplicate = $this->updateFetchDuplicateLeads($leadData['Email']);
-
 
         if ($leadIsDuplicate)
             $leadData['Lead_Duplicado'] = true;
@@ -298,6 +295,63 @@ class ZohoController extends Controller
         $newLead =  $this->createNewRecord('Leads', $leadData);
 
         return (json_encode($newLead));
+    }
+
+    public function createContact(Request $request)
+    {
+
+        $data = $request->all();
+
+        //lo primero que haremos es intentar crear el contacto
+        $contactData = array(
+            'First_Name' => $data['name'],
+            'Last_Name' => $data['surname'],
+            'Email' => $data['email'],
+            'DNI' => $data['dni'],
+            'Home_Phone' => $data['phone'],
+            'Pais' => $data['country'],
+        );
+
+		$newContact = $this->createNewRecord('Contacts',$contactData);
+
+        return (json_encode($newContact));
+    }
+
+    public function convertLead(Request $request)
+    {
+        $data = $request->all();
+        $leadId = $data['id'];
+
+        $response = $this->convertRecord($leadId,'Leads');
+
+        return(json_encode($response));
+    }
+
+    private function convertRecord($id, $type)
+    {
+        $answer['result'] = 'error';
+        $answer['id'] = '';
+        $answer['detail'] = '';
+
+        try
+        {
+            $record = ZCRMRestClient::getInstance()->getRecordInstance($type, $id); // To get record instance
+            
+
+            $contact = ZCRMRecord::getInstance("Contacts", Null); // to get the record of deal in form of ZCRMRecord insatnce
+            $details = array("overwrite"=>TRUE);
+            
+            $responseIn = $record->convert($contact, $details); // to convert record
+
+            $answer['result'] = 'ok';
+            $answer['id'] = $responseIn["Contacts"];
+
+        } catch (\Exception $e) 
+        {
+            $answer['detail'] = $e->getMessage();
+        }
+
+        return($answer);
     }
 
     private function processLeadData($data)
@@ -318,7 +372,7 @@ class ZohoController extends Controller
         $leadData['Lead_Status']        = $data['status'];
         $leadData['Pais']                 = $data["country"];
         $leadData['pp']                 = $data["profession"];
-        $leadData['Especialidad']       = $data["specialty"];
+        $leadData['Especialidad']       = [$data["specialty"]];
         $leadData['*owner']             = $this->emi_owner;
 
         return $leadData;

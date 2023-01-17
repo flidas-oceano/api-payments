@@ -31,6 +31,8 @@ Route::post("/db/stepCreateLead",[PurchasingProcessController::class, 'stepCreat
 Route::post("/db/stepConversionContact",[PurchasingProcessController::class, 'stepConversionContact']);
 
 Route::post('/createLead',[ZohoController::class, 'createLead']);
+Route::post('/convertLead',[ZohoController::class, 'convertLead']);
+Route::post('/createContact',[ZohoController::class, 'createContact']);
 Route::post('/updateZohoStripe',[ZohoController::class, 'updateZohoStripe']);
 
 // http://localhost:8000/api/zcrm/createLead
