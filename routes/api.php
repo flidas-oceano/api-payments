@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\{StripePaymentController,LeadController,PurchasingProcessController,ZohoController};
+use App\Http\Controllers\{StripePaymentController,LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +19,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::apiResource("/leads",LeadController::class);
+
 Route::post("/stripe/paymentIntent",[StripePaymentController::class, 'paymentIntent']);
 Route::post("/stripe/subscriptionPayment",[StripePaymentController::class, 'subscriptionPayment']);
 Route::get("/stripe/customer/search/{email}",[StripePaymentController::class, 'findCustomerByEmail']);
@@ -36,4 +38,7 @@ Route::post('/updateZohoStripe',[ZohoController::class, 'updateZohoStripe']);
 // http://localhost:8000/api/zcrm/createLead
 
 
-// Route::resource('db', '\App\Http\Controllers\PurchasingProcessController');
+Route::apiResource("professions", ProfessionController::class);
+Route::apiResource("specialities", SpecialityController::class);
+Route::apiResource("methods", MethodContactController::class);
+Route::apiResource("progress", PurchasingProcessController::class);
