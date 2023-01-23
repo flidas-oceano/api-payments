@@ -223,6 +223,34 @@ class ZohoController extends Controller
         return response()->json($updateContract);
     }
 
+    public function obtainData(UpdateContractZohoRequest $request)
+    {
+
+        $dataUpdate = [
+            'Email' => $request->email,
+            'Monto_de_Anticipo' => $request->installment_amount,
+            'Monto_de_Saldo' => $request->amount - $request->installment_amount,
+            'Cantidad' => $request->installments, //Nro de cuotas
+            'Valor_Cuota' => $request->installment_amount, //Costo de cada cuota
+            'Cuotas_restantes_sin_anticipo' => $request->installments - 1,
+            'Fecha_de_Vto' => date('Y-m-d'),
+            'Status' => 'Contrato Efectivo',
+            'Modalidad_de_pago_del_Anticipo' => 'Stripe',
+            'Medio_de_Pago' => 'Stripe',
+            'Es_Suscri' => boolval($request->is_suscri),
+            'stripe_subscription_id' => $request->subscriptionId,
+            'L_nea_nica_6' => $request->fullname,
+            'Billing_Street' => $request->address,
+            'L_nea_nica_3' => strval($request->dni),
+            'Tel_fono_Facturacion' => $request->phone
+        ];
+
+        $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
+
+
+        return response()->json($updateContract);
+    }
+
     public function createLead(Request $request)
     {
 
