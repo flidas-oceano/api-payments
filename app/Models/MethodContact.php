@@ -9,8 +9,8 @@ class MethodContact extends Model
 {
     use HasFactory;
     protected $table = 'method_contacts';
-    protected $fillable = [
-        'name'
-    ];
-    public $timestamps = false;
+    protected $fillable = ['name'];
+    public $timestamps = true;
+    protected $hidden = ['created_at','updated_at'];
+
 }

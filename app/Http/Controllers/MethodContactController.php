@@ -15,7 +15,8 @@ class MethodContactController extends Controller
      */
     public function index()
     {
-        //
+        $methods = MethodContact::all();
+        return response()->json($methods);
     }
 
     /**
