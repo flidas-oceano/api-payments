@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{PurchasingProcess,Lead,Contact,MethodContact,Address};
+use App\Models\{Lead,Contact,Address, PurchaseProgress};
 use App\Http\Requests\StorePurchasingProcessRequest;
 use App\Http\Requests\UpdatePurchasingProcessRequest;
-use Faker\Guesser\Name;
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use PhpParser\JsonDecoder;
 
 class PurchasingProcessController extends Controller
 {
@@ -20,17 +19,16 @@ class PurchasingProcessController extends Controller
      */
     public function index()
     {
-        // $procceses = DB::table('purchasing_proccess')->get();
 
-        $procceses = DB::table('purchasing_processes as pp')
+      /*   $procceses = DB::table('purchasing_processes as pp')
                             ->join('leads as l','l.id','=','pp.lead_id_fk')
                             ->select('pp.*','l.*')
-                            ->get();
+                            ->get(); */
 
         // $procceses = PurchasingProcess::with(['leads'])->get();
         // $procceses = Lead::with('purchasingProcesses')->get();
-
-        return $procceses;
+        $allProcess = PurchaseProgress::all();
+        return response()->json($allProcess);
     }
 
     /**
@@ -51,7 +49,8 @@ class PurchasingProcessController extends Controller
      */
     public function store(StorePurchasingProcessRequest $request)
     {
-        //
+        $newProgress = PurchaseProgress::create($request->all());
+        return response()->json($newProgress);
     }
 
     /**
@@ -60,18 +59,24 @@ class PurchasingProcessController extends Controller
      * @param  \App\Models\PurchasingProcess  $purchasingProcess
      * @return \Illuminate\Http\Response
      */
-    public function show(PurchasingProcess $purchasingProcess)
+    public function show($id)
     {
-        //
+
+        if(!empty($purchasingProcess)){
+            return response()->json(['message' => 'El PurchaseProgress con id '.$id.' no existe'], 404);
+        }
+
+        return response()->json(PurchaseProgress::getModel($id));
+
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\PurchasingProcess  $purchasingProcess
+     * @param  \App\Models\PurchaseProgress  $purchasingProcess
      * @return \Illuminate\Http\Response
      */
-    public function edit(PurchasingProcess $purchasingProcess)
+    public function edit(PurchaseProgress $purchasingProcess)
     {
         //
     }
@@ -80,21 +85,21 @@ class PurchasingProcessController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \App\Http\Requests\UpdatePurchasingProcessRequest  $request
-     * @param  \App\Models\PurchasingProcess  $purchasingProcess
+     * @param  \App\Models\PurchaseProgress  $purchasingProcess
      * @return \Illuminate\Http\Response
      */
-    public function update(UpdatePurchasingProcessRequest $request, PurchasingProcess $purchasingProcess)
+    public function update(Request $request,$id)
     {
-        //
+        return PurchaseProgress::updateProgress($id, $request->all());
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\PurchasingProcess  $purchasingProcess
+     * @param  \App\Models\PurchaseProgress  $purchasingProcess
      * @return \Illuminate\Http\Response
      */
-    public function destroy(PurchasingProcess $purchasingProcess)
+    public function destroy(PurchaseProgress $purchasingProcess)
     {
         //
     }
