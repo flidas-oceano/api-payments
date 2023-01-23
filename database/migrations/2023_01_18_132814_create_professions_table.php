@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateMethodContactsTable extends Migration
+class CreateProfessionsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,9 @@ class CreateMethodContactsTable extends Migration
      */
     public function up()
     {
-        Schema::create('method_contacts', function (Blueprint $table) {
+        Schema::create('professions', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name',180)->nullable(false);
             $table->timestamps();
         });
     }
@@ -27,6 +27,6 @@ class CreateMethodContactsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('method_contacts');
+        Schema::dropIfExists('professions');
     }
 }

@@ -13,12 +13,13 @@ class CreatePurchasingProcessesTable extends Migration
      */
     public function up()
     {
-        Schema::create('purchasing_processes', function (Blueprint $table) {
+        Schema::create('purchase_progress', function (Blueprint $table) {
             $table->id();
+            $table->integer('step',false, true);
+            $table->string('country')->nullable();
+            $table->string('title')->nullable();
 
-            $table->string('title');
-
-            $table->foreignId('country_id_fk')
+/*             $table->foreignId('country_id_fk')
                     ->nullable()        
                     ->references('id')
                     ->on('countries');
@@ -26,8 +27,8 @@ class CreatePurchasingProcessesTable extends Migration
                     ->nullable()        
                     ->references('id')
                     ->on('leads');
-
-            // $table->timestamps();
+ */
+            $table->timestamps();
 
         });
     }
