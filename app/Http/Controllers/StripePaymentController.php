@@ -104,9 +104,6 @@ class StripePaymentController extends Controller
                 'payment_behavior' => 'error_if_incomplete'
             ]);
 
-
-
-
             return response()->json($stripeSubscription);
         } catch (Exception $e) {
             return response()->json($e->getMessage(), 500);
