@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreLeadRequest;
 use App\Http\Requests\UpdateLeadRequest;
-use App\Models\{PurchasingProcess,Lead,Contact,MethodContact,Address};
+use App\Models\{Lead, PurchaseProgress};
+use Illuminate\Http\Request;
 
 class LeadController extends Controller
 {
@@ -41,7 +42,9 @@ class LeadController extends Controller
      */
     public function store(StoreLeadRequest $request)
     {
-        //
+        $newOrUpdatedLead = Lead::updateOrCreate(['email' => $request->email], $request->all());
+
+        return response()->json($newOrUpdatedLead);
     }
 
     /**
@@ -87,5 +90,14 @@ class LeadController extends Controller
     public function destroy(Lead $lead)
     {
         //
+    }
+
+    public function storeProgress(Request $request, $idPurchaseProgress)
+    {
+        $leadAttributes = $request->except(['step_number','country']);
+        $newOrUpdatedLead = Lead::updateOrCreate(['email' => $request->email], $leadAttributes);
+        $progress = PurchaseProgress::updateProgress($idPurchaseProgress, ['step' => $request->step_number, 'lead_id' => $newOrUpdatedLead->id]);
+       
+        return response()->json(['lead' => $newOrUpdatedLead, 'progress' => $progress]);
     }
 }
