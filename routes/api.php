@@ -20,7 +20,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::apiResource("/leads",LeadController::class);
-
+Route::post('/leadSaveProgress/{idPurchaseProgress}',[LeadController::class, 'storeProgress']);
 Route::post("/stripe/paymentIntent",[StripePaymentController::class, 'paymentIntent']);
 Route::post("/stripe/subscriptionPayment",[StripePaymentController::class, 'subscriptionPayment']);
 Route::get("/stripe/customer/search/{email}",[StripePaymentController::class, 'findCustomerByEmail']);
