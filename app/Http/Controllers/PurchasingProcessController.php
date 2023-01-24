@@ -61,12 +61,12 @@ class PurchasingProcessController extends Controller
      */
     public function show($id)
     {
-
-        if(!empty($purchasingProcess)){
+        $purchasingProcess = PurchaseProgress::getModel($id);
+        if(empty($purchasingProcess)){
             return response()->json(['message' => 'El PurchaseProgress con id '.$id.' no existe'], 404);
         }
 
-        return response()->json(PurchaseProgress::getModel($id));
+        return response()->json($purchasingProcess);
 
     }
 
