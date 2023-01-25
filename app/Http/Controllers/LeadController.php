@@ -94,7 +94,7 @@ class LeadController extends Controller
 
     public function storeProgress(Request $request, $idPurchaseProgress)
     {
-        $leadAttributes = $request->except(['step_number','country']);
+        $leadAttributes = $request->except(['step_number']);
         $newOrUpdatedLead = Lead::updateOrCreate(['email' => $request->email], $leadAttributes);
         $progress = PurchaseProgress::updateProgress($idPurchaseProgress, ['step' => $request->step_number, 'lead_id' => $newOrUpdatedLead->id]);
        

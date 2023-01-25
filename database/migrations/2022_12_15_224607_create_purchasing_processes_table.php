@@ -21,7 +21,7 @@ class CreatePurchasingProcessesTable extends Migration
             $table->foreignId('lead_id')
                     ->nullable()        
                     ->references('id')
-                    ->on('leads');
+                    ->on('leads')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
 
         });

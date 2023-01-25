@@ -24,12 +24,14 @@ class Lead extends Model
         'profession',
         'speciality'
     ];
-    public $timestamps = false;
+    public $timestamps = true;
+    public $hidden = ['created_at','updated_at','source_lead','lead_status','lead_source','id'];
 
     public function purchasingProcesses(){
         $purchasingProcesses = $this->hasMany(PurchasingProcess::class,'lead_id_fk','id');
         return $purchasingProcesses;
     }
+
     public function contact(){
         // $contact = Contact::where('id', $this->contact_id_fk)->first();
          $contact = $this->belongsTo(Contact::class,'contact_id_fk');
