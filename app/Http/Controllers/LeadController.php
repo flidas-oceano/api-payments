@@ -14,7 +14,7 @@ class LeadController extends Controller
         $lead = Lead::all();
         return json_encode(['lead'=> $lead]);
     }
-    
+
     /**
      * Display a listing of the resource.
      *
@@ -31,7 +31,7 @@ class LeadController extends Controller
      */
     public function create()
     {
-    
+
     }
 
     /**
@@ -97,7 +97,7 @@ class LeadController extends Controller
         $leadAttributes = $request->except(['step_number']);
         $newOrUpdatedLead = Lead::updateOrCreate(['email' => $request->email], $leadAttributes);
         $progress = PurchaseProgress::updateProgress($idPurchaseProgress, ['step' => $request->step_number, 'lead_id' => $newOrUpdatedLead->id]);
-       
+
         return response()->json(['lead' => $newOrUpdatedLead, 'progress' => $progress]);
     }
 }
