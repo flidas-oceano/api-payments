@@ -445,10 +445,10 @@ class ZohoController extends Controller
 		$answer = array();
 		$nonexistent = false;
 		//arma y reemplaza sku por ID de producto en zoho
-		foreach($products as $k => $p)
+		foreach($products as $p)
         {
             $answer[] = array(
-                'Product Id' => $k,
+                'Product Id' => $p['id'],
                 'Quantity' => (int)$p['quantity'],
                 'List Price' => (float)$p['price'],
                 //'List Price #USD' => (float)$p['price_usd'],
