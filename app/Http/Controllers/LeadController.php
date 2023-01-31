@@ -14,7 +14,7 @@ class LeadController extends Controller
         $lead = Lead::all();
         return json_encode(['lead'=> $lead]);
     }
-    
+
     /**
      * Display a listing of the resource.
      *
@@ -31,7 +31,7 @@ class LeadController extends Controller
      */
     public function create()
     {
-    
+
     }
 
     /**

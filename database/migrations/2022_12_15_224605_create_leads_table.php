@@ -28,22 +28,22 @@ class CreateLeadsTable extends Migration
             $table->foreignId('profession')
                 ->nullable()
                 ->references('id')
-                ->on('professions');
+                ->on('professions')->onDelete('cascade')->onUpdate('cascade');
 
             $table->foreignId('speciality')
                 ->nullable()
                 ->references('id')
-                ->on('specialities');
+                ->on('specialities')->onDelete('cascade')->onUpdate('cascade');
 
             $table->foreignId('method_contact')
                 ->nullable()
                 ->references('id')
-                ->on('method_contacts');
+                ->on('method_contacts')->onDelete('cascade')->onUpdate('cascade');
 
             $table->foreignId('contact_id')
                 ->nullable()
                 ->references('id')
-                ->on('contacts');
+                ->on('contacts')->onDelete('cascade')->onUpdate('cascade');
 
             $table->timestamps();
         });
