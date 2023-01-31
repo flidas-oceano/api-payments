@@ -26,8 +26,13 @@ class PurchaseProgress extends Model
         return $progress;
     }
 
-    public static function updateProgress($purchaseProgressId, $values){
-        PurchaseProgress::findOrFail($purchaseProgressId)->update($values);
+    public static function updateProgress($purchaseProgressId, $requestValues){
+        $purchase = PurchaseProgress::findOrFail($purchaseProgressId);
+        if(gettype($requestValues) === 'object'){
+            $purchase->update($requestValues->only(['step_number', 'country']));
+        }else{
+            $purchase->update($requestValues);
+        }
         return PurchaseProgress::find($purchaseProgressId);
     }
 }

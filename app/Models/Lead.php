@@ -19,6 +19,7 @@ class Lead extends Model
         'username',
         'email',
         'telephone',
+        'method_contact',
         'contact_id_fk',
         'method_contact_id_fk',
         'profession',

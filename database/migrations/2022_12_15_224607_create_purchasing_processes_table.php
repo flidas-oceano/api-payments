@@ -15,7 +15,7 @@ class CreatePurchasingProcessesTable extends Migration
     {
         Schema::create('purchase_progress', function (Blueprint $table) {
             $table->id();
-            $table->integer('step',false, true);
+            $table->integer('step_number',false, true);
             $table->string('country')->nullable();
             $table->string('title')->nullable();
             $table->foreignId('lead_id')

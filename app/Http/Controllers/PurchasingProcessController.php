@@ -49,7 +49,7 @@ class PurchasingProcessController extends Controller
      */
     public function store(StorePurchasingProcessRequest $request)
     {
-        $newProgress = PurchaseProgress::create($request->all());
+        $newProgress = PurchaseProgress::create($request->only(['step_number','country']));
         return response()->json($newProgress);
     }
 
@@ -90,7 +90,7 @@ class PurchasingProcessController extends Controller
      */
     public function update(Request $request,$id)
     {
-        return PurchaseProgress::updateProgress($id, $request->all());
+        return PurchaseProgress::updateProgress($id, $request);
     }
 
     /**

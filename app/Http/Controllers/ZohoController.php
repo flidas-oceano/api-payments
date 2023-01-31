@@ -265,7 +265,7 @@ class ZohoController extends Controller
 
         $newLead =  $this->createNewRecord('Leads', $leadData);
 
-        return (json_encode($newLead));
+        return response()->json($newLead);
     }
 
     public function createContact(Request $request)
