@@ -36,7 +36,7 @@ class ZohoController extends Controller
             $oAuthClient = ZohoOAuth::getClientInstance();
            $refreshToken = env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_REFRESH_TOKEN') : env('ZOHO_API_PAYMENTS_PROD_REFRESH_TOKEN');
            $userIdentifier = env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar';
-           $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier); 
+           $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier);
        }catch(Exception $e){
             //dd($e);
         }
@@ -348,9 +348,9 @@ class ZohoController extends Controller
                 'Modalidad_de_pago_del_Anticipo' => $data['left_payment_type'],
                 'Tipo_IVA' => 'Consumidor Final - ICF',
             );
-    
+
             $newSale = $this->createRecordSale($saleData);
-    
+
             return(json_encode($newSale));
         }
         else
@@ -361,7 +361,7 @@ class ZohoController extends Controller
             return(json_encode(['result' => 'error', 'detail' => 'issue with products']));
         }
 
-        
+
     }
 
     private function createRecordSale($data)
@@ -392,10 +392,10 @@ class ZohoController extends Controller
 
                 $record->addLineItem($product);
             }
-            
+
             $responseIns = $record->create();
-            
-            if ($responseIns->getHttpStatusCode() == 201) 
+
+            if ($responseIns->getHttpStatusCode() == 201)
             {
                 $answer['result'] = 'ok';
 
@@ -451,17 +451,17 @@ class ZohoController extends Controller
         try
         {
             $record = ZCRMRestClient::getInstance()->getRecordInstance($type, $id); // To get record instance
-            
+
 
             $contact = ZCRMRecord::getInstance("Contacts", Null); // to get the record of deal in form of ZCRMRecord insatnce
             $details = array("overwrite"=>TRUE);
-            
+
             $responseIn = $record->convert($contact, $details); // to convert record
 
             $answer['result'] = 'ok';
             $answer['id'] = $responseIn["Contacts"];
 
-        } catch (\Exception $e) 
+        } catch (\Exception $e)
         {
             $answer['detail'] = $e->getMessage();
         }
@@ -521,5 +521,27 @@ class ZohoController extends Controller
             $this->updateRecord('Leads', array('Lead_Duplicado' => true), $sameUserLeads[$leadK]->getEntityId(), false);
 
         return true;
+    }
+
+    public function getProducts(){
+        try {
+            $moduleIns = ZCRMRestClient::getInstance()->getModuleInstance('Products');  //To get module instance
+            $records = $moduleIns->getRecords();
+            $products = [];
+
+            foreach($records->getData() as $product){
+                $products[] = [
+                        "name" => $product->getFieldValue('Product_Name'),
+                        "code" => $product->getFieldValue('Product_Code'),
+                        "price" => $product->getFieldValue('Unit_Price'),
+                        "category" => $product->getFieldValue('Product_Category'),
+                        "active" => $product->getFieldValue('Product_Active'),
+                ];
+            }
+
+            return response()->json($products);
+        } catch (\Exception $e) {
+            dd($e);
+        }
     }
 }

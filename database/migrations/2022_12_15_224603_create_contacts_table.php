@@ -15,7 +15,6 @@ class CreateContactsTable extends Migration
     {
         Schema::create('contacts', function (Blueprint $table) {
             $table->id();
-
             $table->string('entity_id_crm')->nullable();
             $table->string('dni')->nullable();
             $table->string('sex')->nullable();
@@ -23,13 +22,13 @@ class CreateContactsTable extends Migration
             $table->string('registration_number')->nullable();
             $table->string('area_of_work')->nullable();
             $table->string('training_interest')->nullable();
-
-            $table->foreignId('addresses_id_fk')
-                    ->nullable()        
-                    ->references('id')
-                    ->on('addresses');
-
-            // $table->timestamps();
+            $table->string('type_of_address')->nullable();
+            $table->string('country')->nullable();
+            $table->string('postal_code')->nullable();
+            $table->string('street')->nullable();
+            $table->string('locality')->nullable();
+            $table->string('province_state')->nullable();
+            $table->timestamps();
         });
     }
 

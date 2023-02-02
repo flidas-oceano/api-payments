@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Contact;
 use App\Http\Requests\StoreContactRequest;
 use App\Http\Requests\UpdateContactRequest;
+use App\Models\Lead;
+use App\Models\PurchaseProgress;
+use Illuminate\Http\Request;
 
 class ContactController extends Controller
 {
@@ -82,5 +85,21 @@ class ContactController extends Controller
     public function destroy(Contact $contact)
     {
         //
+    }
+
+    public function storeProgress(Request $request, $idPurchaseProgress)
+    {
+        $progress = PurchaseProgress::updateProgress($idPurchaseProgress, ['step_number' => $request->step_number]);
+        $contactInProgress = $progress->contact;
+        $contactAttributes = $request->only(Contact::getFormAttributes());
+
+        if(is_null($contactInProgress)){
+            $newContact = Contact::create($contactAttributes);
+            $progress->lead->update(['contact_id' => $newContact->id]);
+        }else{
+            $contactInProgress->update($contactAttributes);
+        }
+
+        return response()->json(['contact' => $progress->contact, 'lead' => $progress->lead , 'progress' => $progress]);
     }
 }
