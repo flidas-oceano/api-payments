@@ -253,8 +253,11 @@ class ZohoController extends Controller
 
     public function createLead(Request $request)
     {
-
         $data = $request->all();
+        // $dataJson = json_decode($request->input('dataJson'), true);
+
+        //Buscar en db por id, traer el lead
+        //Craer lead en crm, traer el id_lead generado en crm y meterlo en el lead de ventapresencial, en el campo entity_id_crm
 
         $leadData = $this->processLeadData($data);
 
@@ -270,7 +273,6 @@ class ZohoController extends Controller
 
     public function createContact(Request $request)
     {
-
         $data = $request->all();
 
         //lo primero que haremos es intentar crear el contacto
@@ -477,18 +479,37 @@ class ZohoController extends Controller
         } else {
             $leadData['Es_Contacto'] = true;
         }
+        
+        $leadData['First_Name']             = $data["name"];
+        $leadData['Last_Name']              = $data["username"];
+        $leadData['Phone']                  = $data["telephone"];
+        $leadData['Email']                  = $data["email"];
+        $LeadHistoricoData['Fuente_de_Lead'] = array(0 => $data['lead_source'] ?? 'Venta Presencial');//hay que definir donde buscamos el dato 
+        $LeadHistoricoData['FUENTE']         = $data['source'] ?? 'Venta Presencial';//hay que definir donde buscamos el dato
+        $leadData['Lead_Status']            = $data['status']?? 'Contacto urgente';
+        $leadData['Pais']                   = $data["country"];
+        $leadData['pp']                     = $data["profession"];
+        $leadData['Especialidad']           = [$data["speciality"]];
+        $leadData['*owner']                 = $this->emi_owner;
 
-        $leadData['First_Name']         = $data["name"];
-        $leadData['Last_Name']             = $data["surname"];
-        $leadData['Phone']                 = $data["phone"];
-        $leadData['Email']                 = $data["email"];
-        $LeadHistoricoData['Fuente_de_Lead']  = array(0 => $data['lead_source']);
-        $LeadHistoricoData['FUENTE']         = $data['source'];
-        $leadData['Lead_Status']        = $data['status'];
-        $leadData['Pais']                 = $data["country"];
-        $leadData['pp']                 = $data["profession"];
-        $leadData['Especialidad']       = [$data["specialty"]];
-        $leadData['*owner']             = $this->emi_owner;
+        // //hay contactos?
+        // if ($this->fetchRecordWithValue('Contacts', 'Email', $data->lead->email) == "error") {
+        //     $leadData['Es_Contacto'] = false;
+        // } else {
+        //     $leadData['Es_Contacto'] = true;
+        // }
+
+        // $leadData['First_Name']             = $data->lead->name;
+        // $leadData['Last_Name']              = $data->lead->surname;
+        // $leadData['Phone']                  = $data->lead->phone;
+        // $leadData['Email']                  = $data->lead->email;
+        // $LeadHistoricoData['Fuente_de_Lead'] = array(0 => $data->lead->lead_source);
+        // $LeadHistoricoData['FUENTE']         = $data->lead->source;
+        // $leadData['Lead_Status']            = $data->lead->status;
+        // $leadData['Pais']                   = $data->lead->country;
+        // $leadData['pp']                     = $data->lead->profession;
+        // $leadData['Especialidad']           = [$data->lead->specialty];
+        // $leadData['*owner']                 = $this->emi_owner; 
 
         return $leadData;
     }
