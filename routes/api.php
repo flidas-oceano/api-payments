@@ -25,19 +25,21 @@ Route::post("/stripe/paymentIntent",[StripePaymentController::class, 'paymentInt
 Route::post("/stripe/subscriptionPayment",[StripePaymentController::class, 'subscriptionPayment']);
 Route::get("/stripe/customer/search/{email}",[StripePaymentController::class, 'findCustomerByEmail']);
 
-
 // http://127.0.0.1:8000/api/db/
 Route::get("/db",[PurchasingProcessController::class, 'index']);
 Route::get("/db/getLead",[LeadController::class, 'index']);
 Route::post("/db/stepCreateLead",[PurchasingProcessController::class, 'stepCreateLead']);
 Route::post("/db/stepConversionContact",[PurchasingProcessController::class, 'stepConversionContact']);
 
-Route::post('/createLead',[ZohoController::class, 'createLead']);
-Route::post('/convertLead',[ZohoController::class, 'convertLead']);
-Route::post('/createContact',[ZohoController::class, 'createContact']);
-Route::post('/createAddress',[ZohoController::class, 'createAddress']);
-Route::post('/createSale',[ZohoController::class, 'createSale']);
-Route::post('/updateZohoStripe',[ZohoController::class, 'updateZohoStripe']);
+
+Route::post('/updateEntityIdLeadVentas',[PurchasingProcessController::class, 'updateEntityIdLeadVentas']);
+
+Route::post('/createLeadZohoCRM',[ZohoController::class, 'createLead']);
+Route::post('/convertLeadZohoCRM',[ZohoController::class, 'convertLead']);
+Route::post('/createContactZohoCRM',[ZohoController::class, 'createContact']);
+Route::post('/createAddressZohoCRM',[ZohoController::class, 'createAddress']);
+Route::post('/createSaleZohoCRM',[ZohoController::class, 'createSale']);
+Route::post('/updateZohoStripeZohoCRM',[ZohoController::class, 'updateZohoStripe']);
 
 // http://localhost:8000/api/zcrm/createLead
 
