@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\{Lead,Contact,Address, PurchaseProgress};
 use App\Http\Requests\StorePurchasingProcessRequest;
 use App\Http\Requests\UpdatePurchasingProcessRequest;
-use App\Http\Controllers\ZohoController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use App\Http\Requests\UpdateLeadRequest;
+
 use Illuminate\Support\Facades\Validator;
+
 
 class PurchasingProcessController extends Controller
 {
@@ -104,7 +106,7 @@ class PurchasingProcessController extends Controller
         //
     }
 // step1: pais
-public function stepCreateLead(Request $request){
+public function stepCreateLead(UpdateLeadRequest $request){
     /* Datos de prueba al postman
         {
             "lead": {
@@ -124,79 +126,35 @@ public function stepCreateLead(Request $request){
             }
         }
     */
-    // return json_encode(['request' => $request->all()]);
-    
-    // dump($request->all());
 
-    // $type = gettype($request->collect());
-    // $objectRequest = $request->collect();
-    // $arrayRequest = $request->all();
+    $lead = $request->all();
 
-    // $jsondecode = json_decode($objectRequest); 
-    // $jsonencode = json_encode($objectRequest); 
-
-    // $typedato = gettype(json_decode($request->input('lead')));
-    // $dato = json_decode($request->input('lead'), true);//array
-    // $dato = json_decode($request, true);//stdclass
-    // $typedato = gettype(json_decode($request->input('lead')));
-
-    // $typedato2 = gettype($request->all());
-    // $dato2 = $request->all();
-
-    // return response()->json(['country' => $dato->country]);
-
-    $dato = json_decode($request->input('dataJson'), true);
-
-    $validator = Validator::make($dato,[
-            "lead.name"=> "required",
-            "lead.username"=> "required",
-            "lead.email"=> "required|email|min:8|",
-            "lead.profession"=> "required",
-            "lead.speciality"=> "required",
-            "lead.telephone"=> "required"
-        ],[
-            "lead.name.required"=>"Name Should be filled",
-            "lead.email.min"=>" Email length should be more than 8"
-        ]);
-        
-    if($validator->fails()){
-        return response()->json([
-            'message' => 'fail',
-            'validator' => $validator
-        ]);
-    }
-
-    $dataJson = json_decode($request->input('dataJson'));
-    
     $newLead = new Lead();
 
     /*region lead */
-        $newLead->id =              isset($dataJson->lead->lead_id)? $dataJson->lead->lead_id:null;
-        $newLead->entity_id_crm =   isset($dataJson->lead->entity_id_crm);
-        $newLead->lead_status =     isset($dataJson->lead->lead_status);
-        $newLead->source_lead =     isset($dataJson->lead->source_lead);
-        $newLead->lead_source =     isset($dataJson->lead->lead_source);
+        $newLead->id =              isset($lead["lead_id"])? $lead["lead_id"]:null;
+        $newLead->entity_id_crm =   isset($lead["entity_id_crm"]);
+        $newLead->lead_status =     isset($lead["lead_status"]);
+        $newLead->source_lead =     isset($lead["source_lead"]);
+        $newLead->lead_source =     isset($lead["lead_source"]);
 
-        $newLead->name =        $dataJson->lead->name;
-        $newLead->username =    $dataJson->lead->username;
-        $newLead->email =       $dataJson->lead->email;
-        $newLead->telephone =   $dataJson->lead->telephone;
-        $newLead->profession =  $dataJson->lead->profession;
-        $newLead->speciality =  $dataJson->lead->speciality;
+        $newLead->name =        $lead["name"];
+        $newLead->username =    $lead["username"];
+        $newLead->email =       $lead["email"];
+        $newLead->telephone =   $lead["telephone"];
+        $newLead->profession =  $lead["profession"];
+        $newLead->speciality =  $lead["speciality"];
         // if(!isset($lead['lead_id'])){
         //     $newLead->contact_id_fk = $newContact->id;
         // }
-        isset($dataJson->lead->lead_id)? 
+        isset($lead["lead_id"])? 
             $newLead->update():
             $newLead->save();
     /*region lead */
 
-    
-
     return response()->json([
         'message' => 'success',
-        'newLead' => $newLead,
-        'validator' => $validator
+        'newLead' => $newLead
     ]);
 }
  // step3: => nombre aconvertir a contacto :

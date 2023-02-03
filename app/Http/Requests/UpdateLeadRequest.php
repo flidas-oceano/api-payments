@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
+
 
 class UpdateLeadRequest extends FormRequest
 {
@@ -13,7 +16,7 @@ class UpdateLeadRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,7 +27,16 @@ class UpdateLeadRequest extends FormRequest
     public function rules()
     {
         return [
-            //
+            "name"=> "required",
+            "username"=> "required",
+            "email"=> "required|email|min:8|",
+            "profession"=> "required",
+            "speciality"=> "required",
+            "telephone"=> "required"
         ];
+    }
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(response()->json($validator->errors(), 400));
     }
 }

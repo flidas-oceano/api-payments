@@ -492,25 +492,6 @@ class ZohoController extends Controller
         $leadData['Especialidad']           = [$data["speciality"]];
         $leadData['*owner']                 = $this->emi_owner;
 
-        // //hay contactos?
-        // if ($this->fetchRecordWithValue('Contacts', 'Email', $data->lead->email) == "error") {
-        //     $leadData['Es_Contacto'] = false;
-        // } else {
-        //     $leadData['Es_Contacto'] = true;
-        // }
-
-        // $leadData['First_Name']             = $data->lead->name;
-        // $leadData['Last_Name']              = $data->lead->surname;
-        // $leadData['Phone']                  = $data->lead->phone;
-        // $leadData['Email']                  = $data->lead->email;
-        // $LeadHistoricoData['Fuente_de_Lead'] = array(0 => $data->lead->lead_source);
-        // $LeadHistoricoData['FUENTE']         = $data->lead->source;
-        // $leadData['Lead_Status']            = $data->lead->status;
-        // $leadData['Pais']                   = $data->lead->country;
-        // $leadData['pp']                     = $data->lead->profession;
-        // $leadData['Especialidad']           = [$data->lead->specialty];
-        // $leadData['*owner']                 = $this->emi_owner; 
-
         return $leadData;
     }
 
