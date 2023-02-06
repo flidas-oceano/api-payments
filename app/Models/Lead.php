@@ -11,6 +11,7 @@ class Lead extends Model
     use HasFactory;
     protected $table = 'leads';
     protected $fillable = [
+        'id',
         'entity_id_crm',
         'lead_status',
         'source_lead',
@@ -31,6 +32,11 @@ class Lead extends Model
     public function purchasingProcesses(){
         $purchasingProcesses = $this->hasMany(PurchasingProcess::class,'lead_id_fk','id');
         return $purchasingProcesses;
+    }
+
+    public function profession(){
+        $profession = Profession::where('id',$this->profession)->first()->name; 
+        return $profession;
     }
 
     public function contact(){
