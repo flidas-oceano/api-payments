@@ -11,5 +11,9 @@ class Profession extends Model
     protected $timestamp = true;
     protected $fillable = ['name'];
     protected $hidden = ['created_at','updated_at'];
-
+    
+    public function getName(){
+        $name = $this->name;
+        return $name;
+    }
 }

@@ -12,6 +12,7 @@ use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
 use zcrmsdk\oauth\ZohoOAuth;
 use zcrmsdk\crm\crud\ZCRMRecord;
 use zcrmsdk\crm\exception\ZCRMException;
+use App\Models\Profession;
 
 class ZohoController extends Controller
 {
@@ -261,6 +262,9 @@ class ZohoController extends Controller
         //Buscar en db por id, traer el lead
         //Craer lead en crm, traer el id_lead generado en crm y meterlo en el lead de ventapresencial, en el campo entity_id_crm
 
+        $data['profession'] = Profession::where('id',$data['profession'])->first()->name;
+        $data['speciality'] = Profession::where('id',$data['speciality'])->first()->name;
+
         $leadData = $this->processLeadData($data);
 
         $leadIsDuplicate = $this->updateFetchDuplicateLeads($leadData['Email']);
@@ -472,6 +476,7 @@ class ZohoController extends Controller
 
         return($answer);
     }
+
 
     private function processLeadData($data)
     {
