@@ -90,16 +90,17 @@ class ContactController extends Controller
     public function storeProgress(Request $request, $idPurchaseProgress)
     {
         $progress = PurchaseProgress::updateProgress($idPurchaseProgress, ['step_number' => $request->step_number]);
-        $contactInProgress = $progress->contact;
+        $leadInProgress = $progress->lead;
         $contactAttributes = $request->only(Contact::getFormAttributes());
+        $contactAttributes['lead_id'] = $progress->lead->id;
 
-        if(is_null($contactInProgress)){
+        if(is_null($progress->lead->contact)){
             $newContact = Contact::create($contactAttributes);
             $progress->lead->update(['contact_id' => $newContact->id]);
         }else{
-            $contactInProgress->update($contactAttributes);
+            Contact::where("lead_id", $progress->lead->id)->update($contactAttributes);
         }
 
-        return response()->json(['contact' => $progress->contact, 'lead' => $progress->lead , 'progress' => $progress]);
+        return response()->json(['lead' => $progress->lead , 'progress' => $progress]);
     }
 }

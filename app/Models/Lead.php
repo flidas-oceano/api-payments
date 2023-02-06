@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\{PurchasingProcess,Contact};
+use App\Models\{PurchasingProcess};
 
 class Lead extends Model
 {
@@ -20,8 +20,8 @@ class Lead extends Model
         'email',
         'telephone',
         'method_contact',
-        'contact_id_fk',
-        'method_contact_id_fk',
+        'contact_id',
+        'method_contact_id',
         'profession',
         'speciality'
     ];
@@ -29,14 +29,8 @@ class Lead extends Model
     public $hidden = ['created_at','updated_at','source_lead','lead_status','lead_source','id'];
 
     public function purchasingProcesses(){
-        $purchasingProcesses = $this->hasMany(PurchasingProcess::class,'lead_id_fk','id');
+        $purchasingProcesses = $this->hasMany(PurchasingProcess::class,'lead_id','id');
         return $purchasingProcesses;
     }
 
-    public function contact(){
-        // $contact = Contact::where('id', $this->contact_id_fk)->first();
-         $contact = $this->belongsTo(Contact::class,'contact_id_fk');
-         return $contact;
-        // return $contact;
-    }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UpdateContractZohoRequest;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use zcrmsdk\crm\crud\ZCRMInventoryLineItem;
 use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
@@ -21,6 +22,7 @@ class ZohoController extends Controller
     {
         try {
             $this->emi_owner = '2712674000000899001';
+            
 
             ZCRMRestClient::initialize([
                 "client_id" => env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_CLIENT_ID') : env('ZOHO_API_PAYMENTS_PROD_CLIENT_ID'),
@@ -38,7 +40,7 @@ class ZohoController extends Controller
            $userIdentifier = env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar';
            $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier);
        }catch(Exception $e){
-            //dd($e);
+            dd($e);
         }
     }
 
@@ -51,8 +53,8 @@ class ZohoController extends Controller
             $response = $moduleIns->searchRecordsByCriteria('(' . $field . ':equals:' . $value . ')');
             $records = $response->getData();  //To get response data
             $answer = $records[0];
-        } catch (\Exception $e) {
-           // dump($e);
+        } catch (\zcrmsdk\crm\exception\ZCRMException $e) {
+           dd($e);
         }
         return ($answer);
     }
@@ -527,23 +529,24 @@ class ZohoController extends Controller
 
     public function getProducts(){
         try {
-            $moduleIns = ZCRMRestClient::getInstance()->getModuleInstance('Products');  //To get module instance
-            $records = $moduleIns->getRecords();
-            $products = [];
-
-            foreach($records->getData() as $product){
-                $products[] = [
-                        "name" => $product->getFieldValue('Product_Name'),
-                        "code" => $product->getFieldValue('Product_Code'),
-                        "price" => $product->getFieldValue('Unit_Price'),
-                        "category" => $product->getFieldValue('Product_Category'),
-                        "active" => $product->getFieldValue('Product_Active'),
-                ];
+            $response = Http::get("https://www.oceanomedicina.com/api_landing.php");
+    
+            // Verificar si la respuesta HTTP fue exitosa
+            if ($response->successful()) {
+                $data = json_decode($response->body());
+    
+                return response()->json($data);
+            } else {
+                // Manejar posibles errores o excepciones
+                return response()->json([
+                    'error' => 'Error al obtener los productos'
+                ], $response->status());
             }
-
-            return response()->json($products);
         } catch (\Exception $e) {
-            dd($e);
+            // Manejar excepciones no controladas
+            return response()->json([
+                'error' => 'Error al obtener los productos: ' . $e->getMessage()
+            ], 500);
         }
     }
 }
