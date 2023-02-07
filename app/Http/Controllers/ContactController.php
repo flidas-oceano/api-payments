@@ -103,4 +103,15 @@ class ContactController extends Controller
 
         return response()->json(['contact' => $leadInProgress->contact ,'lead' => $progress->lead , 'progress' => $progress]);
     }
+
+    public function updateEntityIdContactSales(Request $request){
+        $attrContact = $request->all();
+        $newOrUpdatedContact = Contact::updateOrCreate([
+            'dni' => $attrContact["dni"]
+            ], $attrContact);
+       
+        return response()->json(['contact' => $newOrUpdatedContact]);
+    }
+
+    
 }

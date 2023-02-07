@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\{ContactController, StripePaymentController,LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController};
+use App\Http\Controllers\{ContactController, StripePaymentController,LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController,Contact};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -32,8 +32,9 @@ Route::get("/db/getLead",[LeadController::class, 'index']);
 Route::post("/db/stepCreateLead",[PurchasingProcessController::class, 'stepCreateLead']);
 Route::post("/db/stepConversionContact",[PurchasingProcessController::class, 'stepConversionContact']);
 
-
 Route::post('/updateEntityIdLeadVentas',[PurchasingProcessController::class, 'updateEntityIdLeadVentas']);
+Route::post('/updateEntityIdContactSales',[ContactController::class, 'updateEntityIdContactSales']);
+
 
 Route::post('/createLeadZohoCRM',[ZohoController::class, 'createLead']);
 Route::post('/convertLeadZohoCRM',[ZohoController::class, 'convertLead']);
@@ -44,7 +45,6 @@ Route::post('/updateZohoStripeZohoCRM',[ZohoController::class, 'updateZohoStripe
 Route::get('/products',[ZohoController::class, 'getProducts']);
 
 // http://localhost:8000/api/zcrm/createLead
-
 
 Route::apiResource("professions", ProfessionController::class);
 Route::apiResource("specialities", SpecialityController::class);

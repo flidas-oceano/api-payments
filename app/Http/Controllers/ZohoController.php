@@ -12,7 +12,7 @@ use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
 use zcrmsdk\oauth\ZohoOAuth;
 use zcrmsdk\crm\crud\ZCRMRecord;
 use zcrmsdk\crm\exception\ZCRMException;
-use App\Models\Profession;
+use App\Models\{Profession,Speciality};
 
 class ZohoController extends Controller
 {
@@ -257,13 +257,9 @@ class ZohoController extends Controller
     public function createLead(Request $request)
     {
         $data = $request->all();
-        // $dataJson = json_decode($request->input('dataJson'), true);
-
-        //Buscar en db por id, traer el lead
-        //Craer lead en crm, traer el id_lead generado en crm y meterlo en el lead de ventapresencial, en el campo entity_id_crm
 
         $data['profession'] = Profession::where('id',$data['profession'])->first()->name;
-        $data['speciality'] = Profession::where('id',$data['speciality'])->first()->name;
+        $data['speciality'] = Speciality::where('id',$data['speciality'])->first()->name;
 
         $leadData = $this->processLeadData($data);
 
@@ -280,14 +276,14 @@ class ZohoController extends Controller
     public function createContact(Request $request)
     {
         $data = $request->all();
-
+        
         //lo primero que haremos es intentar crear el contacto
         $contactData = array(
             'First_Name' => $data['name'],
             'Last_Name' => $data['surname'],
             'Email' => $data['email'],
             'DNI' => $data['dni'],
-            'Home_Phone' => $data['phone'],
+            'Home_Phone' => $data['telephone'],
             'Pais' => $data['country'],
         );
 

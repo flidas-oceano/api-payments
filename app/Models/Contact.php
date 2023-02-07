@@ -11,11 +11,37 @@ class Contact extends Model
     use HasFactory;
     protected $table = 'contacts';
     protected $fillable = [
+        'id',
         'entity_id_crm',
-        'dni', 'sex', 'date_of_birth', 'province_state', 'postal_code', 'street', 'locality', 'registration_number', 'area_of_work', 'training_interest','lead_id'
+        'dni',
+        'sex',  
+        'date_of_birth',
+        'registration_number',
+        'area_of_work',
+        'training_interest',
+        'type_of_address',
+        'country',
+        'postal_code',
+        'street',
+        'locality',
+        'province_state',
+        'lead_id'
     ];
 
-    private static $formAttributes = ['dni', 'sex', 'date_of_birth', 'province_state', 'postal_code', 'street', 'locality', 'registration_number', 'area_of_work', 'training_interest'];
+    private static $formAttributes = [
+        'dni',
+        'sex',
+        'date_of_birth', 
+        'registration_number', 
+        'area_of_work', 
+        'training_interest',
+        'type_of_address',
+        'country',
+        'postal_code', 
+        'street', 
+        'locality', 
+        'province_state', 
+    ];
 
     public function lead()
     {

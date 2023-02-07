@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreContactRequest;
 use App\Models\{Lead,Contact,Address, PurchaseProgress};
 use App\Http\Requests\StorePurchasingProcessRequest;
 use App\Http\Requests\UpdatePurchasingProcessRequest;
@@ -125,7 +126,9 @@ class PurchasingProcessController extends Controller
                 }
             }
         */
-        $leadAttributes = $request->except(['country']);
+        $idPurchaseProgress = $request->only('idPurchaseProgress');
+
+        $leadAttributes = $request->except(['country','idPurchaseProgress']);
         $newOrUpdatedLead = Lead::updateOrCreate([
             'email' => $leadAttributes['email']
         ], $request->all());
@@ -133,24 +136,10 @@ class PurchasingProcessController extends Controller
         return response()->json([
             'message' => 'success',
             'newOrUpdatedLead' => $newOrUpdatedLead,
-            'id' => $newOrUpdatedLead->id
+            'lead_id' => $newOrUpdatedLead->id
         ]);
     }
-    // step3: => nombre aconvertir a contacto :
-    /** 
-        Lead : dni x
-        Lead : sexo x
-        Contact: fechanacimiento x
-        PurchasingProccess-Address : pais 
-        Address : provincia/estado x
-        Address : codpostal x
-        Address : direccion x
-        Address : localidad x
-        Contact: nummatricula x
-        Lead : areatrabajo x
-        Contact: interesformacion x
-    */
-    public function stepConversionContact(Request $request){
+    public function stepConversionContact(StoreContactRequest $request){
         /* Datos de prueba al postman
         {
             "contact": {
@@ -174,81 +163,24 @@ class PurchasingProcessController extends Controller
             }
         }
         */
-        $dataJson = json_decode($request->input('dataJson'), true);
-        
 
-        $validator = Validator::make($dataJson,[
-            // "contact.contact_id"=> "required",
-            // "contact.entity_id_crm"=> "required",
-            "contact.dni"=> "required",
-            "contact.sex"=> "required",
-            "contact.date_of_birth"=> "required",
-            // "contact.addresses_id_fk"=> "required",
-            // "contact.registration_number"=> "required",
-            // "contact.area_of_work"=> "required",
-            // "contact.training_interest"=> "required",
+        $idPurchaseProgress = $request->only('idPurchaseProgress');
 
-            // "address.address_id"=> "required",
-            "address.country"=> "required",
-            "address.province_state"=> "required",
-            "address.postal_code"=> "required",
-            "address.street"=> "required",
-            "address.locality"=> "required",
-            
-        ],[
-            "lead.name.required"=>"Name Should be filled",
-            "lead.email.min"=>" Email length should be more than 8"
-        ]);
+        $contactAttrs = $request->except(['idPurchaseProgress','id']);
+        $newOrUpdatedContact = Contact::updateOrCreate([
+            'dni' => $contactAttrs['dni']
+        ], $contactAttrs);
 
-        if($validator->fails()){
-            return response()->json([
-                'message' => 'fail',
-                'validator' => $validator
-            ]);
-        }
+        // $progress = PurchaseProgress::updateProgress(
+        //     $idPurchaseProgress,
+        //      ['step_number' => $request->step_number,
+        //       'lead_id' => $newOrUpdatedLead->id]
+        //     );
 
-        $dataJson = json_decode($request->input('dataJson'));
-
-        // $address = $request->request->get('address');
-        // $contact = $request->request->get('contact');
-
-        $newAddress = new Address();
-        /*region address */
-            $newAddress->id = isset($dataJson->address->address_id) ? $dataJson->address->address_id:null;
-            $newAddress->country = $dataJson->address->country;
-            $newAddress->province_state = $dataJson->address->province_state;
-            $newAddress->postal_code = $dataJson->address->postal_code;
-            $newAddress->street = $dataJson->address->street;
-            $newAddress->locality = $dataJson->address->locality;
-
-            isset($dataJson->address->address_id) ? 
-                $newAddress->update():
-                $newAddress->save();
-        /*end region address */
-
-        $newContact = new Contact();
-        /* region contacto */
-            $newContact->id = isset($dataJson->contact->contact_id) ? $dataJson->contact->contact_id:null;
-
-            // $newContact->entity_id_crm = isset($leadentity_id_crm);
-            $newContact->dni = $dataJson->contact->dni;
-            $newContact->sex = $dataJson->contact->sex;
-            $newContact->date_of_birth = $dataJson->contact->date_of_birth;
-            $newContact->addresses_id_fk =  isset($newAddress['id']) ? $newAddress['id']:null;
-            $newContact->registration_number = $dataJson->contact->registration_number;
-            $newContact->area_of_work = $dataJson->contact->area_of_work;
-            $newContact->training_interest = $dataJson->contact->training_interest;
-                
-            isset($dataJson->contact->contact_id) ? 
-                $newContact->update():
-                $newContact->save();
-        /*end region contacto */
-        
         return response()->json([
             'message' => 'success',
-            'newContact' => $newContact,
-            'newAddress' => $newAddress,
-            'validator' => $validator
+            'newOrUpdatedContact' => $newOrUpdatedContact,
+            'id' => $newOrUpdatedContact->id
         ]);
     }                                                                           
    

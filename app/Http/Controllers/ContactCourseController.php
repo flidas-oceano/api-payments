@@ -82,5 +82,6 @@ class ContactCourseController extends Controller
     public function destroy(ContactCourse $contactCourse)
     {
         //
+        
     }
 }

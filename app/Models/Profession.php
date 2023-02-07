@@ -9,7 +9,7 @@ class Profession extends Model
 {
     use HasFactory;
     protected $timestamp = true;
-    protected $fillable = ['name'];
+    protected $fillable = ['id','name'];
     protected $hidden = ['created_at','updated_at'];
     
     public function getName(){
