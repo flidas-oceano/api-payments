@@ -101,6 +101,6 @@ class ContactController extends Controller
             Contact::where("lead_id", $progress->lead->id)->update($contactAttributes);
         }
 
-        return response()->json(['lead' => $progress->lead , 'progress' => $progress]);
+        return response()->json(['contact' => $leadInProgress->contact ,'lead' => $progress->lead , 'progress' => $progress]);
     }
 }

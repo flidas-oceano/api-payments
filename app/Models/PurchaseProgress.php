@@ -27,6 +27,7 @@ class PurchaseProgress extends Model
     public static function getModel($purchaseProgressId){
         $progress = PurchaseProgress::where('id', $purchaseProgressId)->first();
         $progress->lead = $progress->hasOne(Lead::class,'id','lead_id')->first();
+        $progress->contact = $progress->lead->hasOne(Contact::class,'id','contact_id')->first();
 
         return $progress;
     }
