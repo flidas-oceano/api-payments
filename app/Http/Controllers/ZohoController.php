@@ -12,7 +12,7 @@ use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
 use zcrmsdk\oauth\ZohoOAuth;
 use zcrmsdk\crm\crud\ZCRMRecord;
 use zcrmsdk\crm\exception\ZCRMException;
-use App\Models\{Profession,Speciality};
+use App\Models\{Contact, Lead, Profession,Speciality};
 use Illuminate\Support\Facades\Log;
 
 class ZohoController extends Controller
@@ -282,12 +282,15 @@ class ZohoController extends Controller
 
     public function createContact(Request $request)
     {
+        $dataLead = $request->only(Lead::getFormAttributes());
+        $dataContact = $request->only(Contact::getFormAttributes());
+
         $data = $request->all();
 
         //lo primero que haremos es intentar crear el contacto
         $contactData = array(
             'First_Name' => $data['name'],
-            'Last_Name' => $data['surname'],
+            'Last_Name' => $data['username'],
             'Email' => $data['email'],
             'DNI' => $data['dni'],
             'Home_Phone' => $data['telephone'],
