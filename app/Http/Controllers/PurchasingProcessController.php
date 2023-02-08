@@ -168,28 +168,30 @@ class PurchasingProcessController extends Controller
         }
         */
 
-        $idPurchaseProgress = $request->only('idPurchaseProgress');
-
-        $contactAttrs = $request->except(['idPurchaseProgress','id']);
+        $contactAttrs = $request->only(Contact::getFormAttributes());
         $newOrUpdatedContact = Contact::updateOrCreate([
             'dni' => $contactAttrs['dni']
         ], $contactAttrs);
 
-        // $progress = PurchaseProgress::updateProgress(
-        //     $idPurchaseProgress,
-        //      ['step_number' => $request->step_number,
-        //       'lead_id' => $newOrUpdatedLead->id]
-        //     );
+        $progress = PurchaseProgress::updateProgress(
+            $request->idPurchaseProgress,
+             ['step_number' => $request->step_number,
+              'contact_id' => $newOrUpdatedContact->id]
+            );
 
         return response()->json([
             'message' => 'success',
-            'newOrUpdatedContact' => $newOrUpdatedContact,
-            'id' => $newOrUpdatedContact->id
+            'contact' => $newOrUpdatedContact,
+            'contact_id' => $newOrUpdatedContact->id,
+            'progress' => $progress,
+            'lead' => $progress->lead
+
         ]);
     }
 
     public function updateEntityIdLeadVentas(Request $request){
         $attrLead = $request->all();
+        
         $newOrUpdatedLead = Lead::updateOrCreate([
             'email' => $attrLead["email"]
             ], $attrLead);

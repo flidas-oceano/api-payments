@@ -105,7 +105,8 @@ class ContactController extends Controller
     }
 
     public function updateEntityIdContactSales(Request $request){
-        $attrContact = $request->all();
+        $attrContact = $request->only(Contact::getFormAttributes());
+
         $newOrUpdatedContact = Contact::updateOrCreate([
             'dni' => $attrContact["dni"]
             ], $attrContact);

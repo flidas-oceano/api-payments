@@ -41,6 +41,7 @@ class Contact extends Model
         'street',
         'locality',
         'province_state',
+        'entity_id_crm'
     ];
 
     public function lead()
