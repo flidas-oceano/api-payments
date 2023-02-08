@@ -37,10 +37,10 @@ class Contact extends Model
         'training_interest',
         'type_of_address',
         'country',
-        'postal_code', 
-        'street', 
-        'locality', 
-        'province_state', 
+        'postal_code',
+        'street',
+        'locality',
+        'province_state',
     ];
 
     public function lead()

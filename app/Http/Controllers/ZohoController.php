@@ -24,7 +24,7 @@ class ZohoController extends Controller
     {
         try {
             $this->emi_owner = '2712674000000899001';
-            
+
 
             ZCRMRestClient::initialize([
                 "client_id" => env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_CLIENT_ID') : env('ZOHO_API_PAYMENTS_PROD_CLIENT_ID'),
@@ -283,7 +283,7 @@ class ZohoController extends Controller
     public function createContact(Request $request)
     {
         $data = $request->all();
-        
+
         //lo primero que haremos es intentar crear el contacto
         $contactData = array(
             'First_Name' => $data['name'],
@@ -345,22 +345,22 @@ class ZohoController extends Controller
         if($productDetails != 'error')
         {
             $saleData = array(
-                'Subject' => 'etc',
-                'Status' => 'Contrato Pendiente',
+                'Subject' => 'etc',//*
+                'Status' => 'Contrato Pendiente',//*
                 'Contact_Name' => $data['contact_id'],
                 'Cantidad' => $data['installments'],
-                'Fecha_de_Vto' => date('Y-m-d'),
+                'Fecha_de_Vto' => date('Y-m-d'),//*
                 'L_nea_nica_6' => $data['name'],
                 'L_nea_nica_3' => $data['identification'],
                 'Billing_Street' => $data['address'],
                 'Tipo_De_Pago' => $data['payment_type'],
-                '[products]' => $productDetails,
+                '[products]' => $productDetails,//* producto->id
                 'Pais' => $data['country'],
                 'Es_Suscri' => $data['is_sub'],
                 'Anticipo' => strval($data['payment_in_advance']),
                 'Cuotas_restantes_sin_anticipo' => $data['left_installments'],
                 'Medio_de_Pago' => $data['left_payment_type'],
-                'Cuotas_totales' => 1,
+                'Cuotas_totales' => 1,//*
                 'Currency' => $data['currency'],
                 'Modalidad_de_pago_del_Anticipo' => $data['left_payment_type'],
                 'Tipo_IVA' => 'Consumidor Final - ICF',
@@ -441,7 +441,7 @@ class ZohoController extends Controller
 		foreach($products as $k => $p)
         {
             $answer[] = array(
-                'Product Id' => $k,
+                'Product Id' => $k,//*
                 'Quantity' => (int)$p['quantity'],
                 'List Price' => (float)$p['price'],
                 //'List Price #USD' => (float)$p['price_usd'],
@@ -503,12 +503,12 @@ class ZohoController extends Controller
         } else {
             $leadData['Es_Contacto'] = true;
         }
-        
+
         $leadData['First_Name']             = $data["name"];
         $leadData['Last_Name']              = $data["username"];
         $leadData['Phone']                  = $data["telephone"];
         $leadData['Email']                  = $data["email"];
-        $LeadHistoricoData['Fuente_de_Lead'] = array(0 => $data['lead_source'] ?? 'Venta Presencial');//hay que definir donde buscamos el dato 
+        $LeadHistoricoData['Fuente_de_Lead'] = array(0 => $data['lead_source'] ?? 'Venta Presencial');//hay que definir donde buscamos el dato
         $LeadHistoricoData['FUENTE']         = $data['source'] ?? 'Venta Presencial';//hay que definir donde buscamos el dato
         $leadData['Lead_Status']            = $data['status']?? 'Contacto urgente';
         $leadData['Pais']                   = $data["country"];
@@ -552,11 +552,11 @@ class ZohoController extends Controller
     public function getProducts(){
         try {
             $response = Http::get("https://www.oceanomedicina.com/api_landing.php");
-    
+
             // Verificar si la respuesta HTTP fue exitosa
             if ($response->successful()) {
                 $data = json_decode($response->body());
-    
+
                 return response()->json($data);
             } else {
                 // Manejar posibles errores o excepciones

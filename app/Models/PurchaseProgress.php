@@ -10,6 +10,15 @@ class PurchaseProgress extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'id',
+        'step_number',
+        'country',
+        'title',
+        'lead_id',
+        'contact_id',
+        'contract_id'
+    ];
     protected $table = 'purchase_progress';
     protected $hidden = ['created_at','updated_at'];
     protected $guarded = [];
@@ -20,13 +29,13 @@ class PurchaseProgress extends Model
     }
 
     public function contact(){
-        $contact = $this->lead->hasOne(Contact::class,'id','contact_id');
+        $contact = $this->hasOne(Contact::class,'id','contact_id');
         return $contact;
     }
 
     public static function getModel($purchaseProgressId){
         $progress = PurchaseProgress::where('id', $purchaseProgressId)->first();
-       /*  if(!is_null($progress->lead)){
+        /*  if(!is_null($progress->lead)){
             $progress->contact = $progress->lead->hasOne(Contact::class,'id','contact_id');
         } */
 

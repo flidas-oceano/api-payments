@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\UpdateLeadRequest;
 
 use Illuminate\Support\Facades\Validator;
-
+use Symfony\Component\Console\Helper\ProgressBar;
 
 class PurchasingProcessController extends Controller
 {
@@ -126,17 +126,21 @@ class PurchasingProcessController extends Controller
                 }
             }
         */
-        $idPurchaseProgress = $request->only('idPurchaseProgress');
 
-        $leadAttributes = $request->except(['country','idPurchaseProgress']);
+        $params = $request->only(['idPurchaseProgress', 'step_number']);
+        $leadAttributes = $request->only(Lead::getFormAttributes());
+
         $newOrUpdatedLead = Lead::updateOrCreate([
             'email' => $leadAttributes['email']
-        ], $request->all());
+        ], $leadAttributes);
+
+        $purchaseProcess = PurchaseProgress::where('id',$params['idPurchaseProgress'])->first();
+        $purchaseProcess->update(['lead_id' => $newOrUpdatedLead->id, 'step_number' => $params['step_number']]);
 
         return response()->json([
-            'message' => 'success',
             'newOrUpdatedLead' => $newOrUpdatedLead,
-            'lead_id' => $newOrUpdatedLead->id
+            'lead_id' => $newOrUpdatedLead->id,
+            'progress' => $purchaseProcess
         ]);
     }
     public function stepConversionContact(StoreContactRequest $request){
@@ -182,14 +186,14 @@ class PurchasingProcessController extends Controller
             'newOrUpdatedContact' => $newOrUpdatedContact,
             'id' => $newOrUpdatedContact->id
         ]);
-    }                                                                           
-   
+    }
+
     public function updateEntityIdLeadVentas(Request $request){
         $attrLead = $request->all();
         $newOrUpdatedLead = Lead::updateOrCreate([
             'email' => $attrLead["email"]
             ], $attrLead);
-       
+
         return response()->json(['lead' => $newOrUpdatedLead]);
     }
 }

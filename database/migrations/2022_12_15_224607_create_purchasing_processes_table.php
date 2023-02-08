@@ -19,11 +19,18 @@ class CreatePurchasingProcessesTable extends Migration
             $table->string('country')->nullable();
             $table->string('title')->nullable();
             $table->foreignId('lead_id')
-                    ->nullable()        
+                    ->nullable()
                     ->references('id')
                     ->on('leads')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreignId('contact_id')
+                    ->nullable()
+                    ->references('id')
+                    ->on('contacts')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreignId('contract_id')
+                    ->nullable()
+                    ->references('id')
+                    ->on('contracts')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
-
         });
     }
 
