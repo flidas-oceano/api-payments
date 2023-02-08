@@ -64,12 +64,18 @@ class PurchasingProcessController extends Controller
      */
     public function show($id)
     {
-        $purchasingProcess = PurchaseProgress::getModel($id);
-        if(empty($purchasingProcess)){
+        $progress = PurchaseProgress::getModel($id);
+        if(empty($progress)){
             return response()->json(['message' => 'El PurchaseProgress con id '.$id.' no existe'], 404);
         }
 
-        return response()->json($purchasingProcess);
+        $appEnv = [
+            "progress" => $progress,
+            "lead" => $progress->lead,
+            "contact" => $progress->contact
+        ];
+
+        return response()->json($appEnv);
     }
 
     /**
