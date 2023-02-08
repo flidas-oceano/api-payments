@@ -13,6 +13,7 @@ use zcrmsdk\oauth\ZohoOAuth;
 use zcrmsdk\crm\crud\ZCRMRecord;
 use zcrmsdk\crm\exception\ZCRMException;
 use App\Models\{Contact, Lead, Profession,Speciality};
+use Illuminate\Support\Facades\Log;
 
 class ZohoController extends Controller
 {
@@ -41,7 +42,8 @@ class ZohoController extends Controller
            $userIdentifier = env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar';
            $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier);
        }catch(Exception $e){
-            dd($e);
+        Log::error($e);
+
         }
     }
 
@@ -55,7 +57,7 @@ class ZohoController extends Controller
             $records = $response->getData();  //To get response data
             $answer = $records[0];
         } catch (\zcrmsdk\crm\exception\ZCRMException $e) {
-           //dd($e);
+            Log::error($e);
         }
         return ($answer);
     }
@@ -74,7 +76,7 @@ class ZohoController extends Controller
             } else
                 $answer = '???';
         } catch (\Exception $e) {
-           // dump($e);
+            Log::error($e);
         }
 
         return response()->json($answer);
@@ -92,7 +94,7 @@ class ZohoController extends Controller
             $answer = $records;
         } catch (\Exception $e) {
             if ($log) {
-               // $this->log($e);
+                Log::error($e);
             }
         }
 
@@ -139,7 +141,7 @@ class ZohoController extends Controller
                 $answer['id'] = $handle;
             } else {
                 $answer['result'] = 'error';
-                dd($e);
+                Log::error($e);
             }
         }
 
@@ -192,7 +194,7 @@ class ZohoController extends Controller
                 $answer['id'] = $id;
             }
         } catch (\Exception $e) {
-            //$this->log(print_r($e, true));
+            Log::error($e);
         }
 
         return ($answer);
@@ -250,8 +252,10 @@ class ZohoController extends Controller
 
         $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
 
-
-        return response()->json($updateContract);
+        if($updateContract['result'] == 'error')
+            return response()->json($updateContract, 500);
+        else
+            return response()->json($updateContract);
     }
 
     public function createLead(Request $request)
@@ -270,7 +274,10 @@ class ZohoController extends Controller
 
         $newLead =  $this->createNewRecord('Leads', $leadData);
 
-        return response()->json($newLead);
+        if($newLead['result'] == 'error')
+            return response()->json($newLead, 500);
+        else
+            return response()->json($newLead);
     }
 
     public function createContact(Request $request)
@@ -292,7 +299,10 @@ class ZohoController extends Controller
 
 		$newContact = $this->createNewRecord('Contacts',$contactData);
 
-        return (json_encode($newContact));
+        if($newContact['result'] == 'error')
+            return response()->json($newContact, 500);
+        else
+            return response()->json($newContact);
     }
 
     public function createAddress(Request $request)
@@ -322,7 +332,10 @@ class ZohoController extends Controller
 				$newAddress = $this->updateRecord('Domicilios',$addressData,$existAddress->getEntityId());
 			}
 
-			return(json_encode($newAddress));
+        if($newAddress['result'] == 'error')
+            return response()->json($newAddress, 500);
+        else
+            return response()->json($newAddress);
     }
 
     public function createSale(Request $request)
@@ -357,6 +370,11 @@ class ZohoController extends Controller
             );
 
             $newSale = $this->createRecordSale($saleData);
+
+           // if($newContact['result'] == 'error')
+           // return response()->json($newContact, 500);
+    //    else
+           // return response()->json($newContact);
 
             return(json_encode($newSale));
         }
@@ -411,7 +429,7 @@ class ZohoController extends Controller
                 $answer['id'] = $aux['id'];
             }
         } catch (\Exception $e) {
-
+            Log::error($e);
         }
 
         return ($answer);
@@ -446,7 +464,10 @@ class ZohoController extends Controller
 
         $response = $this->convertRecord($leadId,'Leads');
 
-        return(json_encode($response));
+        if($response['result'] == 'error')
+            return response()->json($response, 500);
+        else
+            return response()->json($response);
     }
 
     private function convertRecord($id, $type)
