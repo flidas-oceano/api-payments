@@ -10,7 +10,6 @@ class Contract extends Model
     use HasFactory;
     protected $fillable = [
         'id',
-        'contact_id',
         'installments',
         'Fecha_de_Vto',
         'lead_source',
@@ -23,7 +22,7 @@ class Contract extends Model
         'left_installments',
         'left_payment_type',
         'currency',
-        'left_payment_type',
+        'contact_id',
     ];
     protected $table = 'contract';
 }
