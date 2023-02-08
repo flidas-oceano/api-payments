@@ -90,18 +90,18 @@ class ContactController extends Controller
     public function storeProgress(Request $request, $idPurchaseProgress)
     {
         $progress = PurchaseProgress::updateProgress($idPurchaseProgress, ['step_number' => $request->step_number]);
-        $leadInProgress = $progress->lead;
         $contactAttributes = $request->only(Contact::getFormAttributes());
         $contactAttributes['lead_id'] = $progress->lead->id;
 
-        if(is_null($progress->lead->contact)){
+        if(is_null($progress->contact)){
             $newContact = Contact::create($contactAttributes);
             $progress->lead->update(['contact_id' => $newContact->id]);
+            $progress->update(['contact_id' => $newContact->id]);
         }else{
-            Contact::where("lead_id", $progress->lead->id)->update($contactAttributes);
+            $progress->contact->update($contactAttributes);
         }
 
-        return response()->json(['contact' => $leadInProgress->contact ,'lead' => $progress->lead , 'progress' => $progress]);
+        return response()->json(['contact' => $progress->contact ,'lead' => $progress->lead , 'progress' => $progress]);
     }
 
     public function updateEntityIdContactSales(Request $request){
@@ -109,9 +109,9 @@ class ContactController extends Controller
         $newOrUpdatedContact = Contact::updateOrCreate([
             'dni' => $attrContact["dni"]
             ], $attrContact);
-       
+
         return response()->json(['contact' => $newOrUpdatedContact]);
     }
 
-    
+
 }

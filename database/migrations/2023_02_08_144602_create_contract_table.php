@@ -13,7 +13,7 @@ class CreateContractTable extends Migration
      */
     public function up()
     {
-        Schema::create('contract', function (Blueprint $table) {
+        Schema::create('contracts', function (Blueprint $table) {
             $table->id();
 
             $table->string('installments')->nullable();
@@ -32,7 +32,7 @@ class CreateContractTable extends Migration
             $table->foreignId('contact_id')
                 ->nullable()
                 ->references('id')
-                ->on('contact')->onDelete('cascade')->onUpdate('cascade');
+                ->on('contacts')->onDelete('cascade')->onUpdate('cascade');
         });
     }
 

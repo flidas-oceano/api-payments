@@ -15,7 +15,9 @@ class PurchaseProgress extends Model
         'step_number',
         'country',
         'title',
-        'lead_id'
+        'lead_id',
+        'contact_id',
+        'contract_id'
     ];
     protected $table = 'purchase_progress';
     protected $hidden = ['created_at','updated_at'];
@@ -27,7 +29,7 @@ class PurchaseProgress extends Model
     }
 
     public function contact(){
-        $contact = $this->lead->hasOne(Contact::class,'id','contact_id');
+        $contact = $this->hasOne(Contact::class,'id','contact_id');
         return $contact;
     }
 
