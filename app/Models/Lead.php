@@ -28,6 +28,22 @@ class Lead extends Model
     ];
     public $timestamps = true;
     public $hidden = ['created_at','updated_at','source_lead','lead_status','lead_source','id'];
+    private static $formAttributes = [
+        'name',
+        'username',
+        'email',
+        'telephone',
+        'method_contact',
+        'contact_id',
+        'method_contact_id',
+        'profession',
+        'speciality'
+    ];
+
+    public static function getFormAttributes()
+    {
+        return self::$formAttributes;
+    }
 
     public function purchasingProcesses(){
         $purchasingProcesses = $this->hasMany(PurchasingProcess::class,'lead_id','id');
@@ -35,7 +51,7 @@ class Lead extends Model
     }
 
     public function profession(){
-        $profession = Profession::where('id',$this->profession)->first()->name; 
+        $profession = Profession::where('id',$this->profession)->first()->name;
         return $profession;
     }
 

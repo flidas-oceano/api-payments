@@ -127,21 +127,20 @@ class PurchasingProcessController extends Controller
             }
         */
 
-        $idPurchaseProgress = $request->only('idPurchaseProgress');
-        $stepNumber = $request->only('step_number');
-
-        $leadAttributes = $request->except(['country','idPurchaseProgress','step_number']);
+        $params = $request->only(['idPurchaseProgress', 'step_number']);
+        $leadAttributes = $request->only(Lead::getFormAttributes());
 
         $newOrUpdatedLead = Lead::updateOrCreate([
             'email' => $leadAttributes['email']
-        ], $request->all());
+        ], $leadAttributes);
 
-        $purchaseProcess = PurchaseProgress::where('id',$idPurchaseProgress)->first();
-        $purchaseProcess->update(['lead_id' => $newOrUpdatedLead->id, 'step_number' => $stepNumber]);
+        $purchaseProcess = PurchaseProgress::where('id',$params['idPurchaseProgress'])->first();
+        $purchaseProcess->update(['lead_id' => $newOrUpdatedLead->id, 'step_number' => $params['step_number']]);
 
         return response()->json([
             'newOrUpdatedLead' => $newOrUpdatedLead,
-            'lead_id' => $newOrUpdatedLead->id
+            'lead_id' => $newOrUpdatedLead->id,
+            'progress' => $purchaseProcess
         ]);
     }
     public function stepConversionContact(StoreContactRequest $request){
