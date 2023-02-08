@@ -33,7 +33,6 @@ Route::post("/db/stepConversionContact",[PurchasingProcessController::class, 'st
 Route::post('/createLead',[ZohoController::class, 'createLead']);
 Route::post('/convertLead',[ZohoController::class, 'convertLead']);
 Route::post('/createContact',[ZohoController::class, 'createContact']);
-Route::post('/createAddress',[ZohoController::class, 'createAddress']);
 Route::post('/createSale',[ZohoController::class, 'createSale']);
 Route::post('/updateZohoStripe',[ZohoController::class, 'updateZohoStripe']);
 

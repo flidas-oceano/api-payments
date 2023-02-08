@@ -317,14 +317,12 @@ class ZohoController extends Controller
         return (json_encode($newContact));
     }
 
-    public function createAddress(Request $request)
+    public function createAddress($data)
     {
-        $data = $request->all();
-
         //armamos data de la dire y la creamos
 			$addressData = array(
 				'Calle' => $data['street'],
-				'C_digo_Postal' => $data['postalcode'],
+				'C_digo_Postal' => $data['postal_code'],
 				'Name' => 'direccion',
 				'Contacto' => $data['contact_id'],
 				'Provincia' => $data['province'],
@@ -344,7 +342,7 @@ class ZohoController extends Controller
 				$newAddress = $this->updateRecord('Domicilios',$addressData,$existAddress->getEntityId());
 			}
 
-			return(json_encode($newAddress));
+			return($newAddress);
     }
 
     public function createSale(Request $request)
@@ -463,15 +461,35 @@ class ZohoController extends Controller
 
     public function convertLead(Request $request)
     {
+        $response = [];
+    
         $data = $request->all();
         $leadId = $data['id'];
 
-        $response = $this->convertRecord($leadId,'Leads');
+        $newData = ['DNI' => $data['dni'],
+                    'Sexo' => 'sex',
+                    'Date_of_Birth' => 'date_of_birth',
+                    'Nro_Matr_cula' => 'registration_number',
+                    '_rea_donde_trabaja' => 'area_of_work',
+                    'Inter_s_de_Formaci_n' => 'training_interest'
+                    ];
+                    
+        $contactStatus = $this->convertRecord($leadId,'Leads', $newData);
+
+        if($contactStatus != 'error')
+        {
+           $address = $this->createAddress($data);
+
+           if($address != ' error')
+           {
+               // $response = 
+           }
+        } 
 
         return(json_encode($response));
     }
 
-    private function convertRecord($id, $type)
+    private function convertRecord($id, $type, $newData)
     {
         $answer['result'] = 'error';
         $answer['id'] = '';
@@ -484,6 +502,9 @@ class ZohoController extends Controller
 
             $contact = ZCRMRecord::getInstance("Contacts", Null); // to get the record of deal in form of ZCRMRecord insatnce
             $details = array("overwrite"=>TRUE);
+
+            foreach($newData as $k => $v)
+                $contact->setFieldValue($k,$v);
             
             $responseIn = $record->convert($contact, $details); // to convert record
 
@@ -550,5 +571,10 @@ class ZohoController extends Controller
             $this->updateRecord('Leads', array('Lead_Duplicado' => true), $sameUserLeads[$leadK]->getEntityId(), false);
 
         return true;
+    }
+
+    private function responseObject()
+    {
+        return(['code' => 0, '0']);
     }
 }
