@@ -23,7 +23,7 @@ class ZohoController extends Controller
     {
         try {
             $this->emi_owner = '2712674000000899001';
-            
+
 
             ZCRMRestClient::initialize([
                 "client_id" => env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_CLIENT_ID') : env('ZOHO_API_PAYMENTS_PROD_CLIENT_ID'),
@@ -55,7 +55,7 @@ class ZohoController extends Controller
             $records = $response->getData();  //To get response data
             $answer = $records[0];
         } catch (\zcrmsdk\crm\exception\ZCRMException $e) {
-           dd($e);
+           //dd($e);
         }
         return ($answer);
     }
@@ -276,7 +276,7 @@ class ZohoController extends Controller
     public function createContact(Request $request)
     {
         $data = $request->all();
-        
+
         //lo primero que haremos es intentar crear el contacto
         $contactData = array(
             'First_Name' => $data['name'],
@@ -482,12 +482,12 @@ class ZohoController extends Controller
         } else {
             $leadData['Es_Contacto'] = true;
         }
-        
+
         $leadData['First_Name']             = $data["name"];
         $leadData['Last_Name']              = $data["username"];
         $leadData['Phone']                  = $data["telephone"];
         $leadData['Email']                  = $data["email"];
-        $LeadHistoricoData['Fuente_de_Lead'] = array(0 => $data['lead_source'] ?? 'Venta Presencial');//hay que definir donde buscamos el dato 
+        $LeadHistoricoData['Fuente_de_Lead'] = array(0 => $data['lead_source'] ?? 'Venta Presencial');//hay que definir donde buscamos el dato
         $LeadHistoricoData['FUENTE']         = $data['source'] ?? 'Venta Presencial';//hay que definir donde buscamos el dato
         $leadData['Lead_Status']            = $data['status']?? 'Contacto urgente';
         $leadData['Pais']                   = $data["country"];
@@ -531,11 +531,11 @@ class ZohoController extends Controller
     public function getProducts(){
         try {
             $response = Http::get("https://www.oceanomedicina.com/api_landing.php");
-    
+
             // Verificar si la respuesta HTTP fue exitosa
             if ($response->successful()) {
                 $data = json_decode($response->body());
-    
+
                 return response()->json($data);
             } else {
                 // Manejar posibles errores o excepciones
