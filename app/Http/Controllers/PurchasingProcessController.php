@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\UpdateLeadRequest;
 
 use Illuminate\Support\Facades\Validator;
-
+use Symfony\Component\Console\Helper\ProgressBar;
 
 class PurchasingProcessController extends Controller
 {
@@ -127,11 +127,21 @@ class PurchasingProcessController extends Controller
             }
         */
         $idPurchaseProgress = $request->only('idPurchaseProgress');
+        $stepNumber = $request->only('step_number');
 
-        $leadAttributes = $request->except(['country','idPurchaseProgress']);
+        $leadAttributes = $request->except(['country','idPurchaseProgress','step_number']);
         $newOrUpdatedLead = Lead::updateOrCreate([
             'email' => $leadAttributes['email']
         ], $request->all());
+
+        //  $progress = PurchaseProgress::updateProgress(
+        //     $idPurchaseProgress,
+        //      ['step_number' => $request->step_number, 'lead_id' => $newOrUpdatedLead->id]
+        //     );
+        $purchaseProcess = PurchaseProgress::find($idPurchaseProgress);
+        $purchaseProcess->lead_id = $newOrUpdatedLead->id;
+        $purchaseProcess->step_number = $request->step_number;
+        $purchaseProcess->save();
 
         return response()->json([
             'message' => 'success',
