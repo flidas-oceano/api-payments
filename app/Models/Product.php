@@ -15,5 +15,5 @@ class Product extends Model
         'discount',
         'contract_id',
     ];
-    protected $table = 'product';
+    protected $table = 'products';
 }

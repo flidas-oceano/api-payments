@@ -31,6 +31,7 @@ Route::get("/db",[PurchasingProcessController::class, 'index']);
 Route::get("/db/getLead",[LeadController::class, 'index']);
 Route::post("/db/stepCreateLead",[PurchasingProcessController::class, 'stepCreateLead']);
 Route::post("/db/stepConversionContact",[PurchasingProcessController::class, 'stepConversionContact']);
+Route::post('/db/stepConversionContract',[PurchasingProcessController::class, 'stepConversionContract']);
 
 Route::post('/updateEntityIdLeadVentas',[PurchasingProcessController::class, 'updateEntityIdLeadVentas']);
 Route::post('/updateEntityIdContactSales',[ContactController::class, 'updateEntityIdContactSales']);

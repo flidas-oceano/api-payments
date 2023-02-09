@@ -24,6 +24,7 @@ class CreateProductsTable extends Migration
                 ->nullable()
                 ->references('id')
                 ->on('contract')->onDelete('cascade')->onUpdate('cascade');
+                $table->timestamps();
         
         });
     }

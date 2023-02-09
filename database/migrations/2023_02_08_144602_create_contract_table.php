@@ -33,7 +33,9 @@ class CreateContractTable extends Migration
                 ->nullable()
                 ->references('id')
                 ->on('contacts')->onDelete('cascade')->onUpdate('cascade');
-        });
+        
+                $table->timestamps();
+            });
     }
 
     /**
