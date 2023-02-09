@@ -351,30 +351,29 @@ class ZohoController extends Controller
                 'Subject' => 'etc',//*
                 'Status' => 'Contrato Pendiente',//*
                 'Contact_Name' => $data['contact_id'],
-                'Cantidad' => $data['installments'],
-                'Fecha_de_Vto' => date('Y-m-d'),//*
-                'L_nea_nica_6' => $data['name'],
-                'L_nea_nica_3' => $data['identification'],
-                'Billing_Street' => $data['address'],
-                'Tipo_De_Pago' => $data['payment_type'],
+                //'Cantidad' => $data['installments'],
+                //'Fecha_de_Vto' => date('Y-m-d'),//*
+                //'L_nea_nica_6' => $data['name'],
+                //'L_nea_nica_3' => $data['identification'],
+                //'Billing_Street' => $data['address'],
+                //'Tipo_De_Pago' => $data['payment_type'],
                 '[products]' => $productDetails,//* producto->id
-                'Pais' => $data['country'],
-                'Es_Suscri' => $data['is_sub'],
-                'Anticipo' => strval($data['payment_in_advance']),
-                'Cuotas_restantes_sin_anticipo' => $data['left_installments'],
-                'Medio_de_Pago' => $data['left_payment_type'],
-                'Cuotas_totales' => 1,//*
+               // 'Pais' => $data['country'],
+                //'Anticipo' => strval($data['payment_in_advance']),
+                //'Cuotas_restantes_sin_anticipo' => $data['left_installments'],
+                //'Medio_de_Pago' => $data['left_payment_type'],
+                //'Cuotas_totales' => 1,//*
                 'Currency' => $data['currency'],
-                'Modalidad_de_pago_del_Anticipo' => $data['left_payment_type'],
-                'Tipo_IVA' => 'Consumidor Final - ICF',
+                //'Modalidad_de_pago_del_Anticipo' => $data['left_payment_type'],
+                //'Tipo_IVA' => 'Consumidor Final - ICF',
             );
 
             $newSale = $this->createRecordSale($saleData);
 
-           // if($newContact['result'] == 'error')
-           // return response()->json($newContact, 500);
-    //    else
-           // return response()->json($newContact);
+            if($newSale['result'] == 'error')
+                return response()->json($newSale, 500);
+            else
+                return response()->json($newSale);
 
             return(json_encode($newSale));
         }
@@ -383,7 +382,7 @@ class ZohoController extends Controller
             $answer['id'] = '';
             $answer['result'] = 'error';
 
-            return(json_encode(['result' => 'error', 'detail' => 'issue with products']));
+            return response()->json(['detail' => 'SKU incorrect'], 500);
         }
 
 
@@ -430,6 +429,7 @@ class ZohoController extends Controller
             }
         } catch (\Exception $e) {
             Log::error($e);
+            
         }
 
         return ($answer);
@@ -439,18 +439,27 @@ class ZohoController extends Controller
     private function buildProductDetails($products)
     {
 		$answer = array();
-		$nonexistent = false;
 		//arma y reemplaza sku por ID de producto en zoho
-		foreach($products as $k => $p)
+		foreach($products as $p)
         {
-            $answer[] = array(
-                'Product Id' => $k,//*
-                'Quantity' => (int)$p['quantity'],
-                'List Price' => (float)$p['price'],
-                //'List Price #USD' => (float)$p['price_usd'],
-                //'List Price #Local Currency' => (float)$p['price'],
-                'Discount' => (float)$p['discount']
-            );
+            $p['sku'] = trim($p['sku']); //Remove whitespace from SKU
+			$rec = $this->fetchRecordWithValue('Products', 'Product_Code', $p['sku']);
+
+            if($rec != 'error')
+            {
+                $answer[] = array(
+                    'Product Id' => $rec->getEntityId(),//*
+                    'Quantity' => (int)$p['quantity'],
+                    'List Price' => (float)$p['price'],
+                    //'List Price #USD' => (float)$p['price_usd'],
+                    //'List Price #Local Currency' => (float)$p['price'],
+                    'Discount' => (float)$p['discount']
+                );
+            }
+            else
+            {
+                return 'error';
+            }
 		}
 
 
