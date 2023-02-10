@@ -210,6 +210,8 @@ class PurchasingProcessController extends Controller
             ], $product);
         }
 
+        $product = $progress->contract->products;
+
         return response()->json([
             "message" => "success",
             "progress" => $progress,

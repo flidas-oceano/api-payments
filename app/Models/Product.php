@@ -15,6 +15,15 @@ class Product extends Model
         'product_code',
         'discount',
         'contract_id',
+        'sku'
+    ];
+    private static $formAttributes = [
+        'id',
+        'quantity',
+        'price',
+        'discount',
+        'contract_id',
+        'sku'
     ];
     protected $table = 'products';
 }

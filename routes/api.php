@@ -41,6 +41,7 @@ Route::post('/updateEntityIdContactSales',[ContactController::class, 'updateEnti
 Route::post('/createLeadZohoCRM',[ZohoController::class, 'createLead']);
 Route::post('/convertLeadZohoCRM',[ZohoController::class, 'convertLead']);
 Route::post('/createContactZohoCRM',[ZohoController::class, 'createContact']);
+Route::post('/createContractZohoCRM',[ZohoController::class, 'createSale']);
 Route::post('/createAddressZohoCRM',[ZohoController::class, 'createAddress']);
 Route::post('/createSaleZohoCRM',[ZohoController::class, 'createSale']);
 Route::post('/updateZohoStripeZohoCRM',[ZohoController::class, 'updateZohoStripe']);
@@ -52,3 +53,4 @@ Route::apiResource("professions", ProfessionController::class);
 Route::apiResource("specialities", SpecialityController::class);
 Route::apiResource("methods", MethodContactController::class);
 Route::apiResource("progress", PurchasingProcessController::class);
+Route::get('/contract/{id}',[ContractController::class, 'show']);
