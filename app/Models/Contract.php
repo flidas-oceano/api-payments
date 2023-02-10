@@ -40,9 +40,6 @@ class Contract extends Model
     ];
     protected $table = 'contracts';
 
-    public function products(){
-        return $this->hasMany(Product::class,'contract_id','id');
-    }
     public static function getFormAttributes()
     {
         return self::$formAttributes;
