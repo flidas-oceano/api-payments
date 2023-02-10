@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreContactRequest;
 use App\Models\{Lead,Contact,Address, Contract, PurchaseProgress,Product};
 use App\Http\Requests\StorePurchasingProcessRequest;
 use App\Http\Requests\UpdatePurchasingProcessRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
-use App\Http\Requests\{UpdateLeadRequest,StoreContractRequest};
+use App\Http\Requests\{UpdateLeadRequest,StoreContactRequest};
 
 
 use Illuminate\Support\Facades\Validator;
@@ -201,42 +200,30 @@ class PurchasingProcessController extends Controller
         $ContractAttrs = $request->only(Contract::getFormAttributes());
 
         // Actualiza el contrato
-        $NewContract = Contract::updateOrCreate([
+        $newOrUpdatedContract = Contract::updateOrCreate([
             'id' => $data['id']
         ], $ContractAttrs);
 
-        $NewContractId = $NewContract->id;
+        $progress = PurchaseProgress::updateProgress(
+            $request->idPurchaseProgress,
+             ['step_number' => $request->step_number,
+              'contact_id' => $newOrUpdatedContract->id]
+        );
 
         // Actualiza los productos
         foreach ($data['products'] as $product) {
             Product::updateOrCreate([
-                'contract_id' => $NewContract->id,
+                'contract_id' => $newOrUpdatedContract->id,
                 'id' =>$product['id']
             ], $product);
         }
 
-        // Actualiza el contrato
-        DB::table('contracts')
-        ->where('id', $data['id'])
-        ->update(['email' => $data['email']]);
-        
-        // Actualiza los productos
-        foreach ($data['products'] as $product) {
-        DB::table('products')
-            ->where('id', $product['id'])
-            ->update([
-                'precio' => $product['precio'],
-                'quantity' => $product['quantity'],
-                'discount' => $product['discount'],
-                'contract_id' => $product['contract_id']
-            ]);
-        }
-
         return response()->json([
-            "messge" => "success"
+            "message" => "success"
         ]);
     }
     
+
 
     public function updateEntityIdLeadVentas(Request $request){
         $attrLead = $request->all();

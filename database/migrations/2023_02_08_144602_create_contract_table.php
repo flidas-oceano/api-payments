@@ -29,11 +29,6 @@ class CreateContractTable extends Migration
             $table->string('left_payment_type')->nullable();
             $table->string('currency')->nullable();
 
-            $table->foreignId('contact_id')
-                ->nullable()
-                ->references('id')
-                ->on('contacts')->onDelete('cascade')->onUpdate('cascade');
-        
                 $table->timestamps();
             });
     }
@@ -45,6 +40,6 @@ class CreateContractTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('contract');
+        Schema::dropIfExists('contracts');
     }
 }

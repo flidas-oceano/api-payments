@@ -23,7 +23,7 @@ class CreateProductsTable extends Migration
             $table->foreignId('contract_id')
                 ->nullable()
                 ->references('id')
-                ->on('contract')->onDelete('cascade')->onUpdate('cascade');
+                ->on('contracts')->onDelete('cascade')->onUpdate('cascade');
                 $table->timestamps();
         
         });
