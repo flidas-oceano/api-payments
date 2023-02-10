@@ -19,7 +19,8 @@ class CreateProductsTable extends Migration
             $table->string('quantity')->nullable();
             $table->string('price')->nullable();
             $table->string('discount')->nullable();
-
+            $table->string('sku')->nullable();
+            
             $table->foreignId('contract_id')
                 ->nullable()
                 ->references('id')

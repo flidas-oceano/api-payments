@@ -218,8 +218,14 @@ class PurchasingProcessController extends Controller
             ], $product);
         }
 
+        $newOrUpdatedContract= Contract::where('id',$newOrUpdatedContract->id)->first();
+        $product = $newOrUpdatedContract->products;
+
         return response()->json([
-            "message" => "success"
+            "message" => "success",
+            'contract' => $newOrUpdatedContract,
+            'contract_id' => $newOrUpdatedContract->id,
+            'progress' => $progress,
         ]);
     }
     

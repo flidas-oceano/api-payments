@@ -43,4 +43,9 @@ class Contract extends Model
     {
         return self::$formAttributes;
     }
+
+    public function products()
+    {
+        return $this->hasMany(Product::class, 'contract_id', 'id');
+    }
 }
