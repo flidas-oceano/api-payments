@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\{ContactController, StripePaymentController,LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController,Contact};
+use App\Http\Controllers\{ContactController, StripePaymentController,LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController,Contact, ContractController};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +22,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::apiResource("/leads",LeadController::class);
 Route::post('/leadSaveProgress/{idPurchaseProgress}',[LeadController::class, 'storeProgress']);
 Route::post('/contactSaveProgress/{idPurchaseProgress}',[ContactController::class, 'storeProgress']);
+Route::post('/contractSaveProgress/{idPurchaseProgress}',[ContractController::class, 'storeProgress']);
 Route::post("/stripe/paymentIntent",[StripePaymentController::class, 'paymentIntent']);
 Route::post("/stripe/subscriptionPayment",[StripePaymentController::class, 'subscriptionPayment']);
 Route::get("/stripe/customer/search/{email}",[StripePaymentController::class, 'findCustomerByEmail']);

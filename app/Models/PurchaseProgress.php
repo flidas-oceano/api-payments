@@ -33,13 +33,13 @@ class PurchaseProgress extends Model
         return $contact;
     }
 
-    public static function getModel($purchaseProgressId){
-        $progress = PurchaseProgress::where('id', $purchaseProgressId)->first();
-        /*  if(!is_null($progress->lead)){
-            $progress->contact = $progress->lead->hasOne(Contact::class,'id','contact_id');
-        } */
+    public function contract(){
+        $contact = $this->hasOne(Contract::class,'id','contract_id');
+        return $contact;
+    }
 
-        return $progress;
+    public static function getModel($purchaseProgressId){
+        return PurchaseProgress::where('id', $purchaseProgressId)->first();
     }
 
     public static function updateProgress($purchaseProgressId, $requestValues){

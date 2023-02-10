@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Contact;
+use App\Models\Contract;
+use App\Models\Product;
+use App\Models\PurchaseProgress;
 use Illuminate\Http\Request;
 
 class ContractController extends Controller
@@ -80,5 +84,35 @@ class ContractController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    public function storeProgress(Request $request, $idPurchaseProgress)
+    {
+
+        $progress = PurchaseProgress::updateProgress($idPurchaseProgress, ['step_number' => $request->step_number]);
+        $contractProducts = $request->products;
+        $contractAttributes = [
+        'name' => $progress->lead->name,
+        'address' => $progress->contact->street,
+        'country' => $progress->country,
+        'currency' => ""
+        ];
+
+        if(is_null($progress->contract)){
+            $newContract = Contract::create($contractAttributes);
+            $progress->update(['contract_id' => $newContract->id]);
+
+        }else{
+            $progress->contract->update($contractAttributes);
+        }
+
+        foreach($contractProducts as $product){
+            Product::updateOrCreate([
+                'contract_id' => $product['contract_id'],
+                'product_code' => $product['id']
+            ], $product);
+        }
+
+        return response()->json(['products' => $contractProducts,'contract' => $progress->contract ,'contact' => $progress->contact ,'lead' => $progress->lead , 'progress' => $progress]);
     }
 }

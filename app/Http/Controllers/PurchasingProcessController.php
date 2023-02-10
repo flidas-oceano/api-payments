@@ -150,30 +150,6 @@ class PurchasingProcessController extends Controller
         ]);
     }
     public function stepConversionContact(StoreContactRequest $request){
-        /* Datos de prueba al postman
-        {
-            "contact": {
-                "contact_id": null,
-                "entity_id_crm": "aa",
-                "dni": "aa",
-                "sex": "aa",
-                "date_of_birth": "aa",
-                "addresses_id_fk": "aa",
-                "registration_number": "aa",
-                "area_of_work": "aa",
-                "training_interest": "aa"
-            },
-            "address": {
-                "address_id" : null,
-                "country" : "conversionContact",
-                "province_state" : "conversionContact",
-                "postal_code" : "conversionContact",
-                "street" : "conversionContact",
-                "locality" : "conversionContact"
-            }
-        }
-        */
-
         $contactAttrs = $request->only(Contact::getFormAttributes());
         $newOrUpdatedContact = Contact::updateOrCreate([
             'dni' => $contactAttrs['dni']
@@ -195,39 +171,60 @@ class PurchasingProcessController extends Controller
     }
 
     public function stepConversionContract(Request $request){
-
-        $data = $request->all();
-        $ContractAttrs = $request->only(Contract::getFormAttributes());
-
-        // Actualiza el contrato
-        $newOrUpdatedContract = Contract::updateOrCreate([
-            'id' => $data['id']
-        ], $ContractAttrs);
-
         $progress = PurchaseProgress::updateProgress(
             $request->idPurchaseProgress,
-             ['step_number' => $request->step_number,
-              'contact_id' => $newOrUpdatedContract->id]
+             ['step_number' => $request->step_number]
         );
 
+        $contractAttributes = [
+            'name' => $progress->lead->name,
+            'address' => $progress->contact->street,
+            'country' => $progress->country,
+            'currency' => ""
+        ];
+
+        if(is_null($progress->contract)){
+            $newContract = Contract::create($contractAttributes);
+            $progress->update(['contract_id' => $newContract->id]);
+        }else{
+            $progress->contract->update($contractAttributes);
+        }
+
+        $progress->save();
+
+        $products = collect($request->products)->map(function($item) use ($progress){
+            return [
+                "quantity" => 1,
+                "product_code" => $item['id'],
+                "price" => $item['precio'],
+                "discount" => 0,
+                "contract_id" => $progress->contract->id,
+            ];
+        })->all();
+
         // Actualiza los productos
-        foreach ($data['products'] as $product) {
+        foreach ($products as $product) {
             Product::updateOrCreate([
-                'contract_id' => $newOrUpdatedContract->id,
-                'id' =>$product['id']
+                'contract_id' => $product['contract_id'],
+                'product_code' => $product['product_code']
             ], $product);
         }
 
         return response()->json([
-            "message" => "success"
+            "message" => "success",
+            "progress" => $progress,
+            "contract" => $progress->contract,
+            "contact" => $progress->contact,
+            "lead" => $progress->lead,
+            "products" => $products
         ]);
     }
-    
+
 
 
     public function updateEntityIdLeadVentas(Request $request){
         $attrLead = $request->all();
-        
+
         $newOrUpdatedLead = Lead::updateOrCreate([
             'email' => $attrLead["email"]
             ], $attrLead);
