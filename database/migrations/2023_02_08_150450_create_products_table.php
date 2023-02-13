@@ -20,6 +20,7 @@ class CreateProductsTable extends Migration
             $table->integer('product_code',false, true);
             $table->string('price');
             $table->string('discount');
+            $table->string('title');
 
             $table->foreignId('contract_id')
                 ->references('id')

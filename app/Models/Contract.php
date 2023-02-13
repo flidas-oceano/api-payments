@@ -39,6 +39,7 @@ class Contract extends Model
         'currency'
     ];
     protected $table = 'contracts';
+    public $hidden = ['created_at','updated_at','products'];
 
     public static function getFormAttributes()
     {

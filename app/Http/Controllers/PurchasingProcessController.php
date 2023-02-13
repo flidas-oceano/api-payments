@@ -72,7 +72,9 @@ class PurchasingProcessController extends Controller
         $appEnv = [
             "progress" => $progress,
             "lead" => $progress->lead,
-            "contact" => $progress->contact
+            "contact" => $progress->contact,
+            "contract" => $progress->contract,
+            "products" => isset($progress->contract->products) ? $progress->contract->products : null
         ];
 
         return response()->json($appEnv);
@@ -111,7 +113,7 @@ class PurchasingProcessController extends Controller
     {
         //
     }
-    // step1: pais
+
     public function stepCreateLead(UpdateLeadRequest $request){
         /* Datos de prueba al postman
             {
@@ -149,6 +151,7 @@ class PurchasingProcessController extends Controller
             'progress' => $purchaseProcess
         ]);
     }
+
     public function stepConversionContact(StoreContactRequest $request){
         $contactAttrs = $request->only(Contact::getFormAttributes());
         $newOrUpdatedContact = Contact::updateOrCreate([
@@ -190,14 +193,14 @@ class PurchasingProcessController extends Controller
             $progress->contract->update($contractAttributes);
         }
 
-        $progress->save();
 
         $products = collect($request->products)->map(function($item) use ($progress){
             return [
-                "quantity" => 1,
-                "product_code" => $item['id'],
-                "price" => $item['precio'],
-                "discount" => 0,
+                "quantity" => $item['quantity'],
+                "product_code" => $item['product_code'],
+                "price" => $item['price'],
+                "discount" => $item['discount'],
+                "title" => $item['title'],
                 "contract_id" => $progress->contract->id,
             ];
         })->all();
@@ -210,7 +213,7 @@ class PurchasingProcessController extends Controller
             ], $product);
         }
 
-        $product = $progress->contract->products;
+        $products = $progress->contract->products->toArray();
 
         return response()->json([
             "message" => "success",

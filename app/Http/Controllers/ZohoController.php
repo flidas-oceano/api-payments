@@ -12,7 +12,7 @@ use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
 use zcrmsdk\oauth\ZohoOAuth;
 use zcrmsdk\crm\crud\ZCRMRecord;
 use zcrmsdk\crm\exception\ZCRMException;
-use App\Models\{Contact, Lead, Profession,Speciality};
+use App\Models\{Contact, Lead, Profession, PurchaseProgress, Speciality};
 use Illuminate\Support\Facades\Log;
 
 class ZohoController extends Controller
@@ -340,17 +340,18 @@ class ZohoController extends Controller
 
     public function createSale(Request $request)
     {
-        $data = $request->all();
+        $progress = PurchaseProgress::find($request->idPurchaseProgress);
+        $products = $progress->contract->products->toArray();
 
          //armo el product details en base a las cosas que compró el usuario...
-        $productDetails = $this->buildProductDetails($data['products']);
+        $productDetails = $this->buildProductDetails($products);
 
         if($productDetails != 'error')
         {
             $saleData = array(
                 'Subject' => 'etc',//*
                 'Status' => 'Contrato Pendiente',//*
-                'Contact_Name' => $data['contact_id'],
+                'Contact_Name' => $progress->contact->entity_id_crm,
                 //'Cantidad' => $data['installments'],
                 //'Fecha_de_Vto' => date('Y-m-d'),//*
                 //'L_nea_nica_6' => $data['name'],
@@ -363,7 +364,7 @@ class ZohoController extends Controller
                 //'Cuotas_restantes_sin_anticipo' => $data['left_installments'],
                 //'Medio_de_Pago' => $data['left_payment_type'],
                 //'Cuotas_totales' => 1,//*
-                'Currency' => $data['currency'],
+                'Currency' => $progress->contract->currency,
                 //'Modalidad_de_pago_del_Anticipo' => $data['left_payment_type'],
                 //'Tipo_IVA' => 'Consumidor Final - ICF',
             );
@@ -429,7 +430,7 @@ class ZohoController extends Controller
             }
         } catch (\Exception $e) {
             Log::error($e);
-            
+
         }
 
         return ($answer);
@@ -442,8 +443,8 @@ class ZohoController extends Controller
 		//arma y reemplaza sku por ID de producto en zoho
 		foreach($products as $p)
         {
-            $p['sku'] = trim($p['sku']); //Remove whitespace from SKU
-			$rec = $this->fetchRecordWithValue('Products', 'Product_Code', $p['sku']);
+            $p['product_code'] = trim($p['product_code']); //Remove whitespace from product_code
+			$rec = $this->fetchRecordWithValue('Products', 'Product_Code', $p['product_code']);
 
             if($rec != 'error')
             {
@@ -561,12 +562,13 @@ class ZohoController extends Controller
         return true;
     }
 
-    public function getProducts(){
+    public function getProducts(Request $request, $iso){
+        $data = $request->all();
         try {
-            $response = Http::get("https://www.oceanomedicina.com/api_landing.php");
+            $response = Http::asForm()->post("https://www.oceanomedicina.net/proxy/proxy2.php?url=https://www.oceanomedicina.com/api_landing.php",['pais' => $iso]);
 
             // Verificar si la respuesta HTTP fue exitosa
-            if ($response->successful()) {
+                if ($response->successful()) {
                 $data = json_decode($response->body());
 
                 return response()->json($data);

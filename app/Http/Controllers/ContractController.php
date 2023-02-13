@@ -95,7 +95,7 @@ class ContractController extends Controller
     {
 
         $progress = PurchaseProgress::updateProgress($idPurchaseProgress, ['step_number' => $request->step_number]);
-        $contractProducts = $request->products;
+
         $contractAttributes = [
         'name' => $progress->lead->name,
         'address' => $progress->contact->street,
@@ -111,13 +111,35 @@ class ContractController extends Controller
             $progress->contract->update($contractAttributes);
         }
 
-        foreach($contractProducts as $product){
+        $products = collect($request->products)->map(function($item) use ($progress){
+            $price = 0;
+            $productCode = 0;
+            if(isset($item['precio'])){
+                $price = $item['precio'];
+                $productCode = $item['id'];
+
+            }else{
+                $price = $item['price'];
+                $productCode = $item['product_code'];
+
+            }
+            return [
+                "quantity" => $item['quantity'],
+                "product_code" => $productCode,
+                "price" => $price,
+                "discount" => $item['discount'],
+                "title" => $item['title'],
+                "contract_id" => $progress->contract->id,
+            ];
+        })->all();
+
+        foreach($products as $product){
             Product::updateOrCreate([
                 'contract_id' => $product['contract_id'],
-                'product_code' => $product['id']
+                'product_code' => $product['product_code']
             ], $product);
         }
 
-        return response()->json(['products' => $contractProducts,'contract' => $progress->contract ,'contact' => $progress->contact ,'lead' => $progress->lead , 'progress' => $progress]);
+        return response()->json(['products' => $products,'contract' => $progress->contract ,'contact' => $progress->contact ,'lead' => $progress->lead , 'progress' => $progress]);
     }
 }

@@ -15,7 +15,7 @@ class Product extends Model
         'product_code',
         'discount',
         'contract_id',
-        'sku'
+        'title'
     ];
     private static $formAttributes = [
         'id',
@@ -23,7 +23,9 @@ class Product extends Model
         'price',
         'discount',
         'contract_id',
-        'sku'
+        'title'
     ];
+    public $hidden = ['created_at','updated_at','id'];
+
     protected $table = 'products';
 }
