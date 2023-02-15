@@ -311,12 +311,12 @@ class ZohoController extends Controller
         //armamos data de la dire y la creamos
 			$addressData = array(
 				'Calle' => $data['street'],
-				'C_digo_Postal' => $data['postalcode'],
+				'C_digo_Postal' => $data['postal_code'],
 				'Name' => 'direccion',
 				'Contacto' => $data['contact_id'],
-				'Provincia' => $data['province'],
+				'Provincia' => $data['province_state'],
 				'Pais' => $data['country'],
-				'Tipo_Dom' => $data['address_type']
+				'Tipo_Dom' => "Particular"
 			);
 
 			//primero vamos a ver si existe una dirección con el mismo ID de contacto
@@ -479,7 +479,7 @@ class ZohoController extends Controller
         $data = $request->all();
         $leadId = $data['lead_id'];
 
-        $response = $this->convertRecord($leadId,'Leads');
+        $response = $this->convertRecord($leadId,'Leads', $data['contact']);
 
         if($response['result'] == 'error')
             return response()->json(['contact' => $response], 500);
@@ -494,7 +494,7 @@ class ZohoController extends Controller
         }
     }
 
-    private function convertRecord($id, $type)
+    private function convertRecord($id, $type, $contactData)
     {
         $answer['result'] = 'error';
         $answer['id'] = '';
@@ -506,7 +506,7 @@ class ZohoController extends Controller
 
 
             $contact = ZCRMRecord::getInstance("Contacts", Null); // to get the record of deal in form of ZCRMRecord insatnce
-            $details = array("overwrite"=>TRUE);
+            $details = array("overwrite"=>TRUE,"DNI" => $contactData['dni']);
 
             $responseIn = $record->convert($contact, $details); // to convert record
 
