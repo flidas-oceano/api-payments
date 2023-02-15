@@ -16,15 +16,17 @@ class CreateProductsTable extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->id();
 
-            $table->string('quantity')->nullable();
-            $table->string('price')->nullable();
-            $table->string('discount')->nullable();
+            $table->integer('quantity',false, true);
+            $table->integer('product_code',false, true);
+            $table->string('price');
+            $table->string('discount');
+            $table->string('title');
 
             $table->foreignId('contract_id')
-                ->nullable()
                 ->references('id')
-                ->on('contract')->onDelete('cascade')->onUpdate('cascade');
-        
+                ->on('contracts')->onDelete('cascade')->onUpdate('cascade');
+
+            $table->timestamps();
         });
     }
 

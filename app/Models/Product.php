@@ -12,8 +12,20 @@ class Product extends Model
         'id',
         'quantity',
         'price',
+        'product_code',
         'discount',
         'contract_id',
+        'title'
     ];
-    protected $table = 'product';
+    private static $formAttributes = [
+        'id',
+        'quantity',
+        'price',
+        'discount',
+        'contract_id',
+        'title'
+    ];
+    public $hidden = ['created_at','updated_at','id'];
+
+    protected $table = 'products';
 }

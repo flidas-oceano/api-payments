@@ -24,22 +24,7 @@ class StoreContactRequest extends FormRequest
     public function rules()
     {
         return [
-            // "contact.contact_id"=> "required",
-            // "contact.entity_id_crm"=> "required",
-            "dni"=> "required",
-            "sex"=> "required",
-            "date_of_birth"=> "required",
-            // "contact.addresses_id_fk"=> "required",
-            // "contact.registration_number"=> "required",
-            // "contact.area_of_work"=> "required",
-            // "contact.training_interest"=> "required",
-            // "address.address_id"=> "required",
-            "country"=> "required",
-            "province_state"=> "required",
-            "postal_code"=> "required",
-            "street"=> "required",
-            "locality"=> "required",
-            
+             "dni"=> "required",
         ];
     }
 }
