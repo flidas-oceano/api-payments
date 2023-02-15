@@ -515,7 +515,15 @@ class ZohoController extends Controller
 
         } catch (\Exception $e)
         {
-            $answer['detail'] = $e->getMessage();
+            $handle = $this->handleError($e, $type, []);
+
+            if ($handle != 'error') {
+                $answer['result'] = 'duplicate';
+                $answer['id'] = $handle;
+            } else {
+                $answer['result'] = 'error';
+                Log::error($e);
+            }
         }
 
         return($answer);
