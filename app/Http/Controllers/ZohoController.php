@@ -302,9 +302,11 @@ class ZohoController extends Controller
             return response()->json($newContact);
     }
 
-    public function createAddress(Request $request)
+    private function createAddress($data)
     {
-        $data = $request->all();
+        $answer = [];
+        $answer['id'] = '';
+        $answer['result'] = '';
 
         //armamos data de la dire y la creamos
 			$addressData = array(
@@ -329,10 +331,19 @@ class ZohoController extends Controller
 				$newAddress = $this->updateRecord('Domicilios',$addressData,$existAddress->getEntityId());
 			}
 
-        if($newAddress['result'] == 'error')
-            return response()->json($newAddress, 500);
+        return($newAddress);
+    }
+
+    public function createAddressRequest(Request $request)
+    {
+        $data = $request->all();
+
+        $address = $this->createAddress($data);
+
+        if($address['result'] == 'error')
+            return response()->json($address, 500);
         else
-            return response()->json($newAddress);
+            return response()->json($address);
     }
 
     public function createSale(Request $request)
@@ -454,7 +465,8 @@ class ZohoController extends Controller
             }
             else
             {
-                return 'error';
+                $answer = "error";
+                break;
             }
 		}
 
@@ -470,9 +482,16 @@ class ZohoController extends Controller
         $response = $this->convertRecord($leadId,'Leads');
 
         if($response['result'] == 'error')
-            return response()->json($response, 500);
+            return response()->json(['contact' => $response], 500);
         else
-            return response()->json($response);
+        {
+            $address = $this->createAddress(array_merge($data,['contact_id' => $response['id']]));
+
+            if($address['result'] == 'error')
+                return response()->json(['address' => $address], 500);
+            else
+                return response()->json(['contact' => $response, 'address' => $address]);
+        }
     }
 
     private function convertRecord($id, $type)

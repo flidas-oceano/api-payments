@@ -14,3 +14,4 @@ yarn-error.log
 /.idea
 /.vscode
 api_payments.session.sql
+/ZCRMClientLibrary.log
