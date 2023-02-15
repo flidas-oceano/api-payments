@@ -282,9 +282,6 @@ class ZohoController extends Controller
 
     public function createContact(Request $request)
     {
-        $dataLead = $request->only(Lead::getFormAttributes());
-        $dataContact = $request->only(Contact::getFormAttributes());
-
         $data = $request->all();
 
         //lo primero que haremos es intentar crear el contacto
@@ -382,12 +379,13 @@ class ZohoController extends Controller
 
             $newSale = $this->createRecordSale($saleData);
 
-            if($newSale['result'] == 'error')
+            if($newSale['result'] == 'error'){
                 return response()->json($newSale, 500);
-            else
+            }else{
+                $progress->contract->update(['entity_id_crm' => $newSale['id']]);
                 return response()->json($newSale);
+            }
 
-            return(json_encode($newSale));
         }
         else
         {
@@ -402,8 +400,7 @@ class ZohoController extends Controller
 
     private function createRecordSale($data)
     {
-        $answer = array();
-
+        $answer= array();
         $answer['id'] = '';
         $answer['result'] = 'error';
 
@@ -434,14 +431,12 @@ class ZohoController extends Controller
             if ($responseIns->getHttpStatusCode() == 201)
             {
                 $answer['result'] = 'ok';
-
                 $aux = $responseIns->getDetails();
-
                 $answer['id'] = $aux['id'];
             }
         } catch (\Exception $e) {
             Log::error($e);
-
+            return response()->json($e->getMessage(),500);
         }
 
         return ($answer);

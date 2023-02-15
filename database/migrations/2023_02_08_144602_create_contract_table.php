@@ -17,6 +17,7 @@ class CreateContractTable extends Migration
             $table->id();
 
             $table->string('installments')->nullable();
+            $table->string('entity_id_crm')->nullable();
             $table->string('Fecha_de_Vto')->nullable();
             $table->string('lead_source')->nullable();
             $table->string('name')->nullable();
