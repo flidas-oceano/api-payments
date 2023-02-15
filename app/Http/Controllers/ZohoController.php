@@ -479,7 +479,7 @@ class ZohoController extends Controller
         $data = $request->all();
         $leadId = $data['lead_id'];
 
-        $response = $this->convertRecord($leadId,'Leads', $data['contact']);
+        $response = $this->convertRecord($leadId,'Leads', ['DNI' => $data['dni']]);
 
         if($response['result'] == 'error')
             return response()->json(['contact' => $response], 500);
@@ -494,7 +494,7 @@ class ZohoController extends Controller
         }
     }
 
-    private function convertRecord($id, $type, $contactData)
+    private function convertRecord($id, $type, $data)
     {
         $answer['result'] = 'error';
         $answer['id'] = '';
@@ -506,7 +506,11 @@ class ZohoController extends Controller
 
 
             $contact = ZCRMRecord::getInstance("Contacts", Null); // to get the record of deal in form of ZCRMRecord insatnce
-            $details = array("overwrite"=>TRUE,"DNI" => $contactData['dni']);
+            
+            foreach ($data as $k => $v)
+                $contact->setFieldValue($k, $v);
+
+            $details = array("overwrite"=>TRUE);
 
             $responseIn = $record->convert($contact, $details); // to convert record
 
