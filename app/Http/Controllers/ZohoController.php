@@ -477,7 +477,7 @@ class ZohoController extends Controller
     public function convertLead(Request $request)
     {
         $data = $request->all();
-        $leadId = $data['id'];
+        $leadId = $data['lead_id'];
 
         $response = $this->convertRecord($leadId,'Leads');
 
@@ -485,7 +485,7 @@ class ZohoController extends Controller
             return response()->json(['contact' => $response], 500);
         else
         {
-            $address = $this->createAddress(array_merge($data,['contact_id' => $response['id']]));
+            $address = $this->createAddress(array_merge($data['contact'],['contact_id' => $response['id']]));
 
             if($address['result'] == 'error')
                 return response()->json(['address' => $address], 500);
