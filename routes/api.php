@@ -41,12 +41,7 @@ Route::post('/updateEntityIdContactSales',[ContactController::class, 'updateEnti
 Route::post('/createLeadZohoCRM',[ZohoController::class, 'createLead']);
 Route::post('/convertLeadZohoCRM',[ZohoController::class, 'convertLead']);
 Route::post('/createContactZohoCRM',[ZohoController::class, 'createContact']);
-<<<<<<< HEAD
 Route::post('/createAddressZohoCRM',[ZohoController::class, 'createAddressRequest']);
-=======
-Route::post('/createContractZohoCRM',[ZohoController::class, 'createSale']);
-Route::post('/createAddressZohoCRM',[ZohoController::class, 'createAddress']);
->>>>>>> f24f6442337fbcd6ff9a9a88e3f59414747a996a
 Route::post('/createSaleZohoCRM',[ZohoController::class, 'createSale']);
 Route::post('/updateZohoStripeZohoCRM',[ZohoController::class, 'updateZohoStripe']);
 Route::get('/products/{iso}',[ZohoController::class, 'getProducts']);
