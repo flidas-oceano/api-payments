@@ -10,6 +10,7 @@ class Contract extends Model
     use HasFactory;
     protected $fillable = [
         'id',
+        'entity_id_crm',
         'installments',
         'Fecha_de_Vto',
         'lead_source',

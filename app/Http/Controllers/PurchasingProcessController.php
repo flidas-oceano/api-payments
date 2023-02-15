@@ -183,25 +183,28 @@ class PurchasingProcessController extends Controller
             'name' => $progress->lead->name,
             'address' => $progress->contact->street,
             'country' => $progress->country,
-            'currency' => ""
+            'currency' => "USD"
         ];
+
+        $contractId = null;
 
         if(is_null($progress->contract)){
             $newContract = Contract::create($contractAttributes);
             $progress->update(['contract_id' => $newContract->id]);
+            $contractId = $newContract->id;
         }else{
             $progress->contract->update($contractAttributes);
+            $contractId = $progress->contract->id;
         }
 
-
-        $products = collect($request->products)->map(function($item) use ($progress){
+        $products = collect($request->products)->map(function($item) use ($contractId){
             return [
                 "quantity" => $item['quantity'],
                 "product_code" => $item['product_code'],
                 "price" => $item['price'],
                 "discount" => $item['discount'],
                 "title" => $item['title'],
-                "contract_id" => $progress->contract->id,
+                "contract_id" => $contractId,
             ];
         })->all();
 
@@ -212,8 +215,6 @@ class PurchasingProcessController extends Controller
                 'product_code' => $product['product_code']
             ], $product);
         }
-
-        $products = $progress->contract->products->toArray();
 
         return response()->json([
             "message" => "success",
