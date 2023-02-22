@@ -605,4 +605,29 @@ class ZohoController extends Controller
             ], 500);
         }
     }
+
+    public function getProductsWithoutIso(Request $request){
+        $data = $request->all();
+        try {
+            $response = Http::asForm()->post("https://www.oceanomedicina.net/proxy/proxy2.php?url=https://www.oceanomedicina.com/api_landing.php",['pais' => 'ar']);
+
+            // Verificar si la respuesta HTTP fue exitosa
+                if ($response->successful()) {
+                $data = json_decode($response->body());
+
+                return response()->json($data);
+            } else {
+                // Manejar posibles errores o excepciones
+                return response()->json([
+                    'error' => 'Error al obtener los productos'
+                ], $response->status());
+            }
+        } catch (\Exception $e) {
+            // Manejar excepciones no controladas
+            return response()->json([
+                'error' => 'Error al obtener los productos: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
 }
