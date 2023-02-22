@@ -26,24 +26,20 @@ class CreateLeadsTable extends Migration
             $table->string('telephone')->nullable();
 
             $table->foreignId('profession')
-                ->nullable()
                 ->references('id')
-                ->on('professions')->onDelete('cascade')->onUpdate('cascade');
+                ->on('professions');
 
             $table->foreignId('speciality')
-                ->nullable()
                 ->references('id')
-                ->on('specialities')->onDelete('cascade')->onUpdate('cascade');
+                ->on('specialities');
 
             $table->foreignId('method_contact')
-                ->nullable()
                 ->references('id')
-                ->on('method_contacts')->onDelete('cascade')->onUpdate('cascade');
+                ->on('method_contacts');
 
             $table->foreignId('contact_id')
-                ->nullable()
                 ->references('id')
-                ->on('contacts')->onDelete('cascade')->onUpdate('cascade');
+                ->on('contacts');
 
             $table->timestamps();
         });

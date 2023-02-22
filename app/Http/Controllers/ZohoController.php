@@ -479,12 +479,13 @@ class ZohoController extends Controller
         $data = $request->all();
         $leadId = $data['lead_id'];
 
-        $response = $this->convertRecord($leadId,'Leads', ['DNI' => $data['dni']]);
+        $response = $this->convertRecord($leadId,'Leads');
 
         if($response['result'] == 'error')
             return response()->json(['contact' => $response], 500);
         else
         {
+            $updatedContact = $this->updateRecord("Contacts",["DNI" => $data['contact']['dni']],$response['id'], false);
             $address = $this->createAddress(array_merge($data['contact'],['contact_id' => $response['id']]));
 
             if($address['result'] == 'error')
@@ -494,7 +495,7 @@ class ZohoController extends Controller
         }
     }
 
-    private function convertRecord($id, $type, $data)
+    private function convertRecord($id, $type)
     {
         $answer['result'] = 'error';
         $answer['id'] = '';
@@ -503,15 +504,8 @@ class ZohoController extends Controller
         try
         {
             $record = ZCRMRestClient::getInstance()->getRecordInstance($type, $id); // To get record instance
-
-
-            $contact = ZCRMRecord::getInstance("Contacts", Null); // to get the record of deal in form of ZCRMRecord insatnce
-            
-            foreach ($data as $k => $v)
-                $contact->setFieldValue($k, $v);
-
-            $details = array("overwrite"=>TRUE);
-
+            $contact = ZCRMRecord::getInstance("Contacts", null); // to get the record of deal in form of ZCRMRecord insatnce
+            $details = array("overwrite"=>true);
             $responseIn = $record->convert($contact, $details); // to convert record
 
             $answer['result'] = 'ok';
