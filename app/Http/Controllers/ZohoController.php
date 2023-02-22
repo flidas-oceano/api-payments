@@ -478,8 +478,9 @@ class ZohoController extends Controller
     {
         $data = $request->all();
         $leadId = $data['lead_id'];
+        $dniLead = $data['contact']['dni'];
 
-        $response = $this->convertRecord($leadId,'Leads');
+        $response = $this->convertRecord($leadId,'Leads', ['DNI' => $data['contact']['dni']]);
 
         if($response['result'] == 'error')
             return response()->json(['contact' => $response], 500);
