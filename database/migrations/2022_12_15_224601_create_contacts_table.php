@@ -28,12 +28,6 @@ class CreateContactsTable extends Migration
             $table->string('street')->nullable();
             $table->string('locality')->nullable();
             $table->string('province_state')->nullable();
-
-            $table->foreignId('lead_id')
-                    ->nullable()        
-                    ->references('id')
-                    ->on('leads')->onDelete('cascade')->onUpdate('cascade');
-                    
             $table->timestamps();
         });
     }
