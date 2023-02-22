@@ -25,24 +25,19 @@ class CreateLeadsTable extends Migration
             $table->string('email')->nullable();
             $table->string('telephone')->nullable();
 
-            $table->integer('profession')->unsigned()->nullable();
-            $table->integer('speciality')->unsigned()->nullable();
-            $table->integer('method_contact')->unsigned()->nullable();
-            $table->integer('contact_id')->unsigned()->nullable();
-
-            $table->foreign('profession')
+            $table->foreignId('profession')
                 ->references('id')
                 ->on('professions');
 
-            $table->foreign('speciality')
+            $table->foreignId('speciality')
                 ->references('id')
                 ->on('specialities');
 
-            $table->foreign('method_contact')
+            $table->foreignId('method_contact')
                 ->references('id')
                 ->on('method_contacts');
 
-            $table->foreign('contact_id')
+            $table->foreignId('contact_id')
                 ->references('id')
                 ->on('contacts');
 
