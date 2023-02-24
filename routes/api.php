@@ -43,10 +43,9 @@ Route::post('/createContactZohoCRM',[ZohoController::class, 'createContact']);
 Route::post('/createAddressZohoCRM',[ZohoController::class, 'createAddressRequest']);
 Route::post('/createSaleZohoCRM',[ZohoController::class, 'createSale']);
 Route::post('/updateZohoStripeZohoCRM',[ZohoController::class, 'updateZohoStripe']);
+Route::post('/obtainDataCRM',[ZohoController::class, 'obtainData']);
 Route::get('/products/{iso}',[ZohoController::class, 'getProducts']);
 Route::get('/products',[ZohoController::class, 'getProductsWithoutIso']);
-
-// http://localhost:8000/api/zcrm/createLead
 
 Route::apiResource("professions", ProfessionController::class);
 Route::apiResource("specialities", SpecialityController::class);

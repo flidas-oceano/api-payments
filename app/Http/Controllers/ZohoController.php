@@ -230,29 +230,29 @@ class ZohoController extends Controller
             return response()->json($updateContract);
     }
 
-    public function obtainData(UpdateContractZohoRequest $request)
+    public function obtainData(Request $request)
     {
 
         $data = $request->all();
 
         $key = $data['key'];
 		$id = $data['id'];
-		
+
 		$answer = [];
         $answer['detail'] = 'wrong key';
         $answer['status'] = 'error';
-        
+
 		if($key == '9j9fj0Do204==3fja134')
 		{
 			$sale = $this->fetchRecordWithValue('Sales_Orders','id',$id, true);
-			
+
 			if($sale != 'error')
 			{
 				$answer = [];
 				$answer['products'] = [];
-				
+
 				$products = $sale->getLineItems();
-		
+
 				foreach($products as $p)
 				{
 					$newP = [];
@@ -260,20 +260,20 @@ class ZohoController extends Controller
 					$newP['quantity'] = $p->getQuantity();
 					$newP['id'] = $p->getId();
 					$newP['price'] = $p->getNetTotal();
-					
+
 					$answer['products'][] = $newP;
-					
+
 				}
 				$answer['sale'] = $sale->getData();
-				
+
 				$contactId = $sale->getFieldValue('Contact_Name')->getEntityId();
-				
+
 				$contact = $this->fetchRecordWithValue('Contacts','id',$contactId, true);
-				
+
 				$answer['contact'] = $contact->getData();
 
                 $answer['status'] = 'ok';
-			
+
 			}
 			else
 			{
@@ -281,7 +281,7 @@ class ZohoController extends Controller
                 $answer['status'] = 'error';
 			}
 		}
-		
+
         if($answer['status'] == 'error')
             return response()->json($answer, 500);
         else
