@@ -551,6 +551,7 @@ class ZohoController extends Controller
                 $answer['id'] = $handle;
             } else {
                 $answer['result'] = 'error';
+                $answer['message'] = $e;
                 Log::error($e);
             }
         }
