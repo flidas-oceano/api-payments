@@ -233,31 +233,59 @@ class ZohoController extends Controller
     public function obtainData(UpdateContractZohoRequest $request)
     {
 
-        $dataUpdate = [
-            'Email' => $request->email,
-            'Monto_de_Anticipo' => $request->installment_amount,
-            'Monto_de_Saldo' => $request->amount - $request->installment_amount,
-            'Cantidad' => $request->installments, //Nro de cuotas
-            'Valor_Cuota' => $request->installment_amount, //Costo de cada cuota
-            'Cuotas_restantes_sin_anticipo' => $request->installments - 1,
-            'Fecha_de_Vto' => date('Y-m-d'),
-            'Status' => 'Contrato Efectivo',
-            'Modalidad_de_pago_del_Anticipo' => 'Stripe',
-            'Medio_de_Pago' => 'Stripe',
-            'Es_Suscri' => boolval($request->is_suscri),
-            'stripe_subscription_id' => $request->subscriptionId,
-            'L_nea_nica_6' => $request->fullname,
-            'Billing_Street' => $request->address,
-            'L_nea_nica_3' => strval($request->dni),
-            'Tel_fono_Facturacion' => $request->phone
-        ];
+        $data = $request->all();
 
-        $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
+        $key = $data['key'];
+		$id = $data['id'];
+		
+		$answer = [];
+        $answer['detail'] = 'wrong key';
+        $answer['status'] = 'error';
+        
+		if($key == '9j9fj0Do204==3fja134')
+		{
+			$sale = $this->fetchRecordWithValue('Sales_Orders','id',$id, true);
+			
+			if($sale != 'error')
+			{
+				$answer = [];
+				$answer['products'] = [];
+				
+				$products = $sale->getLineItems();
+		
+				foreach($products as $p)
+				{
+					$newP = [];
+					$newP['name'] = $p->getProduct()->getLookupLabel();
+					$newP['quantity'] = $p->getQuantity();
+					$newP['id'] = $p->getId();
+					$newP['price'] = $p->getNetTotal();
+					
+					$answer['products'][] = $newP;
+					
+				}
+				$answer['sale'] = $sale->getData();
+				
+				$contactId = $sale->getFieldValue('Contact_Name')->getEntityId();
+				
+				$contact = $this->fetchRecordWithValue('Contacts','id',$contactId, true);
+				
+				$answer['contact'] = $contact->getData();
 
-        if($updateContract['result'] == 'error')
-            return response()->json($updateContract, 500);
+                $answer['status'] = 'ok';
+			
+			}
+			else
+			{
+                $answer['detail'] = 'sale not found';
+                $answer['status'] = 'error';
+			}
+		}
+		
+        if($answer['status'] == 'error')
+            return response()->json($answer, 500);
         else
-            return response()->json($updateContract);
+            return response()->json($answer);
     }
 
     public function createLead(Request $request)
