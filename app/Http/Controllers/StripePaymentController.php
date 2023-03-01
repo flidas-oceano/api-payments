@@ -62,13 +62,13 @@ class StripePaymentController extends Controller
           }else{
             $stripeSK = env('APP_DEBUG') ? env('STRIPE_OCEANO_SK_TEST') : env('STRIPE_OCEANO_SK_PROD');
         }
-        
+
         return  $stripeSK;
     }
 
     public function subscriptionPayment(Request $request)
     {
-       
+
         try {
 
             $stripeConfig = $this->getStripeAccountByCountry($request->country);
@@ -170,8 +170,10 @@ class StripePaymentController extends Controller
 
     private static function getPlanIdByCountry($country, $is_test_environment)
     {
+
+        $answer='';
         switch ($country) {
-            case 'ar': {
+            case 'AR': {
                     $answer = $is_test_environment ? 'plan_HIbEiKOss32TFv' : 'plan_IBc208sWxXoqSX';
                     break;
                 } //Argentina
@@ -187,7 +189,7 @@ class StripePaymentController extends Controller
                     $answer = $is_test_environment ? 'plan_HHVWiCk3XFBgUn' : 'price_HJCn7S4fnRLHwO';
                     break;
                 } //Perú
-            case 'mx': {
+            case 'MX': {
                     $answer = $is_test_environment ? /*OCEANO PLAN 'price_1HaHelBZ0DURRH2FOsEBD3Yx' */ "plan_LAc5CqAkJTxvMu" : 'price_1KX8QdE5uG7kVBQX3SIYoDwc'/* 'price_1HcZMpBZ0DURRH2FIqO53wvW' */;
                     break;
                 } //Mexico
