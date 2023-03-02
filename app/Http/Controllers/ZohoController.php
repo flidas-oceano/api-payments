@@ -198,7 +198,7 @@ class ZohoController extends Controller
             }
         } catch (ZCRMException $e) {
             Log::error($e);
-          
+
             if(!empty($e->getExceptionDetails()))
                 $answer['detail'] = $e->getExceptionDetails();
             else
@@ -345,15 +345,16 @@ class ZohoController extends Controller
         $answer = [];
         $answer['id'] = '';
         $answer['result'] = '';
+        $contactData = $data['contact'];
 
         //armamos data de la dire y la creamos
 			$addressData = array(
-				'Calle' => $data['street'],
-				'C_digo_Postal' => $data['postal_code'],
+				'Calle' => $contactData['street'],
+				'C_digo_Postal' => $contactData['postal_code'],
 				'Name' => 'direccion',
-				'Contacto' => $data['contact_id'],
-				'Provincia' => $data['province_state'],
-				'Pais' => $data['country'],
+				'Contacto' => $contactData['contact_id'],
+				'Provincia' => $contactData['province_state'],
+				'Pais' => $contactData['country'],
 				'Tipo_Dom' => "Particular"
 			);
 
@@ -474,7 +475,7 @@ class ZohoController extends Controller
                 $answer['id'] = $aux['id'];
             }
         } catch (ZCRMException $e) {
-            
+
             if(!empty($e->getExceptionDetails()))
                 $answer['detail'] = $e->getExceptionDetails();
             else
