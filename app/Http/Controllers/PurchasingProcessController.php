@@ -154,6 +154,7 @@ class PurchasingProcessController extends Controller
 
     public function stepConversionContact(StoreContactRequest $request){
         $contactAttrs = $request->only(Contact::getFormAttributes());
+
         $newOrUpdatedContact = Contact::updateOrCreate([
             'dni' => $contactAttrs['dni']
         ], $contactAttrs);

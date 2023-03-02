@@ -352,7 +352,7 @@ class ZohoController extends Controller
 				'Calle' => $contactData['street'],
 				'C_digo_Postal' => $contactData['postal_code'],
 				'Name' => 'direccion',
-				'Contacto' => $contactData['contact_id'],
+				'Contacto' => $data['contact_id'],
 				'Provincia' => $contactData['province_state'],
 				'Pais' => $contactData['country'],
 				'Tipo_Dom' => "Particular"
@@ -523,6 +523,7 @@ class ZohoController extends Controller
     public function convertLead(Request $request)
     {
         $data = $request->all();
+        $progress = PurchaseProgress::find($request->idPurchaseProgress);
         $leadId = $data['lead_id'];
         $dniLead = $data['contact']['dni'];
 
@@ -533,7 +534,8 @@ class ZohoController extends Controller
         else
         {
             $updatedContact = $this->updateRecord("Contacts",["DNI" => $data['contact']['dni']],$response['id'], false);
-            $address = $this->createAddress(array_merge($data,['contact_id' => $response['id']]));
+            $addressParams = array_merge($data,['contact_id' => $response['id']]);
+            $address = $this->createAddress($addressParams);
 
             if($address['result'] == 'error')
                 return response()->json(['address' => $address], 500);
