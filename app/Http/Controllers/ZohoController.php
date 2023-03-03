@@ -117,6 +117,7 @@ class ZohoController extends Controller
 
         $answer['result'] = '';
         $answer['id'] = '';
+        $answer['detail'] = '';
 
 
         //hace el intento de subir el record
@@ -141,6 +142,7 @@ class ZohoController extends Controller
                 $answer['id'] = $handle;
             } else {
                 $answer['result'] = 'error';
+                $answer['detail'] = $e->getExceptionDetails();
                 Log::error($e);
             }
         }
@@ -176,6 +178,7 @@ class ZohoController extends Controller
 
         $answer['result'] = 'error';
         $answer['id'] = '';
+        $answer['detail'] = '';
 
         try {
             $zcrmRecordIns = ZCRMRecord::getInstance($type, $id);
@@ -193,8 +196,13 @@ class ZohoController extends Controller
                 $answer['result'] = 'ok';
                 $answer['id'] = $id;
             }
-        } catch (\Exception $e) {
+        } catch (ZCRMException $e) {
             Log::error($e);
+
+            if(!empty($e->getExceptionDetails()))
+                $answer['detail'] = $e->getExceptionDetails();
+            else
+                $answer['detail'] = $e->getMessage();
         }
 
         return ($answer);
@@ -337,15 +345,16 @@ class ZohoController extends Controller
         $answer = [];
         $answer['id'] = '';
         $answer['result'] = '';
+        $contactData = $data['contact'];
 
         //armamos data de la dire y la creamos
 			$addressData = array(
-				'Calle' => $data['street'],
-				'C_digo_Postal' => $data['postal_code'],
+				'Calle' => $contactData['street'],
+				'C_digo_Postal' => $contactData['postal_code'],
 				'Name' => 'direccion',
 				'Contacto' => $data['contact_id'],
-				'Provincia' => $data['province_state'],
-				'Pais' => $data['country'],
+				'Provincia' => $contactData['province_state'],
+				'Pais' => $contactData['country'],
 				'Tipo_Dom' => "Particular"
 			);
 
@@ -433,6 +442,7 @@ class ZohoController extends Controller
         $answer= array();
         $answer['id'] = '';
         $answer['result'] = 'error';
+        $answer['detail'] = '';
 
         try {
             $record = ZCRMRestClient::getInstance()->getRecordInstance("Sales_Orders", null); // To get record instance
@@ -464,9 +474,15 @@ class ZohoController extends Controller
                 $aux = $responseIns->getDetails();
                 $answer['id'] = $aux['id'];
             }
-        } catch (\Exception $e) {
+        } catch (ZCRMException $e) {
+
+            if(!empty($e->getExceptionDetails()))
+                $answer['detail'] = $e->getExceptionDetails();
+            else
+                $answer['detail'] = $e->getMessage();
+
             Log::error($e);
-            return response()->json($e->getMessage(),500);
+
         }
 
         return ($answer);
@@ -507,6 +523,7 @@ class ZohoController extends Controller
     public function convertLead(Request $request)
     {
         $data = $request->all();
+        $progress = PurchaseProgress::find($request->idPurchaseProgress);
         $leadId = $data['lead_id'];
         $dniLead = $data['contact']['dni'];
 
@@ -517,7 +534,8 @@ class ZohoController extends Controller
         else
         {
             $updatedContact = $this->updateRecord("Contacts",["DNI" => $data['contact']['dni']],$response['id'], false);
-            $address = $this->createAddress(array_merge($data['contact'],['contact_id' => $response['id']]));
+            $addressParams = array_merge($data,['contact_id' => $response['id']]);
+            $address = $this->createAddress($addressParams);
 
             if($address['result'] == 'error')
                 return response()->json(['address' => $address], 500);
@@ -542,7 +560,7 @@ class ZohoController extends Controller
             $answer['result'] = 'ok';
             $answer['id'] = $responseIn["Contacts"];
 
-        } catch (\Exception $e)
+        } catch (ZCRMException $e)
         {
             $handle = $this->handleError($e, $type, []);
 
@@ -551,7 +569,12 @@ class ZohoController extends Controller
                 $answer['id'] = $handle;
             } else {
                 $answer['result'] = 'error';
-                $answer['message'] = $e;
+
+                if(!empty($e->getExceptionDetails()))
+                    $answer['detail'] = $e->getExceptionDetails();
+                else
+                    $answer['detail'] = $e->getMessage();
+
                 Log::error($e);
             }
         }
