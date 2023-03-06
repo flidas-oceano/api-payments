@@ -407,7 +407,7 @@ class ZohoController extends Controller
                 //'Billing_Street' => $data['address'],
                 //'Tipo_De_Pago' => $data['payment_type'],
                 '[products]' => $productDetails,//* producto->id
-               // 'Pais' => $data['country'],
+                'Pais' => $progress->country,
                 //'Anticipo' => strval($data['payment_in_advance']),
                 //'Cuotas_restantes_sin_anticipo' => $data['left_installments'],
                 //'Medio_de_Pago' => $data['left_payment_type'],
@@ -527,7 +527,6 @@ class ZohoController extends Controller
         $progress = PurchaseProgress::find($request->idPurchaseProgress);
         $leadId = $data['lead_id'];
         $dniLead = $data['contact']['dni'];
-
         $additionalData = [];
         $additionalData['DNI'] = $data['contact']['dni'];
         $additionalData['Sexo'] = $data['contact']['sex'];
