@@ -353,9 +353,9 @@ class ZohoController extends Controller
 				'C_digo_Postal' => $contactData['postal_code'],
 				'Name' => 'direccion',
 				'Contacto' => $data['contact_id'],
-				'Provincia' => $data['province_state'],
-				'Pais' => $data['country'],
-				'Localidad1' => $data['locality'],
+				'Provincia' => $contactData['province_state'],
+				'Pais' => $contactData['country'],
+				'Localidad1' => $contactData['locality'],
 				'Tipo_Dom' => "Particular"
 			);
 
