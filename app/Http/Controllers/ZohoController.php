@@ -523,13 +523,21 @@ class ZohoController extends Controller
 
     public function convertLead(Request $request)
     {
+        $genderOptions = [
+            (object) ['id' => 1, 'name' => 'Masculino'],
+            (object) ['id' => 2, 'name' => 'Femenino'],
+            (object) ['id' => 3, 'name' => 'Prefiero no aclararlo']
+        ];
+
         $data = $request->all();
         $progress = PurchaseProgress::find($request->idPurchaseProgress);
         $leadId = $data['lead_id'];
         $dniLead = $data['contact']['dni'];
+        $gender = collect($genderOptions)->firstWhere('id', $data['contact']['sex'])->name;
+
         $additionalData = [];
         $additionalData['DNI'] = $data['contact']['dni'];
-        $additionalData['Sexo'] = $data['contact']['sex'];
+        $additionalData['Sexo'] = $gender;
         $additionalData['Date_of_Birth'] = $data['contact']['date_of_birth'];
         $additionalData['Nro_Matr_cula'] = $data['contact']['registration_number'];
         $additionalData['rea_donde_trabaja'] = $data['contact']['area_of_work'];
