@@ -354,6 +354,7 @@ class ZohoController extends Controller
 				'Contacto' => $data['contact_id'],
 				'Provincia' => $data['province_state'],
 				'Pais' => $data['country'],
+				'Localidad1' => $data['locality'],
 				'Tipo_Dom' => "Particular"
 			);
 
@@ -525,13 +526,21 @@ class ZohoController extends Controller
         $leadId = $data['lead_id'];
         $dniLead = $data['contact']['dni'];
 
-        $response = $this->convertRecord($leadId,'Leads', ['DNI' => $data['contact']['dni']]);
+        $additionalData = [];
+        $additionalData['DNI'] = $data['contact']['dni'];
+        $additionalData['Sexo'] = $data['contact']['sex'];
+        $additionalData['Date_of_Birth'] = $data['contact']['date_of_birth'];
+        $additionalData['Nro_Matr_cula'] = $data['contact']['registration_number'];
+        $additionalData['rea_donde_trabaja'] = $data['contact']['area_of_work'];
+        $additionalData['Inter_s_de_Formaci_n'] = $data['contact']['training_interest'];
+
+        $response = $this->convertRecord($leadId,'Leads', $additionalData);
 
         if($response['result'] == 'error')
             return response()->json(['contact' => $response], 500);
         else
         {
-            $updatedContact = $this->updateRecord("Contacts",["DNI" => $data['contact']['dni']],$response['id'], false);
+            $updatedContact = $this->updateRecord("Contacts",$additionalData,$response['id'], false);
             $address = $this->createAddress(array_merge($data,['contact_id' => $response['id']]));
 
             if($address['result'] == 'error')
@@ -593,12 +602,13 @@ class ZohoController extends Controller
         $leadData['Last_Name']              = $data["username"];
         $leadData['Phone']                  = $data["telephone"];
         $leadData['Email']                  = $data["email"];
-        $LeadHistoricoData['Fuente_de_Lead'] = array(0 => $data['lead_source'] ?? 'Venta Presencial');//hay que definir donde buscamos el dato
-        $LeadHistoricoData['FUENTE']         = $data['source'] ?? 'Venta Presencial';//hay que definir donde buscamos el dato
-        $leadData['Lead_Status']            = $data['status']?? 'Contacto urgente';
+        $LeadHistoricoData['Fuente_de_Lead'] = array(0 => 'Venta Presencial');//hay que definir donde buscamos el dato
+        $LeadHistoricoData['FUENTE']         = 'Venta Presencial';//hay que definir donde buscamos el dato
+        $leadData['Lead_Status']            = 'Contacto urgente';
         $leadData['Pais']                   = $data["country"];
         $leadData['pp']                     = $data["profession"];
         $leadData['Especialidad']           = [$data["speciality"]];
+        $leadData['Canal_de_Contactaci_n']           = [$data["method_contact"]];
         $leadData['*owner']                 = $this->emi_owner;
 
         return $leadData;
