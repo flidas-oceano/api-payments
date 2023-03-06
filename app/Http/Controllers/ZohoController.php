@@ -198,7 +198,7 @@ class ZohoController extends Controller
             }
         } catch (ZCRMException $e) {
             Log::error($e);
-          
+
             if(!empty($e->getExceptionDetails()))
                 $answer['detail'] = $e->getExceptionDetails();
             else
@@ -345,11 +345,12 @@ class ZohoController extends Controller
         $answer = [];
         $answer['id'] = '';
         $answer['result'] = '';
+        $contactData = $data['contact'];
 
         //armamos data de la dire y la creamos
 			$addressData = array(
-				'Calle' => $data['street'],
-				'C_digo_Postal' => $data['postal_code'],
+				'Calle' => $contactData['street'],
+				'C_digo_Postal' => $contactData['postal_code'],
 				'Name' => 'direccion',
 				'Contacto' => $data['contact_id'],
 				'Provincia' => $data['province_state'],
@@ -475,7 +476,7 @@ class ZohoController extends Controller
                 $answer['id'] = $aux['id'];
             }
         } catch (ZCRMException $e) {
-            
+
             if(!empty($e->getExceptionDetails()))
                 $answer['detail'] = $e->getExceptionDetails();
             else
@@ -523,6 +524,7 @@ class ZohoController extends Controller
     public function convertLead(Request $request)
     {
         $data = $request->all();
+        $progress = PurchaseProgress::find($request->idPurchaseProgress);
         $leadId = $data['lead_id'];
         $dniLead = $data['contact']['dni'];
 
@@ -541,7 +543,8 @@ class ZohoController extends Controller
         else
         {
             $updatedContact = $this->updateRecord("Contacts",$additionalData,$response['id'], false);
-            $address = $this->createAddress(array_merge($data,['contact_id' => $response['id']]));
+            $addressParams = array_merge($data,['contact_id' => $response['id']]);
+            $address = $this->createAddress($addressParams);
 
             if($address['result'] == 'error')
                 return response()->json(['address' => $address], 500);
