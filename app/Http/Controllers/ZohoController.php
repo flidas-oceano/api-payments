@@ -12,7 +12,7 @@ use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
 use zcrmsdk\oauth\ZohoOAuth;
 use zcrmsdk\crm\crud\ZCRMRecord;
 use zcrmsdk\crm\exception\ZCRMException;
-use App\Models\{Contact, Lead, Profession, PurchaseProgress, Speciality};
+use App\Models\{Contact, Lead, Profession, PurchaseProgress, Speciality, MethodContact};
 use Illuminate\Support\Facades\Log;
 
 class ZohoController extends Controller
@@ -302,6 +302,7 @@ class ZohoController extends Controller
 
         $data['profession'] = Profession::where('id',$data['profession'])->first()->name;
         $data['speciality'] = Speciality::where('id',$data['speciality'])->first()->name;
+        $data['method_contact'] = MethodContact::where('id',$data['method_contact'])->first()->name;
 
         $leadData = $this->processLeadData($data);
 
