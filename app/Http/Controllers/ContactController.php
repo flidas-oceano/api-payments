@@ -91,7 +91,6 @@ class ContactController extends Controller
     {
         $progress = PurchaseProgress::updateProgress($idPurchaseProgress, ['step_number' => $request->step_number]);
         $contactAttributes = $request->only(Contact::getFormAttributes());
-        $contactAttributes['lead_id'] = $progress->lead->id;
 
         if(is_null($progress->contact)){
             $newContact = Contact::create($contactAttributes);

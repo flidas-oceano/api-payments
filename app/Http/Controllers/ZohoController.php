@@ -345,6 +345,7 @@ class ZohoController extends Controller
         $answer = [];
         $answer['id'] = '';
         $answer['result'] = '';
+        //Guardo contacto en variable
         $contactData = $data['contact'];
 
         //armamos data de la dire y la creamos
@@ -355,6 +356,7 @@ class ZohoController extends Controller
 				'Contacto' => $data['contact_id'],
 				'Provincia' => $contactData['province_state'],
 				'Pais' => $contactData['country'],
+				'Localidad1' => $contactData['locality'],
 				'Tipo_Dom' => "Particular"
 			);
 
@@ -406,7 +408,7 @@ class ZohoController extends Controller
                 //'Billing_Street' => $data['address'],
                 //'Tipo_De_Pago' => $data['payment_type'],
                 '[products]' => $productDetails,//* producto->id
-               // 'Pais' => $data['country'],
+                'Pais' => $progress->country,
                 //'Anticipo' => strval($data['payment_in_advance']),
                 //'Cuotas_restantes_sin_anticipo' => $data['left_installments'],
                 //'Medio_de_Pago' => $data['left_payment_type'],
@@ -522,18 +524,33 @@ class ZohoController extends Controller
 
     public function convertLead(Request $request)
     {
+        $genderOptions = [
+            (object) ['id' => 1, 'name' => 'Masculino'],
+            (object) ['id' => 2, 'name' => 'Femenino'],
+            (object) ['id' => 3, 'name' => 'Prefiero no aclararlo']
+        ];
+
         $data = $request->all();
         $progress = PurchaseProgress::find($request->idPurchaseProgress);
         $leadId = $data['lead_id'];
         $dniLead = $data['contact']['dni'];
+        $gender = collect($genderOptions)->firstWhere('id', $data['contact']['sex'])->name;
 
-        $response = $this->convertRecord($leadId,'Leads', ['DNI' => $data['contact']['dni']]);
+        $additionalData = [];
+        $additionalData['DNI'] = $data['contact']['dni'];
+        $additionalData['Sexo'] = $gender;
+        $additionalData['Date_of_Birth'] = $data['contact']['date_of_birth'];
+        $additionalData['Nro_Matr_cula'] = $data['contact']['registration_number'];
+        $additionalData['rea_donde_trabaja'] = $data['contact']['area_of_work'];
+        $additionalData['Inter_s_de_Formaci_n'] = $data['contact']['training_interest'];
+
+        $response = $this->convertRecord($leadId,'Leads', $additionalData);
 
         if($response['result'] == 'error')
             return response()->json(['contact' => $response], 500);
         else
         {
-            $updatedContact = $this->updateRecord("Contacts",["DNI" => $data['contact']['dni']],$response['id'], false);
+            $updatedContact = $this->updateRecord("Contacts",$additionalData,$response['id'], false);
             $addressParams = array_merge($data,['contact_id' => $response['id']]);
             $address = $this->createAddress($addressParams);
 
@@ -596,12 +613,13 @@ class ZohoController extends Controller
         $leadData['Last_Name']              = $data["username"];
         $leadData['Phone']                  = $data["telephone"];
         $leadData['Email']                  = $data["email"];
-        $LeadHistoricoData['Fuente_de_Lead'] = array(0 => $data['lead_source'] ?? 'Venta Presencial');//hay que definir donde buscamos el dato
-        $LeadHistoricoData['FUENTE']         = $data['source'] ?? 'Venta Presencial';//hay que definir donde buscamos el dato
-        $leadData['Lead_Status']            = $data['status']?? 'Contacto urgente';
+        $LeadHistoricoData['Fuente_de_Lead'] = array(0 => 'Venta Presencial');//hay que definir donde buscamos el dato
+        $LeadHistoricoData['FUENTE']         = 'Venta Presencial';//hay que definir donde buscamos el dato
+        $leadData['Lead_Status']            = 'Contacto urgente';
         $leadData['Pais']                   = $data["country"];
         $leadData['pp']                     = $data["profession"];
         $leadData['Especialidad']           = [$data["speciality"]];
+        $leadData['Canal_de_Contactaci_n']           = [$data["method_contact"]];
         $leadData['*owner']                 = $this->emi_owner;
 
         return $leadData;

@@ -21,7 +21,22 @@ class ProfessionSeeder extends Seeder
             'name' => "Enfermeros / Auxiliares"
         ],
         [
+            'name' => "Enfermero"
+        ],
+        [
+            'name' => "Auxiliar de enfermería"
+        ],
+        [
             'name' => "Residentes / Estudiantes"
+        ],
+        [
+            'name' => "Residente"
+        ],
+        [
+            'name' => "Estudiante"
+        ],
+        [
+            'name' => "Sin Contacto"
         ],
         [
             'name' => "Fuerza Pública"
