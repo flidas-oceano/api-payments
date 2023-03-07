@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Http\Requests\{UpdateLeadRequest,StoreContactRequest};
 
-
+use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\Console\Helper\ProgressBar;
 
