@@ -25,10 +25,12 @@ class StoreContactRequest extends FormRequest
     {
         $errors = $validator->errors();
 
+
         if ($this->expectsJson()) {
             return response()->json([
-                'message' => 'Error de validacion.',
+                'message' => 'Error de validacion en los campos del contacto.',
                 'errors' => $errors,
+                'progress' => 3,
             ], 422);
         }
 

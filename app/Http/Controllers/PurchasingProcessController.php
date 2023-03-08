@@ -117,21 +117,25 @@ class PurchasingProcessController extends Controller
     public function stepCreateLead(UpdateLeadRequest $request){
         /* Datos de prueba al postman
             {
-                "lead": {
-                    "lead_id":null,
-                    "entity_id_crm":"",
-                    "lead_status":"",
-                    "source_lead":"",
-                    "lead_source":"",
-                    "name":"",
-                    "username":"",
-                    "email":"",
-                    "profession":"",
-                    "speciality":"",
-                    "method_contact_id_fk":"",
-                    "telephone":"",
-                    "contact_id_fk":""
-                }
+                area_of_work: "",
+                country: "",
+                date_of_birth: "",
+                dni: "",
+                idPurchaseProgress: "39",
+                locality: "",
+                method_contact: "",
+                name: "",
+                postal_code: "",
+                profession: "",
+                province_state: "",
+                registration_number: "",
+                sex: "",
+                speciality: "",
+                step_number: 3,
+                street: "",
+                telephone: "",
+                training_interest: "",
+                username: ""
             }
         */
 
