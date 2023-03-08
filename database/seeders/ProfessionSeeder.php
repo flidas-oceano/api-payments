@@ -7,43 +7,19 @@ use Illuminate\Database\Seeder;
 
 class ProfessionSeeder extends Seeder
 {
+
+
+
     public $data = [
-        [
-            'name' => "Médico"
-        ],
-        [
-            'name' => "Lic. de la Salud"
-        ],
-        [
-            'name' => "Técnico Universitario"
-        ],
-        [
-            'name' => "Enfermeros / Auxiliares"
-        ],
-        [
-            'name' => "Enfermero"
-        ],
-        [
-            'name' => "Auxiliar de enfermería"
-        ],
-        [
-            'name' => "Residentes / Estudiantes"
-        ],
-        [
-            'name' => "Residente"
-        ],
-        [
-            'name' => "Estudiante"
-        ],
-        [
-            'name' => "Sin Contacto"
-        ],
-        [
-            'name' => "Fuerza Pública"
-        ],
-        [
-            'name' => "Otra Profesión"
-        ],
+        ['name' => "Médico"],
+        ['name' => "Lic. de la Salud"],
+        ['name' => "Enfermero"],
+        ['name' => "Auxiliar de enfermería"],
+        ['name' => "Fuerza Pública"],
+        ['name' => "Técnico Universitario"],
+        ['name' => "Residente"],
+        ['name' => "Estudiante"],
+        ['name' => "Otra Profesión"],
     ];
 
     /**
