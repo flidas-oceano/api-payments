@@ -12,7 +12,7 @@ use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
 use zcrmsdk\oauth\ZohoOAuth;
 use zcrmsdk\crm\crud\ZCRMRecord;
 use zcrmsdk\crm\exception\ZCRMException;
-use App\Models\{Contact, Lead, Profession, PurchaseProgress, Speciality};
+use App\Models\{Contact, Lead, Profession, PurchaseProgress, Speciality, MethodContact};
 use Illuminate\Support\Facades\Log;
 
 class ZohoController extends Controller
@@ -302,6 +302,7 @@ class ZohoController extends Controller
 
         $data['profession'] = Profession::where('id',$data['profession'])->first()->name;
         $data['speciality'] = Speciality::where('id',$data['speciality'])->first()->name;
+        $data['method_contact'] = MethodContact::where('id',$data['method_contact'])->first()->name;
 
         $leadData = $this->processLeadData($data);
 
@@ -345,6 +346,7 @@ class ZohoController extends Controller
         $answer = [];
         $answer['id'] = '';
         $answer['result'] = '';
+        //Guardo contacto en variable
         $contactData = $data['contact'];
 
         //armamos data de la dire y la creamos
@@ -407,7 +409,7 @@ class ZohoController extends Controller
                 //'Billing_Street' => $data['address'],
                 //'Tipo_De_Pago' => $data['payment_type'],
                 '[products]' => $productDetails,//* producto->id
-               // 'Pais' => $data['country'],
+                'Pais' => $progress->country,
                 //'Anticipo' => strval($data['payment_in_advance']),
                 //'Cuotas_restantes_sin_anticipo' => $data['left_installments'],
                 //'Medio_de_Pago' => $data['left_payment_type'],
@@ -523,14 +525,21 @@ class ZohoController extends Controller
 
     public function convertLead(Request $request)
     {
+        $genderOptions = [
+            (object) ['id' => 1, 'name' => 'Masculino'],
+            (object) ['id' => 2, 'name' => 'Femenino'],
+            (object) ['id' => 3, 'name' => 'Prefiero no aclararlo']
+        ];
+
         $data = $request->all();
     $progress = PurchaseProgress::find($request->idPurchaseProgress);
         $leadId = $data['lead_id'];
         $dniLead = $data['contact']['dni'];
+        $gender = collect($genderOptions)->firstWhere('id', $data['contact']['sex'])->name;
 
         $additionalData = [];
         $additionalData['DNI'] = $data['contact']['dni'];
-        $additionalData['Sexo'] = $data['contact']['sex'];
+        $additionalData['Sexo'] = $gender;
         $additionalData['Date_of_Birth'] = $data['contact']['date_of_birth'];
         $additionalData['Nro_Matr_cula'] = $data['contact']['registration_number'];
         $additionalData['rea_donde_trabaja'] = $data['contact']['area_of_work'];

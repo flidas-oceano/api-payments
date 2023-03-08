@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Http\Requests\{UpdateLeadRequest,StoreContactRequest};
 
-
+use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\Console\Helper\ProgressBar;
 
@@ -174,17 +174,31 @@ class PurchasingProcessController extends Controller
         ]);
     }
 
+    private function getCurrencyByCountry($country)
+    {
+        $client = new Client();
+        $response = $client->request('GET', 'https://restcountries.com/v2/name/' . $country . '?fullText=true');
+
+        $body = json_decode($response->getBody());
+
+        $currency = $body[0]->currencies[0]->code;
+
+        return $currency;
+    }
+
     public function stepConversionContract(Request $request){
         $progress = PurchaseProgress::updateProgress(
             $request->idPurchaseProgress,
              ['step_number' => $request->step_number]
         );
 
+        $currency = $this->getCurrencyByCountry($progress->country);
+
         $contractAttributes = [
             'name' => $progress->lead->name,
             'address' => $progress->contact->street,
             'country' => $progress->country,
-            'currency' => "USD"
+            'currency' => $currency
         ];
 
         $contractId = null;
