@@ -12,7 +12,7 @@ use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
 use zcrmsdk\oauth\ZohoOAuth;
 use zcrmsdk\crm\crud\ZCRMRecord;
 use zcrmsdk\crm\exception\ZCRMException;
-use App\Models\{Contact, Lead, Profession, PurchaseProgress, Speciality};
+use App\Models\{Contact, Lead, Profession, PurchaseProgress, Speciality, MethodContact};
 use Illuminate\Support\Facades\Log;
 
 class ZohoController extends Controller
@@ -302,6 +302,7 @@ class ZohoController extends Controller
 
         $data['profession'] = Profession::where('id',$data['profession'])->first()->name;
         $data['speciality'] = Speciality::where('id',$data['speciality'])->first()->name;
+        $data['method_contact'] = MethodContact::where('id',$data['method_contact'])->first()->name;
 
         $leadData = $this->processLeadData($data);
 
@@ -345,6 +346,7 @@ class ZohoController extends Controller
         $answer = [];
         $answer['id'] = '';
         $answer['result'] = '';
+        //Guardo contacto en variable
         $contactData = $data['contact'];
 
         //armamos data de la dire y la creamos
@@ -530,7 +532,7 @@ class ZohoController extends Controller
         ];
 
         $data = $request->all();
-        $progress = PurchaseProgress::find($request->idPurchaseProgress);
+    $progress = PurchaseProgress::find($request->idPurchaseProgress);
         $leadId = $data['lead_id'];
         $dniLead = $data['contact']['dni'];
         $gender = collect($genderOptions)->firstWhere('id', $data['contact']['sex'])->name;
@@ -542,6 +544,8 @@ class ZohoController extends Controller
         $additionalData['Nro_Matr_cula'] = $data['contact']['registration_number'];
         $additionalData['rea_donde_trabaja'] = $data['contact']['area_of_work'];
         $additionalData['Inter_s_de_Formaci_n'] = $data['contact']['training_interest'];
+        $additionalData['Plataforma'] = 'Venta Presencial';
+
 
         $response = $this->convertRecord($leadId,'Leads', $additionalData);
 
@@ -612,8 +616,9 @@ class ZohoController extends Controller
         $leadData['Last_Name']              = $data["username"];
         $leadData['Phone']                  = $data["telephone"];
         $leadData['Email']                  = $data["email"];
-        $LeadHistoricoData['Fuente_de_Lead'] = array(0 => 'Venta Presencial');//hay que definir donde buscamos el dato
-        $LeadHistoricoData['FUENTE']         = 'Venta Presencial';//hay que definir donde buscamos el dato
+        $leadData['Fuente_de_Lead'] = array(0 => 'Venta Presencial');//hay que definir donde buscamos el dato
+        $leadData['FUENTE']         = 'Venta Presencial';//hay que definir donde buscamos el dato
+        $leadData['Plataforma']         = 'Venta Presencial';
         $leadData['Lead_Status']            = 'Contacto urgente';
         $leadData['Pais']                   = $data["country"];
         $leadData['pp']                     = $data["profession"];
