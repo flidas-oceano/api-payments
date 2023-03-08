@@ -524,7 +524,7 @@ class ZohoController extends Controller
     public function convertLead(Request $request)
     {
         $data = $request->all();
-        $progress = PurchaseProgress::find($request->idPurchaseProgress);
+    $progress = PurchaseProgress::find($request->idPurchaseProgress);
         $leadId = $data['lead_id'];
         $dniLead = $data['contact']['dni'];
 
@@ -535,6 +535,8 @@ class ZohoController extends Controller
         $additionalData['Nro_Matr_cula'] = $data['contact']['registration_number'];
         $additionalData['rea_donde_trabaja'] = $data['contact']['area_of_work'];
         $additionalData['Inter_s_de_Formaci_n'] = $data['contact']['training_interest'];
+        $additionalData['Plataforma'] = 'Venta Presencial';
+
 
         $response = $this->convertRecord($leadId,'Leads', $additionalData);
 
@@ -605,8 +607,9 @@ class ZohoController extends Controller
         $leadData['Last_Name']              = $data["username"];
         $leadData['Phone']                  = $data["telephone"];
         $leadData['Email']                  = $data["email"];
-        $LeadHistoricoData['Fuente_de_Lead'] = array(0 => 'Venta Presencial');//hay que definir donde buscamos el dato
-        $LeadHistoricoData['FUENTE']         = 'Venta Presencial';//hay que definir donde buscamos el dato
+        $leadData['Fuente_de_Lead'] = array(0 => 'Venta Presencial');//hay que definir donde buscamos el dato
+        $leadData['FUENTE']         = 'Venta Presencial';//hay que definir donde buscamos el dato
+        $leadData['Plataforma']         = 'Venta Presencial';
         $leadData['Lead_Status']            = 'Contacto urgente';
         $leadData['Pais']                   = $data["country"];
         $leadData['pp']                     = $data["profession"];
