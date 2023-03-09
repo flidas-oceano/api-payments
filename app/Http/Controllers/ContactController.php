@@ -108,7 +108,12 @@ class ContactController extends Controller
 
         $newOrUpdatedContact = Contact::updateOrCreate([
             'dni' => $attrContact["dni"]
-            ], $attrContact);
+        ], $attrContact);
+        
+        //Limpiar el entity id porque en zoho se borra el lead.
+        $idProggress = $request->progress['id'];
+        $progress = PurchaseProgress::where("id", $idProggress)->first();
+        Lead::updateOrCreate(['id' => $progress->lead->id], ['entity_id_crm' => null]);
 
         return response()->json(['contact' => $newOrUpdatedContact]);
     }
