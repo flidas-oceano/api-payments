@@ -101,7 +101,8 @@ class StripePaymentController extends Controller
                 'default_payment_method' => $paymentMethod->id,
                 'cancel_at' => $subscriptionFinishedAt,
                 'metadata'  => $subscriptionMetadata,
-                'payment_behavior' => 'error_if_incomplete'
+                'payment_behavior' => 'error_if_incomplete',
+                'proration_behavior' => 'none',
             ]);
 
             return response()->json($stripeSubscription);
@@ -112,7 +113,7 @@ class StripePaymentController extends Controller
 
     private static function generateMetadataArray($requestData, $stripeMetadataData)
     {
-        $metadata = array('origin' => 'Pasarela Cobros Stripe');
+        $metadata = array('origin' => 'Super Pasarela de Cobros');
         // dd($requestData->sale);
         $metadata["SO_Number"] = $requestData->sale['SO_Number'];
         $metadataTotalAmount = 0;
