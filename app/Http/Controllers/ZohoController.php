@@ -166,7 +166,7 @@ class ZohoController extends Controller
         if ($cod == 'DUPLICATE_DATA') {
             $answer = $details['id'];
         }
-
+       // ID_ALREADY_CONVERTED
 
         return ($answer);
     }
@@ -525,6 +525,8 @@ class ZohoController extends Controller
 
     public function convertLead(Request $request)
     {
+        $contact_id = '-1';
+
         $genderOptions = [
             (object) ['id' => 1, 'name' => 'Masculino'],
             (object) ['id' => 2, 'name' => 'Femenino'],
@@ -534,7 +536,7 @@ class ZohoController extends Controller
         $data = $request->all();
     $progress = PurchaseProgress::find($request->idPurchaseProgress);
         $leadId = $data['lead_id'];
-        $dniLead = $data['contact']['dni'];
+
         $gender = collect($genderOptions)->firstWhere('id', $data['contact']['sex'])->name;
 
         $additionalData = [];
@@ -547,21 +549,31 @@ class ZohoController extends Controller
         $additionalData['Plataforma'] = 'Venta Presencial';
 
 
-        $response = $this->convertRecord($leadId,'Leads', $additionalData);
+        $response = $this->convertRecord($leadId,'Leads');
 
-        if($response['result'] == 'error')
-            return response()->json(['contact' => $response], 500);
+        $fetchContact = $this->fetchRecordWithValue("Contacts",'DNI',$data['contact']['dni']);
+
+        if($fetchContact != 'error')
+        {
+            $contact_id = $fetchContact->getEntityId();
+        }
         else
         {
-            $updatedContact = $this->updateRecord("Contacts",$additionalData,$response['id'], false);
-            $addressParams = array_merge($data,['contact_id' => $response['id']]);
-            $address = $this->createAddress($addressParams);
-
-            if($address['result'] == 'error')
-                return response()->json(['address' => $address], 500);
-            else
-                return response()->json(['contact' => $response, 'address' => $address]);
+            if(!empty($response['id']))
+                $contact_id = $response['id'];
         }
+
+        $updatedContact = $this->updateRecord("Contacts",$additionalData,$contact_id, false);    
+
+        $addressParams = array_merge($data,['contact_id' => $response['id']]);
+        $addressParams = array_merge($data,['contact_id' => $response['id']]);
+        $address = $this->createAddress($addressParams);
+
+        if($address['result'] == 'error' || $updatedContact['result'] == 'error')
+            return response()->json(['lead' => $response, 'contact' => $updatedContact, 'address' => $address], 500);
+        else
+            return response()->json(['lead' => $response, 'contact' => $updatedContact, 'address' => $address]);
+        
     }
 
     private function convertRecord($id, $type)
