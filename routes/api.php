@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\{ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, CronosController};
+use App\Http\Controllers\{ContactController, StripePaymentController,LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController,ContractController,DatafastController, CronosController};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -53,6 +53,9 @@ Route::apiResource('methods', MethodContactController::class);
 Route::apiResource('progress', PurchasingProcessController::class);
 Route::get('/progress/{id}', [PurchasingProcessController::class, 'show']);
 
-Route::get('/contract/{id}', [ContractController::class, 'show']);
+Route::get('/contract/{id}',[ContractController::class, 'show']);
+Route::get('/msk',[CronosController::class, 'show']);
 
-Route::get('/msk', [CronosController::class, 'index']);
+Route::post('/datafastGetForm',[DatafastController::class, 'requestForm']);
+
+
