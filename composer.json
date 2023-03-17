@@ -5,7 +5,7 @@
     "keywords": ["framework", "laravel"],
     "license": "MIT",
     "require": {
-        "php": "^8.0.13",
+        "php": "^7.4.29",
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.0.1",
         "laravel/framework": "^8.75",
@@ -13,6 +13,7 @@
         "laravel/telescope": "^4.10",
         "laravel/tinker": "^2.5",
         "stripe/stripe-php": "^10.0",
+        "webpatser/laravel-countries": "^1.5",
         "zohocrm/php-sdk-archive": "^2.1"
     },
     "require-dev": {
