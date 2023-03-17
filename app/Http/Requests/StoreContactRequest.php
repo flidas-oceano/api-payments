@@ -65,7 +65,7 @@ class StoreContactRequest extends FormRequest
             "sex"=> "required",
             "date_of_birth"=> "required",
             "province_state"=> "required",
-            "postal_code"=> "required",
+            'postal_code' => 'required_unless:country,Chile',
             "street"=> "required",
             "locality"=> "required",
             "idPurchaseProgress"=> "required",
