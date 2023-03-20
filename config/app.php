@@ -177,7 +177,7 @@ return [
         App\Providers\TelescopeServiceProvider::class,
         Webpatser\Countries\CountriesServiceProvider::class,
         // StefanBauer\LaravelFaviconGenerator\LaravelFaviconGeneratorServiceProvider::class,
-        
+
     ],
 
     /*
@@ -233,7 +233,7 @@ return [
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
         'Countries' => Webpatser\Countries\CountriesFacade::class,
-        'LaravelFavicon' => StefanBauer\LaravelFaviconGenerator\Facades\LaravelFaviconGenerator::class,
+        //'LaravelFavicon' => StefanBauer\LaravelFaviconGenerator\Facades\LaravelFaviconGenerator::class,
     ],
 
 ];

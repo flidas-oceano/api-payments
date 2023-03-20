@@ -54,7 +54,8 @@ Route::apiResource('progress', PurchasingProcessController::class);
 Route::get('/progress/{id}', [PurchasingProcessController::class, 'show']);
 
 Route::get('/contract/{id}',[ContractController::class, 'show']);
-Route::get('/msk',[CronosController::class, 'show']);
+Route::get('/msk',[CronosController::class, 'index']);
+Route::get('/province/{country}',[CronosController::class, 'getProvinces']);
 
 Route::post('/datafastGetForm',[DatafastController::class, 'requestForm']);
 
