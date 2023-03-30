@@ -19,3 +19,7 @@ Route::get('/', function(){
 });
 
 Route::get('/contract/{so}', [ZohoController::class,'getContractBySO']);
+
+Auth::routes();
+
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
