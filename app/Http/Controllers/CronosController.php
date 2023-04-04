@@ -20,7 +20,7 @@ class CronosController extends Controller
     public function __construct()
     {
         try {
-            $this->emi_owner = '2712674000000899001';
+            /* $this->emi_owner = '2712674000000899001';
 
 
             ZCRMRestClient::initialize([
@@ -37,7 +37,7 @@ class CronosController extends Controller
             $oAuthClient = ZohoOAuth::getClientInstance();
            $refreshToken = env('ZOHO_API_PAYMENTS_MSK_REFRESH_TOKEN');
            $userIdentifier = 'integraciones@msklatam.com';
-           $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier);
+           $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier); */
        }catch(Exception $e){
         Log::error($e);
 
