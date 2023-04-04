@@ -67,7 +67,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'America/Argentina/Buenos_Aires',
 
     /*
     |--------------------------------------------------------------------------
@@ -177,11 +177,11 @@ return [
         //Login Passport
         Laravel\Passport\PassportServiceProvider::class,
 
-        
+
         App\Providers\TelescopeServiceProvider::class,
         Webpatser\Countries\CountriesServiceProvider::class,
         // StefanBauer\LaravelFaviconGenerator\LaravelFaviconGeneratorServiceProvider::class,
-        
+
 
     ],
 

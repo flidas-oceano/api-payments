@@ -1,61 +1,16 @@
 <?php
 namespace App\Http\Controllers;
-use Illuminate\Http\Request;
-use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
+use App\Models\User;
 use Laravel\Passport\Token;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class PassportAuthController extends Controller
 {
-    // public function register(Request $request)
-    // {
-    //     $this->validate($request, [
-    //         'name' => 'required|min:4',
-    //         'email' => 'required|email',
-    //         'password' => 'required|min:8',
-    //     ]);
- 
-    //     $user = User::create([
-    //         'name' => $request->name,
-    //         'email' => $request->email,
-    //         'password' => bcrypt($request->password)
-    //     ]);
-       
-    //     $token = $user->createToken('LaravelAuthApp')->accessToken;
- 
-    //     return response()->json(['token' => $token], 200);
-    // }
-    // public function login(Request $request)
-    // {
-    //     $data = [
-    //         'email' => $request->email,
-    //         'password' => $request->password
-    //     ];
- 
-    //     if (auth()->attempt($data)) {
-    //         $token = auth()->user()->createToken('LaravelAuthApp')->accessToken;
-    //         return response()->json(['token' => $token], 200);
-    //     } else {
-    //         return response()->json(['error' => 'Unauthorized'], 401);
-    //     }
-    // }   
-    // public function logout(Request $request)
-    // {
-    //     $user = Auth::guard('api')->user();
-    //     $user->token()->revoke();
 
-    //     return response()->json(['message' => 'Successfully logged out']);
-    // }
-    
-    // public function users(Request $request)
-    // {
-    //     $users = User::all();
-    //     return response()->json([
-    //         'users' => $users
-    //     ]); 
-    // }  
 
     public function register(Request $request)
     {
@@ -73,27 +28,21 @@ class PassportAuthController extends Controller
             ], 422);
         }
 
-        $user = new User([
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => bcrypt($request->password)
+            'password' => Hash::make($request->password)
         ]);
-       
-        $user->save(); 
-        
-        // $token = $user->createToken('LaravelAuthApp')->accessToken;
-        
-        // return response()->json([
-        //     'token'=> $token,
-        //     'token_type'=>'Bearer',
-        // ], 200);
+
+
         return response()->json([
             'message'=>'Usuario creado.',
         ], 200);
     }
+
     public function login(Request $request)
     {
-       
+
         try {
             $result = $request->validate([
                 'email' => 'required',
@@ -108,30 +57,19 @@ class PassportAuthController extends Controller
             ], 422);
         }
 
-        if(!Auth::attempt(['email' => $request->email, 'password' => $request->password]))
+        if(!Auth::attempt(['email' => $request->email, 'password' => $request->password])){
             return response()->json(['messagge' => 'Error en las credenciales.'],401);
-
+}
         $user = $request->user();
-        $tokenRes = $user->createToken('Personal Access Token');
-        $token = $tokenRes->token;
+        $token = $user->createToken($user->email)->accessToken;
 
-        if($request->remember_me)
-            // $token->expires_at= Carbon::now()->addMinutes(60);
-            $token->expires_at= Carbon::now()->addSeconds(10);
-
-        $token->save();
 
         return response()->json([
-            'access_token'=> $tokenRes->accessToken,
+            'access_token'=> $token,
             'token_type'=>'Bearer',
-            'expires_at'=> Carbon::parse(
-                $tokenRes->token->expires_at
-            )->toDateTimeString(),
-            'now' => now(),
-            'expires_in'=> $tokenRes->token->expires_at->diffInSeconds(now()),
-            'token_expired' => Carbon::parse($tokenRes->token->expires_at)->isPast()
         ]);
-    } 
+    }
+
     public function logout(Request $request)
     {
         $request->user()->token()->revoke();
@@ -143,7 +81,8 @@ class PassportAuthController extends Controller
     {
         $users=User::all();
         return response()->json($users);
-    }  
+    }
+
     public function expiredToken(Request $request){
         $credentials = $request->only('email', 'password');
         if (Auth::attempt($credentials)) {
@@ -197,7 +136,7 @@ class PassportAuthController extends Controller
 
         //         ];
         //     });
-        
+
         //     return response()->json([
         //         'tokens' => $tokens
         //     ]);
@@ -214,7 +153,7 @@ class PassportAuthController extends Controller
             $check = Auth::guard('api')->check();
         return response()->json([
             'data' => $data,
-            'isValid' => $check 
+            'isValid' => $check
         ]);
         } catch (ValidationException $e) {
             return response()->json([

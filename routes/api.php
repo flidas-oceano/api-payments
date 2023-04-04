@@ -1,9 +1,8 @@
 <?php
 
-use App\Http\Controllers\{ContactController, StripePaymentController,LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController,ContractController,DatafastController, CronosController};
+use App\Http\Controllers\{PassportAuthController,ContactController, StripePaymentController,LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController,ContractController,DatafastController, CronosController};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PassportAuthController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -24,10 +23,10 @@ Route::middleware('auth:api')->get('/user', function (Request $request){
 });
 
 // Route::group(['prefix' => 'auth'], function (){
-    Route::post('register',[PassportAuthController::class, 'register']);
-    Route::post('login',[PassportAuthController::class, 'login']);
-    Route::post('expiredToken',[PassportAuthController::class, 'expiredToken']);
-    Route::get('tokenIsValid',[PassportAuthController::class, 'tokenIsValid'])->middleware('auth:api');
+    Route::post('/register',[PassportAuthController::class, 'register']);
+    Route::post('/login',[PassportAuthController::class, 'login']);
+    Route::post('/expiredToken',[PassportAuthController::class, 'expiredToken']);
+    Route::get('/tokenIsValid',[PassportAuthController::class, 'tokenIsValid'])->middleware('auth:api');
 
     Route::group(['middleware' => 'auth:api'], function (){
         Route::get('logout',[PassportAuthController::class, 'logout']);
@@ -68,7 +67,6 @@ Route::apiResource('professions', ProfessionController::class);
 Route::apiResource('specialities', SpecialityController::class);
 Route::apiResource('methods', MethodContactController::class);
 Route::apiResource('progress', PurchasingProcessController::class);
-        Route::get('/progress/{id}', [PurchasingProcessController::class, 'show']);
 
 Route::get('/contract/{id}',[ContractController::class, 'show']);
 Route::get('/msk',[CronosController::class, 'index']);
