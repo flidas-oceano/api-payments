@@ -43,6 +43,14 @@ return [
         'api' => [
             'driver' => 'passport',
             'provider' => 'users'
+            
+        ],
+        'api' => [
+            'driver' => 'passport',
+            'provider' => 'users',
+            'hash' => false,
+            // 'expire_in' => env('JWT_EXPIRE_IN', 60)
+            'expire_in' => 10
         ]
     ],
 

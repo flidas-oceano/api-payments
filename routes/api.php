@@ -24,15 +24,16 @@ Route::middleware('auth:api')->get('/user', function (Request $request){
 });
 
 // Route::group(['prefix' => 'auth'], function (){
-    Route::post('register2',[PassportAuthController::class, 'register2']);
-    Route::post('login2',[PassportAuthController::class, 'login2']);
+    Route::post('register',[PassportAuthController::class, 'register']);
+    Route::post('login',[PassportAuthController::class, 'login']);
+    Route::post('expiredToken',[PassportAuthController::class, 'expiredToken']);
+    Route::get('tokenIsValid',[PassportAuthController::class, 'tokenIsValid'])->middleware('auth:api');
 
     Route::group(['middleware' => 'auth:api'], function (){
-        Route::get('logout2',[PassportAuthController::class, 'logout2']);
-        Route::get('user2',[PassportAuthController::class, 'user2']);
+        Route::get('logout',[PassportAuthController::class, 'logout']);
+        Route::get('user',[PassportAuthController::class, 'user']);
     });
 // });
-
 
 Route::apiResource('/leads', LeadController::class);
 Route::post('/leadSaveProgress/{idPurchaseProgress}', [LeadController::class, 'storeProgress'])->middleware('auth:api');
