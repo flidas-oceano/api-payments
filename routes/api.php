@@ -56,3 +56,4 @@ Route::get("/progress/{id}", [PurchasingProcessController::class, 'show']);
 Route::get('/contract/{id}',[ContractController::class, 'show']);
 
 Route::post('/datafastGetForm',[DatafastController::class, 'requestForm']);
+Route::post('/datafastProcessResponse',[DatafastController::class, 'processResponse']);
