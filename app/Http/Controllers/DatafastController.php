@@ -169,13 +169,13 @@ class DatafastController extends Controller
 			
 			//writeLogDatafast("DATAFAST = send_to_cake " . json_encode($savedData));
 
-			$result = process_transaction_for_crm($savedData);
+			//$result = process_transaction_for_crm($savedData);
 
-			$result = json_decode($result,true);
+			//$result = json_decode($result,true);
 
-			if(isset($result['status']) && $result['status'] == 1 || $result['status'] == 3)
-				sendFormForPayments($result['status']);	
-			else
+			//if(isset($result['status']) && $result['status'] == 1 || $result['status'] == 3)
+				//sendFormForPayments($result['status']);	
+			//else
 			{
 				//$datafast = new Datafast();
 				//$datafast->notifyProblem('error del lado de cake datafast al pedir transaccion');

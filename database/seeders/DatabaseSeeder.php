@@ -17,7 +17,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ProfessionSeeder::class,
             SpecialitySeeder::class,
-            MethodContactSeeder::class
+            MethodContactSeeder::class,
+            CountriesSeeder::class
         ]);
     }
 }
