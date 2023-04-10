@@ -146,6 +146,101 @@ class DatafastController extends Controller
 		return $answer['id'];
 	}
 
+	public function processResponse(Request $request)
+	{
+		$dfPack = $request->all;
+
+		$dfResult = json_decode(request($dfPack),true);
+
+		echo "<pre>";
+		print_r($dfResult);
+		echo "</pre>";
+
+		dd();
+
+		if(isset($dfResult['registrationId']))
+		{
+			$savedData = $_SESSION['transaction_data'];
+			$savedData['datafast'] = [];
+
+			$savedData['datafast']['datafast_token'] = $dfResult['registrationId'];
+			$savedData['datafast']['datafast_result'] = $dfResult['result']['code'];
+			$savedData['datafast']['datafast_payid'] = $dfResult['id'];
+			
+			//writeLogDatafast("DATAFAST = send_to_cake " . json_encode($savedData));
+
+			//$result = process_transaction_for_crm($savedData);
+
+			//$result = json_decode($result,true);
+
+			//if(isset($result['status']) && $result['status'] == 1 || $result['status'] == 3)
+				//sendFormForPayments($result['status']);	
+			//else
+			{
+				//$datafast = new Datafast();
+				//$datafast->notifyProblem('error del lado de cake datafast al pedir transaccion');
+			}
+		}
+		else
+		{
+			//do nothing, va a quedar en procesando.
+		}
+	}
+
+	private function requestDatafast($dfPack) 
+	{
+		$resourcePath = $dfPack['resourcePath'];
+		
+		//writeLogDatafast("DATAFAST = request_transaction_result_pre " . $_GET['resourcePath'] . ' ' . $_GET['id']);
+		
+		//$domain = return_domain();
+		$isDebug = env('APP_DEBUG');
+		
+		if($isDebug)
+		{
+			$url = "https://eu-test.oppwa.com".$resourcePath;
+			$verifyPeer = false;
+			$entityId = '8ac7a4c7803f575f018042ab82fb0916';
+			$accessToken = 'OGE4Mjk0MTg1YTY1YmY1ZTAxNWE2YzhjNzI4YzBkOTV8YmZxR3F3UTMyWA==';
+		}
+		else
+		{
+			$url = "https://eu-prod.oppwa.com".$resourcePath;
+			$verifyPeer = true;
+			$entityId = '8acda4c881aeabd90181b020482a0fdc';
+			$accessToken = 'OGFjZGE0Yzg4MWFlYWJkOTAxODFiMDFmYjM4MDBmYzN8QjlRYzlUTnJjWg==';
+		}
+		
+		
+		$url .= "?entityId=" . $entityId;
+		
+		//echo $url;
+		
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+		'Authorization:Bearer ' . $accessToken));
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $verifyPeer);// this should be set to true in production
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		
+		$responseData = curl_exec($ch);
+		
+		//respuesta de ellos
+		//writeLogDatafast("DATAFAST = request_transaction_result_response " . json_encode($responseData));
+		
+		if(curl_errno($ch)) 
+		{
+			//$datafast = new Datafast();
+			//$datafast->notifyProblem('curl error al querer traer resultado' . $_GET['resourcePath'] . ' ' . $_GET['id']);
+			//writeLogDatafast('curl error al querer traer resultado' . $_GET['resourcePath'] . ' ' . $_GET['id']);
+		}
+		
+		curl_close($ch);
+		
+		return $responseData;
+	}
+
     private function shortMailHash($mail)
 	{
 		$hash = hash('md5',$mail);

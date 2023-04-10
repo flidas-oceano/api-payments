@@ -75,3 +75,5 @@ Route::get('/province/{country}',[CronosController::class, 'getProvinces']);
 Route::post('/datafastGetForm',[DatafastController::class, 'requestForm']);
 
 
+Route::post('/datafastGetForm',[DatafastController::class, 'requestForm']);
+Route::post('/datafastProcessResponse',[DatafastController::class, 'processResponse']);
