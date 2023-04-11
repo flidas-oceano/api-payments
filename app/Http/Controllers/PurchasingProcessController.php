@@ -22,14 +22,6 @@ class PurchasingProcessController extends Controller
      */
     public function index()
     {
-
-      /*   $procceses = DB::table('purchasing_processes as pp')
-                            ->join('leads as l','l.id','=','pp.lead_id_fk')
-                            ->select('pp.*','l.*')
-                            ->get(); */
-
-        // $procceses = PurchasingProcess::with(['leads'])->get();
-        // $procceses = Lead::with('purchasingProcesses')->get();
         $allProcess = PurchaseProgress::all();
         return response()->json($allProcess);
     }
@@ -52,7 +44,8 @@ class PurchasingProcessController extends Controller
      */
     public function store(StorePurchasingProcessRequest $request)
     {
-        $newProgress = PurchaseProgress::create($request->only(['step_number','country']));
+        $data = $request->only(['step_number','country','user_id']);
+        $newProgress = PurchaseProgress::create($data);
         return response()->json($newProgress);
     }
 
