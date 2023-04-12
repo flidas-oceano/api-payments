@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use App\Models\{CronosElements};
 use Illuminate\Support\Facades\Storage;
 use zcrmsdk\crm\crud\ZCRMInventoryLineItem;
 use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
@@ -11,12 +12,13 @@ use zcrmsdk\oauth\ZohoOAuth;
 use zcrmsdk\crm\crud\ZCRMRecord;
 use zcrmsdk\crm\exception\ZCRMException;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\App;
 
 class CronosController extends Controller
 {
     
 
-	public $zoho_api, $spain_url;
+	public $zoho_api, $spain_url, $NewZoho;
 	
 	//--------------------------------
 	//--------------------------------
@@ -39,6 +41,7 @@ class CronosController extends Controller
 
 		$this->spain_url = 'api-dev';
 		$this->zoho_api = 'e25b3b8fd44657334be72a513f129502';
+		$this->NewZoho = App::make('App\Http\Controllers\ZohoController');
 
 		/*
 		if ($this->_env == 'prod') //prode
@@ -56,16 +59,15 @@ class CronosController extends Controller
 	
 	public function addcontract()
 	{
-		$this->render(false);
-		
+	
 		if(isset($_POST['response']))
 		{
 			$response = json_decode($_POST['response']);
 			$data = $response->data;
 			
 			$aux = $data[0];
-			$this->log('[add] Llegó contrato: ' . $aux->SO_Number, 'info', 'eh');
 			
+			Log::info('[add] Llegó contrato: ' . $aux->SO_Number);			
 
 			$this->uploadElement($data,'add','pending');
 			
@@ -73,7 +75,7 @@ class CronosController extends Controller
 		}
 		
 	}
-/*
+
 	private function uploadElement($data,$type,$status)
 	{	
 		$answer = true;
@@ -83,8 +85,7 @@ class CronosController extends Controller
 	
 		$this->loadModel('Elements');
 		
-		$elementsTable = TableRegistry::get('Elements');
-		$element = $elementsTable->newEntity();
+		$element = new CronosElements();
 		
 		$so_numb = $data[0]->SO_Number;
 		
@@ -99,17 +100,17 @@ class CronosController extends Controller
 
 		try
 		{
-			$answer = $elementsTable->save($element);
+			$element->save();
 		} 
 		catch (\Throwable $e)
 		{
-			$this->log($e);
-			$this->notifyContractError(['SO' => $so_numb]);
+			//$this->log($e);
+			
 			$answer = false;
 		}
 		
 		return($answer);
-	}*/
+	}
 	
 	private function post_spain($data)
 	{
@@ -266,18 +267,13 @@ class CronosController extends Controller
 			return $this->response;
 		}
 	}
-    */
-/*
+	*/
+    
+
 	public function cronapi()
 	{
-		$this->render(false);
 		
-		$this->loadComponent('Mailer');
-		
-		$this->loadModel('Elements');		
-		$eleTable = TableRegistry::get('Elements');
-		
-		$elements = $eleTable->find('all',array('conditions' => array('status' => 'pending')))->toArray();
+		$elements = CronosElements::where('status','=','pending')->get();
 
 		$count = 0;
 		
@@ -367,11 +363,11 @@ class CronosController extends Controller
 			}
 			
 			try{		
-			$eleTable->save($e);
+			$e->save();
 			}catch(\Throwable $t)
 			{
-				$this->Mailer->sendMailTemplated('default', 'marianohayon@oceano.com.ar', 'ERROR CRONOS', '');
-				$this->log($t);
+				//$this->Mailer->sendMailTemplated('default', 'marianohayon@oceano.com.ar', 'ERROR CRONOS', '');
+				Log::error($t);
 			}
 	
 					
@@ -386,7 +382,7 @@ class CronosController extends Controller
 		$this->ProcessForEsanet();
 		
 	}
-*/
+
 	//le pasas los elementos, y mediante un proceso omite los repetidos de manera
 	//que sólo proceses las últimas copias de esos repetidos... (o sea la última que haya llegado)
 	public function omitDuplicates($elements)
@@ -423,18 +419,16 @@ class CronosController extends Controller
 	
 	//recorre los elementos success y los marca en zoho "esanet ok"
 	//sólo si corresponde! (preguntando a españa)
-    /*
+    
 	private function ProcessForEsanet()
 	{	
 		$this->render(false);
 		
-		$this->loadComponent('NewZoho');
-		
-		$this->loadModel('Elements');		
-		$eleTable = TableRegistry::get('Elements');
-		
-		$elements = $eleTable->find('all',array('conditions' => array('status' => 'success','esanet' => false, 'error_lime_to_esanet' => false)))->toArray();
-		
+		$elements = CronosElements::where('status','=','success')
+		->where('esanet',false)
+		->where('error_lime_to_esanet',false)
+		->get();
+
 		$contador = 0;
 		
 		foreach($elements as $e)
@@ -522,7 +516,7 @@ class CronosController extends Controller
 			
 			//escribir en BD lo que correspnoda, ya sea ignorado, ya sea esanet = ok....
 			if($write)
-				$eleTable->save($e);
+				$e->save();
 			
 
 			
@@ -533,7 +527,7 @@ class CronosController extends Controller
 		
 	}
 	
-    */
+    
 
 
 	//--------------------------------
@@ -556,11 +550,10 @@ class CronosController extends Controller
 	//--------------------------------
 	
 	//empaqueta toda la data, le pasas en crudo lo que te da zoho... y el tipo de operación (es un add o edit?)
-    /*
+    
 	private function packData($crude, $operation)
 	{
-		$this->loadComponent('NewZoho');
-		
+
 		$answer = array();
 		
 		$orderData = $crude[0]; //tomamos todo junto, así de una, ya que la data esta dispersada con los arrays
@@ -701,16 +694,15 @@ class CronosController extends Controller
 		
 		return($answer);
 	}
-	*/
+	
 
 	//le pasas el paquete y mira los datos y hace algunos cambios
 	//si es necesario
 	//esto es ajustes son en base a datos que ya tenés en el pack, o sea no podés acceder al sales_order crudo
-    /*
+    
 	private function adjustments($pack)
 	{
-		$this->loadComponent('NewZoho');
-		
+
 		if($pack['contrato']['es ecommerce'])
 		{
 			//$pack['contrato']['propietario de contrato'] = '9501 - (ventas digitales)';
@@ -831,7 +823,7 @@ class CronosController extends Controller
 		}
 		
 		//cosas que por ahora estarán en test, pero luego no!!
-
+/*
 		if($this->_env == 'test')
 		{
 			$pack['contrato']['sucursal'] = 17;
@@ -849,15 +841,16 @@ class CronosController extends Controller
 			//-------- OJO QUE ESTO TE CAMBIA EL NOMBRE DEL PAIS!!! -------
 			$pack['contrato']['pais'] = $this->format_iso($pack['contrato']['pais']);
 		}
+		*/
 		
 		return($pack);
 	}
-	*/
+	
 	//verificar integridad de datos, podemos obtener toda la informacion necesaria?
-    /*
+    
 	private function verify($data)
 	{
-		$this->loadComponent('NewZoho');
+		
 		$answer = true;
 		
 		if(!isset($data[0]->Owner->id))
@@ -873,7 +866,7 @@ class CronosController extends Controller
 		
 		return($answer);
 	}
-    */
+    
 	
 	//le pasas un dato y un tipo de filtro, y aplica la acción
 	private function filter($data, $type)
@@ -1126,13 +1119,13 @@ class CronosController extends Controller
 		return($answer);
 	}
 
-	/*
+	
 	private function fetchNotes($id)
 	{
-		$this->loadComponent('NewZoho');
+		
 		return($this->NewZoho->getNotes($id));
 	}
-	*/
+	
 
 	//le pasas un cambio en crudo y te devuelve el id de zoho
 	private function extract_zoho_id($ch)
@@ -1288,7 +1281,7 @@ class CronosController extends Controller
 	}
 	
 	//formato iso paises
-    /*
+    
 	private function format_iso($country)
 	{
 		$iso = array(
@@ -1306,24 +1299,5 @@ class CronosController extends Controller
 		
 		return($iso[$country]);
 	}
-	*/
-
-	//temporal para cambiar un estado
-    /*
-	public function cambiarstatus($so)
-	{
-		$this->render(false);
-		
-		$this->loadModel('Elements');		
-		$eleTable = TableRegistry::get('Elements');
-		
-		$element = $eleTable->find('all',array('conditions' => array('so_number' => $so, 'status' => 'roberto'),
-		'order' => ['Elements.id' => 'DESC']))->first();
-		
-		$element->status = 'pending';
-		
-		$eleTable->save($element);
-	}
-	*/
 	
 }

@@ -77,3 +77,5 @@ Route::post('/datafastGetForm',[DatafastController::class, 'requestForm']);
 
 Route::post('/datafastGetForm',[DatafastController::class, 'requestForm']);
 Route::post('/datafastProcessResponse',[DatafastController::class, 'processResponse']);
+
+Route::post('/addElement',[CronosController::class, 'addcontract']);
