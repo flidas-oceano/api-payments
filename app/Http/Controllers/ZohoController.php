@@ -328,6 +328,7 @@ class ZohoController extends Controller
         $data['profession'] = Profession::where('id',$data['profession'])->first()->name;
         $data['speciality'] = Speciality::where('id',$data['speciality'])->first()->name;
         $data['method_contact'] = MethodContact::where('id',$data['method_contact'])->first()->name;
+        $data['user_email'] = $request->user()->email;
 
         $leadData = $this->processLeadData($data);
 
@@ -588,7 +589,7 @@ class ZohoController extends Controller
                 $contact_id = $response['id'];
         }
 
-        $updatedContact = $this->updateRecord("Contacts",$additionalData,$contact_id, false);    
+        $updatedContact = $this->updateRecord("Contacts",$additionalData,$contact_id, false);
 
         $addressParams = array_merge($data,['contact_id' => $response['id']]);
         $addressParams = array_merge($data,['contact_id' => $response['id']]);
@@ -598,7 +599,7 @@ class ZohoController extends Controller
             return response()->json(['lead' => $response, 'contact' => $updatedContact, 'address' => $address], 500);
         else
             return response()->json(['lead' => $response, 'contact' => $updatedContact, 'address' => $address]);
-        
+
     }
 
     private function convertRecord($id, $type)
@@ -661,6 +662,7 @@ class ZohoController extends Controller
         $leadData['pp']                     = $data["profession"];
         $leadData['Especialidad']           = [$data["speciality"]];
         $leadData['Canal_de_Contactaci_n']           = [$data["method_contact"]];
+        $leadData['EIRL']           = $data["user_email"];
         $leadData['*owner']                 = $this->emi_owner;
 
         return $leadData;
