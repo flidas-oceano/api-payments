@@ -67,7 +67,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'America/Argentina/Buenos_Aires',
 
     /*
     |--------------------------------------------------------------------------
@@ -174,7 +174,14 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        //Login Passport
+        Laravel\Passport\PassportServiceProvider::class,
+
+
         App\Providers\TelescopeServiceProvider::class,
+        Webpatser\Countries\CountriesServiceProvider::class,
+        // StefanBauer\LaravelFaviconGenerator\LaravelFaviconGeneratorServiceProvider::class,
+
 
     ],
 
@@ -230,7 +237,8 @@ return [
         'URL' => Illuminate\Support\Facades\URL::class,
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
-
+        'Countries' => Webpatser\Countries\CountriesFacade::class,
+        //'LaravelFavicon' => StefanBauer\LaravelFaviconGenerator\Facades\LaravelFaviconGenerator::class,
     ],
 
 ];
