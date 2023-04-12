@@ -17,7 +17,8 @@ class PurchaseProgress extends Model
         'title',
         'lead_id',
         'contact_id',
-        'contract_id'
+        'contract_id',
+        'user_id'
     ];
     protected $table = 'purchase_progress';
     protected $hidden = ['created_at','updated_at'];

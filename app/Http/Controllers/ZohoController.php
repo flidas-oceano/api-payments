@@ -20,6 +20,31 @@ class ZohoController extends Controller
 
     public $emi_owner;
 
+    public function reinit()
+    {
+        try {
+
+            ZCRMRestClient::initialize([
+                "client_id" => env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_CLIENT_ID') : env('ZOHO_API_PAYMENTS_PROD_CLIENT_ID'),
+                "client_secret" => env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_CLIENT_SECRECT') : env('ZOHO_API_PAYMENTS_PROD_CLIENT_SECRECT'),
+                "redirect_uri" => env('APP_DEBUG') ? 'https://www.zoho.com' : 'https://www.oceanomedicina.com.ar',
+                "token_persistence_path" => Storage::path("zoho"),
+                "persistence_handler_class" => "ZohoOAuthPersistenceByFile",
+                "currentUserEmail" => env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar', //'copyzoho.custom@gmail.com',
+                "accounts_url" => 'https://accounts.zoho.com',
+                "access_type" => "offline"
+            ]);
+
+            $oAuthClient = ZohoOAuth::getClientInstance();
+           $refreshToken = env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_REFRESH_TOKEN') : env('ZOHO_API_PAYMENTS_PROD_REFRESH_TOKEN');
+           $userIdentifier = env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar';
+           $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier);
+       }catch(Exception $e){
+        Log::error($e);
+
+        }
+    }
+
     public function __construct()
     {
         try {
@@ -303,6 +328,7 @@ class ZohoController extends Controller
         $data['profession'] = Profession::where('id',$data['profession'])->first()->name;
         $data['speciality'] = Speciality::where('id',$data['speciality'])->first()->name;
         $data['method_contact'] = MethodContact::where('id',$data['method_contact'])->first()->name;
+        $data['user_email'] = $request->user()->email;
 
         $leadData = $this->processLeadData($data);
 
@@ -563,7 +589,7 @@ class ZohoController extends Controller
                 $contact_id = $response['id'];
         }
 
-        $updatedContact = $this->updateRecord("Contacts",$additionalData,$contact_id, false);    
+        $updatedContact = $this->updateRecord("Contacts",$additionalData,$contact_id, false);
 
         $addressParams = array_merge($data,['contact_id' => $response['id']]);
         $addressParams = array_merge($data,['contact_id' => $response['id']]);
@@ -573,7 +599,7 @@ class ZohoController extends Controller
             return response()->json(['lead' => $response, 'contact' => $updatedContact, 'address' => $address], 500);
         else
             return response()->json(['lead' => $response, 'contact' => $updatedContact, 'address' => $address]);
-        
+
     }
 
     private function convertRecord($id, $type)
@@ -636,6 +662,7 @@ class ZohoController extends Controller
         $leadData['pp']                     = $data["profession"];
         $leadData['Especialidad']           = [$data["speciality"]];
         $leadData['Canal_de_Contactaci_n']           = [$data["method_contact"]];
+        $leadData['EIRL']           = $data["user_email"];
         $leadData['*owner']                 = $this->emi_owner;
 
         return $leadData;

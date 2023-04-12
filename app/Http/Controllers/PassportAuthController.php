@@ -153,7 +153,8 @@ class PassportAuthController extends Controller
             $check = Auth::guard('api')->check();
         return response()->json([
             'data' => $data,
-            'isValid' => $check
+            'isValid' => $check,
+            'user' => $request->user()
         ]);
         } catch (ValidationException $e) {
             return response()->json([
