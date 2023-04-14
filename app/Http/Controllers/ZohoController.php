@@ -30,17 +30,18 @@ class ZohoController extends Controller
                 "redirect_uri" => env('APP_DEBUG') ? 'https://www.zoho.com' : 'https://www.oceanomedicina.com.ar',
                 "token_persistence_path" => Storage::path("zoho"),
                 "persistence_handler_class" => "ZohoOAuthPersistenceByFile",
-                "currentUserEmail" => env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar', //'copyzoho.custom@gmail.com',
+                "currentUserEmail" => env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar',
+                //'copyzoho.custom@gmail.com',
                 "accounts_url" => 'https://accounts.zoho.com',
                 "access_type" => "offline"
             ]);
 
             $oAuthClient = ZohoOAuth::getClientInstance();
-           $refreshToken = env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_REFRESH_TOKEN') : env('ZOHO_API_PAYMENTS_PROD_REFRESH_TOKEN');
-           $userIdentifier = env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar';
-           $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier);
-       }catch(Exception $e){
-        Log::error($e);
+            $refreshToken = env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_REFRESH_TOKEN') : env('ZOHO_API_PAYMENTS_PROD_REFRESH_TOKEN');
+            $userIdentifier = env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar';
+            $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier);
+        } catch (Exception $e) {
+            Log::error($e);
 
         }
     }
@@ -57,17 +58,18 @@ class ZohoController extends Controller
                 "redirect_uri" => env('APP_DEBUG') ? 'https://www.zoho.com' : 'https://www.oceanomedicina.com.ar',
                 "token_persistence_path" => Storage::path("zoho"),
                 "persistence_handler_class" => "ZohoOAuthPersistenceByFile",
-                "currentUserEmail" => env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar', //'copyzoho.custom@gmail.com',
+                "currentUserEmail" => env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar',
+                //'copyzoho.custom@gmail.com',
                 "accounts_url" => 'https://accounts.zoho.com',
                 "access_type" => "offline"
             ]);
 
             $oAuthClient = ZohoOAuth::getClientInstance();
-           $refreshToken = env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_REFRESH_TOKEN') : env('ZOHO_API_PAYMENTS_PROD_REFRESH_TOKEN');
-           $userIdentifier = env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar';
-           $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier);
-       }catch(Exception $e){
-        Log::error($e);
+            $refreshToken = env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_REFRESH_TOKEN') : env('ZOHO_API_PAYMENTS_PROD_REFRESH_TOKEN');
+            $userIdentifier = env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar';
+            $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier);
+        } catch (Exception $e) {
+            Log::error($e);
 
         }
     }
@@ -77,9 +79,9 @@ class ZohoController extends Controller
         $answer = 'error';
         $record = null;
         try {
-            $moduleIns = ZCRMRestClient::getInstance()->getModuleInstance($module);  //To get module instance
+            $moduleIns = ZCRMRestClient::getInstance()->getModuleInstance($module); //To get module instance
             $response = $moduleIns->searchRecordsByCriteria('(' . $field . ':equals:' . $value . ')');
-            $records = $response->getData();  //To get response data
+            $records = $response->getData(); //To get response data
             $answer = $records[0];
         } catch (\zcrmsdk\crm\exception\ZCRMException $e) {
             Log::error($e);
@@ -91,7 +93,7 @@ class ZohoController extends Controller
     {
         $answer = 'error';
 
-        $so = (int)$so;
+        $so = (int) $so;
         $record = null;
 
         try {
@@ -112,9 +114,9 @@ class ZohoController extends Controller
     {
         $answer = array();
         try {
-            $moduleIns = ZCRMRestClient::getInstance()->getModuleInstance($module);  //To get module instance
+            $moduleIns = ZCRMRestClient::getInstance()->getModuleInstance($module); //To get module instance
             $response = $moduleIns->searchRecordsByCriteria($conditions);
-            $records = $response->getData();  //To get response data
+            $records = $response->getData(); //To get response data
 
             $answer = $records;
         } catch (\Exception $e) {
@@ -191,7 +193,7 @@ class ZohoController extends Controller
         if ($cod == 'DUPLICATE_DATA') {
             $answer = $details['id'];
         }
-       // ID_ALREADY_CONVERTED
+        // ID_ALREADY_CONVERTED
 
         return ($answer);
     }
@@ -224,7 +226,7 @@ class ZohoController extends Controller
         } catch (ZCRMException $e) {
             Log::error($e);
 
-            if(!empty($e->getExceptionDetails()))
+            if (!empty($e->getExceptionDetails()))
                 $answer['detail'] = $e->getExceptionDetails();
             else
                 $answer['detail'] = $e->getMessage();
@@ -240,8 +242,10 @@ class ZohoController extends Controller
             'Email' => $request->email,
             'Monto_de_Anticipo' => $request->installment_amount,
             'Monto_de_Saldo' => $request->amount - $request->installment_amount,
-            'Cantidad' => $request->installments, //Nro de cuotas
-            'Valor_Cuota' => $request->installment_amount, //Costo de cada cuota
+            'Cantidad' => $request->installments,
+            //Nro de cuotas
+            'Valor_Cuota' => $request->installment_amount,
+            //Costo de cada cuota
             'Cuotas_restantes_sin_anticipo' => $request->installments - 1,
             'Fecha_de_Vto' => date('Y-m-d'),
             'Status' => 'Contrato Efectivo',
@@ -257,7 +261,7 @@ class ZohoController extends Controller
 
         $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
 
-        if($updateContract['result'] == 'error')
+        if ($updateContract['result'] == 'error')
             return response()->json($updateContract, 500);
         else
             return response()->json($updateContract);
@@ -269,53 +273,48 @@ class ZohoController extends Controller
         $data = $request->all();
 
         $key = $data['key'];
-		$id = $data['id'];
+        $id = $data['id'];
 
-		$answer = [];
+        $answer = [];
         $answer['detail'] = 'wrong key';
         $answer['status'] = 'error';
 
-		if($key == '9j9fj0Do204==3fja134')
-		{
-			$sale = $this->fetchRecordWithValue('Sales_Orders','id',$id, true);
+        if ($key == '9j9fj0Do204==3fja134') {
+            $sale = $this->fetchRecordWithValue('Sales_Orders', 'id', $id, true);
 
-			if($sale != 'error')
-			{
-				$answer = [];
-				$answer['products'] = [];
+            if ($sale != 'error') {
+                $answer = [];
+                $answer['products'] = [];
 
-				$products = $sale->getLineItems();
+                $products = $sale->getLineItems();
 
-				foreach($products as $p)
-				{
-					$newP = [];
-					$newP['name'] = $p->getProduct()->getLookupLabel();
-					$newP['quantity'] = $p->getQuantity();
-					$newP['id'] = $p->getId();
-					$newP['price'] = $p->getNetTotal();
+                foreach ($products as $p) {
+                    $newP = [];
+                    $newP['name'] = $p->getProduct()->getLookupLabel();
+                    $newP['quantity'] = $p->getQuantity();
+                    $newP['id'] = $p->getId();
+                    $newP['price'] = $p->getNetTotal();
 
-					$answer['products'][] = $newP;
+                    $answer['products'][] = $newP;
 
-				}
-				$answer['sale'] = $sale->getData();
+                }
+                $answer['sale'] = $sale->getData();
 
-				$contactId = $sale->getFieldValue('Contact_Name')->getEntityId();
+                $contactId = $sale->getFieldValue('Contact_Name')->getEntityId();
 
-				$contact = $this->fetchRecordWithValue('Contacts','id',$contactId, true);
+                $contact = $this->fetchRecordWithValue('Contacts', 'id', $contactId, true);
 
-				$answer['contact'] = $contact->getData();
+                $answer['contact'] = $contact->getData();
 
                 $answer['status'] = 'ok';
 
-			}
-			else
-			{
+            } else {
                 $answer['detail'] = 'sale not found';
                 $answer['status'] = 'error';
-			}
-		}
+            }
+        }
 
-        if($answer['status'] == 'error')
+        if ($answer['status'] == 'error')
             return response()->json($answer, 500);
         else
             return response()->json($answer);
@@ -325,9 +324,9 @@ class ZohoController extends Controller
     {
         $data = $request->all();
 
-        $data['profession'] = Profession::where('id',$data['profession'])->first()->name;
-        $data['speciality'] = Speciality::where('id',$data['speciality'])->first()->name;
-        $data['method_contact'] = MethodContact::where('id',$data['method_contact'])->first()->name;
+        $data['profession'] = Profession::where('id', $data['profession'])->first()->name;
+        $data['speciality'] = Speciality::where('id', $data['speciality'])->first()->name;
+        $data['method_contact'] = MethodContact::where('id', $data['method_contact'])->first()->name;
         $data['user_email'] = $request->user()->email;
 
         $leadData = $this->processLeadData($data);
@@ -337,9 +336,9 @@ class ZohoController extends Controller
         if ($leadIsDuplicate)
             $leadData['Lead_Duplicado'] = true;
 
-        $newLead =  $this->createNewRecord('Leads', $leadData);
+        $newLead = $this->createNewRecord('Leads', $leadData);
 
-        if($newLead['result'] == 'error')
+        if ($newLead['result'] == 'error')
             return response()->json($newLead, 500);
         else
             return response()->json($newLead);
@@ -359,9 +358,9 @@ class ZohoController extends Controller
             'Pais' => $data['country'],
         );
 
-		$newContact = $this->createNewRecord('Contacts',$contactData);
+        $newContact = $this->createNewRecord('Contacts', $contactData);
 
-        if($newContact['result'] == 'error')
+        if ($newContact['result'] == 'error')
             return response()->json($newContact, 500);
         else
             return response()->json($newContact);
@@ -376,30 +375,30 @@ class ZohoController extends Controller
         $contactData = $data['contact'];
 
         //armamos data de la dire y la creamos
-			$addressData = array(
-				'Calle' => $contactData['street'],
-				'C_digo_Postal' => $contactData['postal_code'],
-				'Name' => 'direccion',
-				'Contacto' => $data['contact_id'],
-				'Provincia' => $contactData['province_state'],
-				'Pais' => $contactData['country'],
-				'Localidad1' => $contactData['locality'],
-				'Tipo_Dom' => "Particular"
-			);
+        $addressData = array(
+            'Calle' => $contactData['street'],
+            'C_digo_Postal' => $contactData['postal_code'],
+            'Name' => 'direccion',
+            'Contacto' => $data['contact_id'],
+            'Provincia' => $contactData['province_state'],
+            'Pais' => $contactData['country'],
+            'Localidad1' => $contactData['locality'],
+            'Tipo_Dom' => "Particular"
+        );
 
-			//primero vamos a ver si existe una dirección con el mismo ID de contacto
-			//para no repetir
-			$existAddress = $this->fetchRecordWithValue('Domicilios', 'Contacto', $data['contact_id']);
+        //primero vamos a ver si existe una dirección con el mismo ID de contacto
+        //para no repetir
+        $existAddress = $this->fetchRecordWithValue('Domicilios', 'Contacto', $data['contact_id']);
 
-			//esto significa que no existe
-			if($existAddress == 'error'){
-				$newAddress = $this->createNewRecord('Domicilios',$addressData);
-			}else //en cambio, si existe, actualizo
-			{
-				$newAddress = $this->updateRecord('Domicilios',$addressData,$existAddress->getEntityId());
-			}
+        //esto significa que no existe
+        if ($existAddress == 'error') {
+            $newAddress = $this->createNewRecord('Domicilios', $addressData);
+        } else //en cambio, si existe, actualizo
+        {
+            $newAddress = $this->updateRecord('Domicilios', $addressData, $existAddress->getEntityId());
+        }
 
-        return($newAddress);
+        return ($newAddress);
     }
 
     public function createAddressRequest(Request $request)
@@ -408,7 +407,7 @@ class ZohoController extends Controller
 
         $address = $this->createAddress($data);
 
-        if($address['result'] == 'error')
+        if ($address['result'] == 'error')
             return response()->json($address, 500);
         else
             return response()->json($address);
@@ -419,14 +418,15 @@ class ZohoController extends Controller
         $progress = PurchaseProgress::find($request->idPurchaseProgress);
         $products = $progress->contract->products->toArray();
 
-         //armo el product details en base a las cosas que compró el usuario...
+        //armo el product details en base a las cosas que compró el usuario...
         $productDetails = $this->buildProductDetails($products);
 
-        if($productDetails != 'error')
-        {
+        if ($productDetails != 'error') {
             $saleData = array(
-                'Subject' => 'etc',//*
-                'Status' => 'Contrato Pendiente',//*
+                'Subject' => 'etc',
+                //*
+                'Status' => 'Contrato Pendiente',
+                //*
                 'Contact_Name' => $progress->contact->entity_id_crm,
                 //'Cantidad' => $data['installments'],
                 //'Fecha_de_Vto' => date('Y-m-d'),//*
@@ -434,7 +434,8 @@ class ZohoController extends Controller
                 //'L_nea_nica_3' => $data['identification'],
                 //'Billing_Street' => $data['address'],
                 //'Tipo_De_Pago' => $data['payment_type'],
-                '[products]' => $productDetails,//* producto->id
+                '[products]' => $productDetails,
+                //* producto->id
                 'Pais' => $progress->country,
                 //'Anticipo' => strval($data['payment_in_advance']),
                 //'Cuotas_restantes_sin_anticipo' => $data['left_installments'],
@@ -447,16 +448,14 @@ class ZohoController extends Controller
 
             $newSale = $this->createRecordSale($saleData);
 
-            if($newSale['result'] == 'error'){
+            if ($newSale['result'] == 'error') {
                 return response()->json($newSale, 500);
-            }else{
+            } else {
                 $progress->contract->update(['entity_id_crm' => $newSale['id']]);
                 return response()->json($newSale);
             }
 
-        }
-        else
-        {
+        } else {
             $answer['id'] = '';
             $answer['result'] = 'error';
 
@@ -468,7 +467,7 @@ class ZohoController extends Controller
 
     private function createRecordSale($data)
     {
-        $answer= array();
+        $answer = array();
         $answer['id'] = '';
         $answer['result'] = 'error';
         $answer['detail'] = '';
@@ -497,15 +496,14 @@ class ZohoController extends Controller
 
             $responseIns = $record->create();
 
-            if ($responseIns->getHttpStatusCode() == 201)
-            {
+            if ($responseIns->getHttpStatusCode() == 201) {
                 $answer['result'] = 'ok';
                 $aux = $responseIns->getDetails();
                 $answer['id'] = $aux['id'];
             }
         } catch (ZCRMException $e) {
 
-            if(!empty($e->getExceptionDetails()))
+            if (!empty($e->getExceptionDetails()))
                 $answer['detail'] = $e->getExceptionDetails();
             else
                 $answer['detail'] = $e->getMessage();
@@ -520,34 +518,31 @@ class ZohoController extends Controller
     //arma el detalle de productos para el contrato
     private function buildProductDetails($products)
     {
-		$answer = array();
-		//arma y reemplaza sku por ID de producto en zoho
-		foreach($products as $p)
-        {
+        $answer = array();
+        //arma y reemplaza sku por ID de producto en zoho
+        foreach ($products as $p) {
             $p['product_code'] = trim($p['product_code']); //Remove whitespace from product_code
-			$rec = $this->fetchRecordWithValue('Products', 'Product_Code', $p['product_code']);
+            $rec = $this->fetchRecordWithValue('Products', 'Product_Code', $p['product_code']);
 
-            if($rec != 'error')
-            {
+            if ($rec != 'error') {
                 $answer[] = array(
-                    'Product Id' => $rec->getEntityId(),//*
-                    'Quantity' => (int)$p['quantity'],
-                    'List Price' => (float)$p['price'],
+                    'Product Id' => $rec->getEntityId(),
+                    //*
+                    'Quantity' => (int) $p['quantity'],
+                    'List Price' => (float) $p['price'],
                     //'List Price #USD' => (float)$p['price_usd'],
                     //'List Price #Local Currency' => (float)$p['price'],
-                    'Discount' => (float)$p['discount']
+                    'Discount' => (float) $p['discount']
                 );
-            }
-            else
-            {
+            } else {
                 $answer = "error";
                 break;
             }
-		}
+        }
 
 
-		return($answer);
-	}
+        return ($answer);
+    }
 
     public function convertLead(Request $request)
     {
@@ -560,7 +555,7 @@ class ZohoController extends Controller
         ];
 
         $data = $request->all();
-    $progress = PurchaseProgress::find($request->idPurchaseProgress);
+        $progress = PurchaseProgress::find($request->idPurchaseProgress);
         $leadId = $data['lead_id'];
 
         $gender = collect($genderOptions)->firstWhere('id', $data['contact']['sex'])->name;
@@ -575,27 +570,24 @@ class ZohoController extends Controller
         $additionalData['Plataforma'] = 'Venta Presencial';
 
 
-        $response = $this->convertRecord($leadId,'Leads');
+        $response = $this->convertRecord($leadId, 'Leads');
 
-        $fetchContact = $this->fetchRecordWithValue("Contacts",'DNI',$data['contact']['dni']);
+        $fetchContact = $this->fetchRecordWithValue("Contacts", 'DNI', $data['contact']['dni']);
 
-        if($fetchContact != 'error')
-        {
+        if ($fetchContact != 'error') {
             $contact_id = $fetchContact->getEntityId();
-        }
-        else
-        {
-            if(!empty($response['id']))
+        } else {
+            if (!empty($response['id']))
                 $contact_id = $response['id'];
         }
 
-        $updatedContact = $this->updateRecord("Contacts",$additionalData,$contact_id, false);
+        $updatedContact = $this->updateRecord("Contacts", $additionalData, $contact_id, false);
 
-        $addressParams = array_merge($data,['contact_id' => $response['id']]);
-        $addressParams = array_merge($data,['contact_id' => $response['id']]);
+        $addressParams = array_merge($data, ['contact_id' => $response['id']]);
+        $addressParams = array_merge($data, ['contact_id' => $response['id']]);
         $address = $this->createAddress($addressParams);
 
-        if($address['result'] == 'error' || $updatedContact['result'] == 'error')
+        if ($address['result'] == 'error' || $updatedContact['result'] == 'error')
             return response()->json(['lead' => $response, 'contact' => $updatedContact, 'address' => $address], 500);
         else
             return response()->json(['lead' => $response, 'contact' => $updatedContact, 'address' => $address]);
@@ -608,18 +600,16 @@ class ZohoController extends Controller
         $answer['id'] = '';
         $answer['detail'] = '';
 
-        try
-        {
+        try {
             $record = ZCRMRestClient::getInstance()->getRecordInstance($type, $id); // To get record instance
             $contact = ZCRMRecord::getInstance("Contacts", null); // to get the record of deal in form of ZCRMRecord insatnce
-            $details = array("overwrite"=>true);
+            $details = array("overwrite" => true);
             $responseIn = $record->convert($contact, $details); // to convert record
 
             $answer['result'] = 'ok';
             $answer['id'] = $responseIn["Contacts"];
 
-        } catch (ZCRMException $e)
-        {
+        } catch (ZCRMException $e) {
             $handle = $this->handleError($e, $type, []);
 
             if ($handle != 'error') {
@@ -628,7 +618,7 @@ class ZohoController extends Controller
             } else {
                 $answer['result'] = 'error';
 
-                if(!empty($e->getExceptionDetails()))
+                if (!empty($e->getExceptionDetails()))
                     $answer['detail'] = $e->getExceptionDetails();
                 else
                     $answer['detail'] = $e->getMessage();
@@ -637,7 +627,7 @@ class ZohoController extends Controller
             }
         }
 
-        return($answer);
+        return ($answer);
     }
 
 
@@ -650,20 +640,20 @@ class ZohoController extends Controller
             $leadData['Es_Contacto'] = true;
         }
 
-        $leadData['First_Name']             = $data["name"];
-        $leadData['Last_Name']              = $data["username"];
-        $leadData['Phone']                  = $data["telephone"];
-        $leadData['Email']                  = $data["email"];
-        $leadData['Fuente_de_Lead'] = array(0 => 'Venta Presencial');//hay que definir donde buscamos el dato
-        $leadData['FUENTE']         = 'Venta Presencial';//hay que definir donde buscamos el dato
-        $leadData['Plataforma']         = 'Venta Presencial';
-        $leadData['Lead_Status']            = 'Contacto urgente';
-        $leadData['Pais']                   = $data["country"];
-        $leadData['pp']                     = $data["profession"];
-        $leadData['Especialidad']           = [$data["speciality"]];
-        $leadData['Canal_de_Contactaci_n']           = [$data["method_contact"]];
-        $leadData['EIRL']           = $data["user_email"];
-        $leadData['*owner']                 = $this->emi_owner;
+        $leadData['First_Name'] = $data["name"];
+        $leadData['Last_Name'] = $data["username"];
+        $leadData['Phone'] = $data["telephone"];
+        $leadData['Email'] = $data["email"];
+        $leadData['Fuente_de_Lead'] = array(0 => 'Venta Presencial'); //hay que definir donde buscamos el dato
+        $leadData['FUENTE'] = 'Venta Presencial'; //hay que definir donde buscamos el dato
+        $leadData['Plataforma'] = 'Venta Presencial';
+        $leadData['Lead_Status'] = 'Contacto urgente';
+        $leadData['Pais'] = $data["country"];
+        $leadData['pp'] = $data["profession"];
+        $leadData['Especialidad'] = [$data["speciality"]];
+        $leadData['Canal_de_Contactaci_n'] = [$data["method_contact"]];
+        $leadData['EIRL'] = $data["user_email"];
+        $leadData['*owner'] = $this->emi_owner;
 
         return $leadData;
     }
@@ -671,8 +661,8 @@ class ZohoController extends Controller
     private function updateFetchDuplicateLeads($mail)
     {
         //hay leads con ese mail?
-        $searchBy              =  "((Email:equals:" . $mail . ")and(Lead_Status:equals:Contacto urgente))";
-        $sameUserLeads       =  $this->fetchRecords('Leads', $searchBy); //<-- busca records para saber si el usuario ya intentó comprar anteriormente
+        $searchBy = "((Email:equals:" . $mail . ")and(Lead_Status:equals:Contacto urgente))";
+        $sameUserLeads = $this->fetchRecords('Leads', $searchBy); //<-- busca records para saber si el usuario ya intentó comprar anteriormente
 
         if (count($sameUserLeads) == 0) {
             //no encontró nada, entonces no tiene que actualizar y no hay duplicados
@@ -698,13 +688,14 @@ class ZohoController extends Controller
         return true;
     }
 
-    public function getProducts(Request $request, $iso){
+    public function getProducts(Request $request, $iso)
+    {
         $data = $request->all();
         try {
-            $response = Http::asForm()->post("https://www.oceanomedicina.net/proxy/proxy2.php?url=https://www.oceanomedicina.com/api_landing.php",['pais' => $iso]);
+            $response = Http::asForm()->post("https://www.oceanomedicina.net/proxy/proxy2.php?url=https://www.oceanomedicina.com/api_landing.php", ['pais' => $iso]);
 
             // Verificar si la respuesta HTTP fue exitosa
-                if ($response->successful()) {
+            if ($response->successful()) {
                 $data = json_decode($response->body());
 
                 return response()->json($data);
@@ -722,13 +713,14 @@ class ZohoController extends Controller
         }
     }
 
-    public function getProductsWithoutIso(Request $request){
+    public function getProductsWithoutIso(Request $request)
+    {
         $data = $request->all();
         try {
-            $response = Http::asForm()->post("https://www.oceanomedicina.net/proxy/proxy2.php?url=https://www.oceanomedicina.com/api_landing.php",['pais' => 'ar']);
+            $response = Http::asForm()->post("https://www.oceanomedicina.net/proxy/proxy2.php?url=https://www.oceanomedicina.com/api_landing.php", ['pais' => 'ar']);
 
             // Verificar si la respuesta HTTP fue exitosa
-                if ($response->successful()) {
+            if ($response->successful()) {
                 $data = json_decode($response->body());
 
                 return response()->json($data);
