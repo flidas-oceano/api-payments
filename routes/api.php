@@ -3,6 +3,9 @@
 use App\Http\Controllers\{PassportAuthController,ContactController, StripePaymentController,LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController,ContractController,DatafastController, CronosController};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Laravel\Passport\Bridge\AccessToken;
+use Laravel\Passport\Http\Controllers\AccessTokenController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -25,11 +28,13 @@ Route::middleware('auth:api')->get('/user', function (Request $request){
 // Route::group(['prefix' => 'auth'], function (){
     Route::post('/register',[PassportAuthController::class, 'register']);
     Route::post('/login',[PassportAuthController::class, 'login']);
+    //Route::post('login',[AccessTokenController::class, 'issueToken'])->middleware(['api-login','throttle']);
+
     Route::post('/expiredToken',[PassportAuthController::class, 'expiredToken']);
     Route::get('/tokenIsValid',[PassportAuthController::class, 'tokenIsValid'])->middleware('auth:api');
 
+    Route::post('logout',[PassportAuthController::class, 'logout']);
     Route::group(['middleware' => 'auth:api'], function (){
-        Route::get('logout',[PassportAuthController::class, 'logout']);
         Route::get('user',[PassportAuthController::class, 'user']);
     });
 // });
