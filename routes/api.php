@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // });
 
-Route::middleware('auth.api')->group(function () {
+Route::middleware('auth:api')->group(function () {
     Route::get('/tokenIsValid', [PassportAuthController::class, 'tokenIsValid']);
     Route::get('user', [PassportAuthController::class, 'user']);
     Route::post('logout', [PassportAuthController::class, 'logout']);
