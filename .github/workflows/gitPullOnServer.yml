@@ -1,0 +1,25 @@
+name: Git Pull on Server
+
+on:
+  push:
+    branches:
+      - master 
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Install SSH
+      run: apt-get install openssh-client -y
+    - name: SSH into server and execute git pull
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }} # agrega la dirección IP o dominio de tu servidor en las secrets de tu repositorio
+        username: ${{ secrets.USERNAME }} # agrega el nombre de usuario SSH en las secrets de tu repositorio
+        key: ${{ secrets.KEY }} # agrega la clave SSH en las secrets de tu repositorio
+        port: ${{ secrets.PORT }} # agrega el puerto SSH en las secrets de tu repositorio
+        script: |
+          cd /var/www/oceanomedicina.net/htdocs/api-payments # cambia "/ruta/a/tu/proyecto" por la ruta de tu proyecto en tu servidor
+          sudo git pull # ejecuta el comando "git pull" para actualizar el proyecto en tu servidor
