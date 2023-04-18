@@ -21,11 +21,11 @@ class CreateCronosElementsTable extends Migration
             $table->string('status', 100);
             $table->text('data')->nullable();
             $table->text('log')->nullable();
-            $table->tinyInteger('processed');
-            $table->tinyInteger('esanet');
-            $table->tinyInteger('error_lime_to_esanet');
-            $table->tinyInteger('send_to_foc');
-            $table->tinyInteger('msk');
+            $table->tinyInteger('processed')->nullable();
+            $table->tinyInteger('esanet')->nullable();
+            $table->tinyInteger('error_lime_to_esanet')->nullable();
+            $table->tinyInteger('send_to_foc')->nullable();
+            $table->tinyInteger('msk')->nullable();
             $table->timestamps();
         });
     }
