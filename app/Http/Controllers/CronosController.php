@@ -79,32 +79,37 @@ class CronosController extends Controller
 	private function uploadElement($data,$type,$status)
 	{	
 		$answer = true;
+
+		Log::info("gonna save");
 		
 		//para logear
 		$aux = $data[0];
-	
-		$this->loadModel('Elements');
-		
-		$element = new CronosElements();
-		
+
 		$so_numb = $data[0]->SO_Number;
-		
+
 		//codifico data
 		$data = json_encode($data);
-		
-		$element->when_date = date("Y-m-d");
-		$element->data = $data;
-		$element->so_number = $so_numb;
-		$element->status = $status;
-		$element->type = $type;
+
+		$element = CronosElements::create([
+			'when_date' => date("Y-m-d"),
+			'data' => $data,
+			'so_number' => $so_numb,
+			'status' => $status,
+			'type' => $type,
+			'esanet' => 0
+		]);
+
+		Log::info("puse los datos");
 
 		try
 		{
 			$element->save();
+			Log::info("guardado ok");
 		} 
 		catch (\Throwable $e)
 		{
 			//$this->log($e);
+			Log::error($e);
 			
 			$answer = false;
 		}
@@ -276,11 +281,25 @@ class CronosController extends Controller
 		$elements = CronosElements::where('status','=','pending')->get();
 
 		$count = 0;
-		
-		$elements = $this->omitDuplicates($elements);
-		
+
+		//OPTIMIZACION
+		//---- hacer que al guardar cada elemento sea único, esto se logra
+		/*
+
+			haciendo que en so_number se guarde el SO o el ID del contrato al llegar.
+			es decir, que las rows sean únicas en base al so o id, y que al actualizar lo que haga es pisar el mismo row
+
+		*/
+
+
+
+		//------------------
+
 		foreach($elements as $e)
 		{		
+			$dataReady = ''; //para pasarle a LIME
+			$pack = ''; //datos procesador, sin encodear
+
 			$count++;
 			
 			$ignore = false;
@@ -316,8 +335,8 @@ class CronosController extends Controller
 					}
 					else
 					{
-						$e['data'] = $encodeToJson;
-						$e['processed'] = true;
+						$e->data = $encodeToJson;
+						$e->processed = true;
 					}
 					
 					
@@ -332,90 +351,89 @@ class CronosController extends Controller
 					
 					$dataReady = $e->data;	
 				}		
-			
-				if(!$ignore)
+			}
+
+			$spainStatus = '';
+
+			//si no es omitible...
+			if(!$ignore)
+			{
+				//primero lo mando a españa
+				//lo mando a españa primero porque si lo mando y salió ok, es españa quien luego me dice
+				//este contrato ya lo tengo, entonces en base a eso yo tengo el contrato en su estado final...
+				//y ese es el cual uso para luego crear en MSK
+
+				//envia a spain!			
+				$what = $this->post_spain($dataReady);
+
+				$e->log = $what['log'];
+
+				$what['answer'] = 'ok';
+				
+				//salió bien, cambia el estado
+				if($what['answer'] == 'ok')
+					$spainStatus = 'success';
+				else
 				{
-					
-					//envia a spain!			
-					$what = $this->post_spain($dataReady);
-	
-					$e['log'] = $what['log'];
-					
-					//salió bien, cambia el estado
-					if($what['answer'] == 'ok')
-						$e['status'] = 'success';
-					else
+					if($what['answer'] == 'duplicate')
 					{
-						if($what['answer'] == 'duplicate')
+						$spainStatus = 'success';
+					}
+					else
+					if($what['answer'] == 'country')
+					{
+						$spainStatus = 'ignore';
+					}
+				}
+
+				//----
+
+				if($spainStatus == 'success')
+				{
+					$this->NewZoho->reinit();
+
+					//mandar a MSK
+					//primero reviso que no esté en MSK
+					$exists = $this->NewZoho->fetchRecordWithValue('Sales_Orders','otro_so',$pack['contrato']['numero de so']);
+					
+					if($exists == 'error')
+					{
+						//no existe, lo voy a crear
+						$result = $this->createMSK($pack);
+						
+						if($result)
 						{
-							$e['status'] = 'success';
-						}
-						else
-						if($what['answer'] == 'country')
-						{
-							$e['status'] = 'ignore';
+							$e->msk = 1;
+							$e->status = "success";											
 						}
 					}
-					
-					
+					else
+					{
+						$e->msk = 1;
+							$e->status = "success";
+					}
 				}
-			
+
 			}
-			
+
+
 			try{		
-			$e->save();
+				$e->save();
 			}catch(\Throwable $t)
 			{
-				//$this->Mailer->sendMailTemplated('default', 'marianohayon@oceano.com.ar', 'ERROR CRONOS', '');
+				echo ' no pude grabar';
+
+				dd($t);
+				
 				Log::error($t);
 			}
 	
-					
-			//if($count > 2)
-				//die();
-			
-			
-	
 		}
 		
-		//procesa para anotar en zoho lo de esanet
-		$this->ProcessForEsanet();
+		echo ' todo ok';
 		
 	}
 
-	//le pasas los elementos, y mediante un proceso omite los repetidos de manera
-	//que sólo proceses las últimas copias de esos repetidos... (o sea la última que haya llegado)
-	public function omitDuplicates($elements)
-	{
-		$answer = array();
-	
-		$reverse = array_reverse($elements,true);
-		
-		//recorre en reversa (los más recientes primero)
-		//marca en elements las copias viejas
-		foreach($reverse as $k => $r)
-		{
-			//si no fue omitido anteriormente
-			if($elements[$k]->status == 'pending')
-			{
-				foreach($elements as $ke => $e)
-				{
-					if($r->so_number == $e->so_number) //otro row con mismo SO
-					{
-						if($r->id != $e->id) //no soy yo
-						{
-							$elements[$ke]->status = 'omit';
-						}
-					}
-				}
-			}
-		}
-		
-		$answer = $elements;
-		
-		return($answer);	
-	}
-	
 	
 	//recorre los elementos success y los marca en zoho "esanet ok"
 	//sólo si corresponde! (preguntando a españa)
@@ -1057,7 +1075,8 @@ class CronosController extends Controller
 			$answer['membresia'] = (int) filter_var($this->pax($data,'Membresia'), FILTER_SANITIZE_NUMBER_INT);
 			$answer['tipo de cuenta'] = $this->pax($data,'Tipo_de_Cuenta');
 			$answer['num de cuenta'] = $this->pax($data,'N_mero_de_Cuenta');
-			$answer['notas'] = $this->fetchNotes($this->pax($data,'id'));
+			//$answer['notas'] = $this->fetchNotes($this->pax($data,'id'));
+			$answer['notas'] = '';
 			
 			$bonificar = intval($this->pax($data,'Bonificar'));
 
@@ -1298,6 +1317,158 @@ class CronosController extends Controller
 		);
 		
 		return($iso[$country]);
+	}
+
+	private function createMSK($element)
+	{
+		$answer = false;
+		
+		//para ir viendo si avanzar o no, los status
+		$contactStatus = false;
+		$saleStatus = false;
+		$prodStatus = false;
+		
+		$explodedName = explode(",",$element['contacto']["nombre de contacto"]);
+		
+		$surname = '-';
+		$name = '-';
+		
+		if(isset($explodedName[0]))
+			$surname = $explodedName[0];
+		
+		if(isset($explodedName[1]))
+			$name = $explodedName[1];
+		
+		
+		//lo primero que haremos es intentar crear el contacto
+		$contactData = array(
+			"ID_Personal" => $element['contacto']['dni'],
+			'First_Name' => $name,
+			'Last_Name' => $surname,
+			'Email' => $element['contacto']["correo electronico"],
+			'Home_Phone'=>$element['contacto']["telefono particular"],
+			'Other_Phone' => $element['contacto']["otro telefono"],
+			'Pais' => $element['contacto']["pais"],
+			'Profesi_n' => $element['contacto']["profesion o estudio"],
+			'Especialidad' => $element['contacto']["especialidad"],
+			'Estado_civil' => $element['contacto']["estado civil"],
+			"Sexo" => $element['contacto']["genero"],
+			'Date_of_Birth' => $element['contacto']["fecha de nacimiento"],
+			'Lugar_de_trabajo' => $element['contacto']["lugar de trabajo"],
+			'Mailing_Street' => $element['domicilio']["calle y nro"],
+			'C_digo_postal' => $element['domicilio']["codigo postal"],
+			'Estado' => $element['domicilio']["region"],
+			'Ciudad' => $element['domicilio']["localidad"],
+			'Mailing_State' => $element['domicilio']["provincia"],
+		);
+
+		$newContact = $this->NewZoho->createNewRecord('Contacts',$contactData);
+
+		//si pudo crear bien el contacto, status ok
+		if($newContact['result'] == 'ok' || $newContact['result'] == 'duplicate')
+		{
+			$contactStatus = true;
+		}
+
+		echo "estado de contacto <pre>";
+		print_r($newContact);
+		echo "</pre>";
+
+		//avanza si está bien todo, sino no
+		if($contactStatus)
+		{
+            //armo el product details en base a las cosas que compró el usuario...
+			$productDetails = $this->buildProductDetails($element['cursos']);
+
+			if($productDetails != 'error')
+			{
+				$prodStatus = true;
+			}
+		}
+		
+		echo "orod status <pre>";
+		print_r($prodStatus);
+		echo "</pre>";
+
+		//si pudo crear los product details
+		if($prodStatus)
+		{
+			
+			$owner = '5344455000001853001';
+
+            //armamos dato de la venta (contrato) y a crear
+			$saleData = array(
+				'Subject' => 'test',
+				'Contact_Name' => $newContact['id'],
+				'Grand_Total' => $element['contrato']["total general"],
+				//"dni", id persona
+				"CUIT_CUIL_o_DNI" => $element['contrato']["cuit"],
+				'Nombre_Raz_n_social' => $element['contrato']["nombre y apellido"] . $element['contrato']["razon social"],
+				"Tipo_de_factura" => $element['contrato']["tipo iva"],
+				'otro_so' => $element['contrato']["numero de so"],
+				'Billing_Street' => $element['contrato']["domicilio de facturacion"],
+				'Currency' => $element['contrato']["moneda"],
+				'Status' => $element['contrato']["estado de contrato"],
+				//"pais", esta
+                "Seleccione_total_de_pagos_recurrentes" => $element['contrato']["cuotas totales"],
+				'[products]' => $productDetails,
+				'Owner' => $owner
+			);
+
+			$newSale = $this->NewZoho->createSale($saleData);
+
+			//si pudo crear bien el contrato, status ok
+			if($newSale['result'] == 'ok')
+			{
+				$saleStatus = true;
+			}
+		}
+
+		echo "sale status <pre>";
+		print_r($newSale);
+		echo "</pre>";
+
+		if($contactStatus && $saleStatus && $prodStatus)
+			$answer = true;
+
+		return($answer);
+	}
+	
+	//arma el detalle de productos para el contrato
+    private function buildProductDetails($products)
+	{
+		$answer = array();
+		$nonexistent = false;
+
+		$this->loadComponent('NewZohoMSK');
+
+		//arma y reemplaza sku por ID de producto en zoho
+		foreach($products as $p){
+			
+			
+			$rec = $this->NewZoho->fetchRecordWithValue('Products', 'Product_Code', $p['codigo de curso']);
+
+			//trajo ok
+			if($rec != 'error'){
+				$answer[] = array(
+					'Product Id' => $rec->getEntityId(),
+					'Quantity' => $p['cantidad'],
+					'List Price' => $p['precio de lista'],
+					//'List Price #USD' => (float)$p['price_usd'],
+					//'List Price #Local Currency' => (float)$p['price'],
+					'Discount' => $p['descuento']
+				);
+			}
+			else //dió error, entonces voy a romper todo a propósito así da mal el contrato
+			{
+				$nonexistent = true;
+			}
+		}
+
+		if($nonexistent)
+			$answer = 'error';
+
+		return($answer);
 	}
 	
 }
