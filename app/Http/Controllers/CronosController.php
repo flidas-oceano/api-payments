@@ -1440,7 +1440,7 @@ class CronosController extends Controller
 		$answer = array();
 		$nonexistent = false;
 
-		dd('aaaaaaa');
+		
 		
 		//arma y reemplaza sku por ID de producto en zoho
 		foreach($products as $p){
