@@ -1439,9 +1439,7 @@ class CronosController extends Controller
 	{
 		$answer = array();
 		$nonexistent = false;
-
-		$this->loadComponent('NewZohoMSK');
-
+	
 		//arma y reemplaza sku por ID de producto en zoho
 		foreach($products as $p){
 			

@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use zcrmsdk\crm\exception\ZCRMException;
+use zcrmsdk\crm\setup\org\ZCRMOrganization;
 use zcrmsdk\crm\crud\ZCRMInventoryLineItem;
 use App\Http\Requests\UpdateContractZohoRequest;
 use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
@@ -140,7 +141,7 @@ class ZohoController extends Controller
     //exception -> reventó todo
     //ok -> salio bien
     //duplicate -> no es malo, pero está duplicado, o sea que no se crea, sino que trae su id
-    private function createNewRecord($type, $data)
+    public function createNewRecord($type, $data)
     {
         $status = 'ok'; //el status, y en base a esto armo el answer o no...
         //ok = salio bien, y te paso el id
