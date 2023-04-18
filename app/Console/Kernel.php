@@ -17,7 +17,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         $schedule->command('telescope:prune --hours=48')->daily();
-        $schedule->command('passport:purge')->everyMinute();
+        $schedule->command('passport:purge')->hourly();
         $schedule->call('App\Http\Controllers\CronosController@cronapi')->everyThirtyMinutes();
     }
 
