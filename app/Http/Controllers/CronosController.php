@@ -57,52 +57,60 @@ class CronosController extends Controller
         */
     }
 
-    public function addcontract(Request $request)
+    public function addcontract()
     {
-        if (isset($request->response)) {
-            $response = (object) $request->response;
+
+        if (isset($_POST['response'])) {
+            $response = json_decode($_POST['response']);
             $data = $response->data;
 
-            $sale = (object) $data[0];
+            $aux = $data[0];
 
-            Log::info('[add] Llegó contrato: ' . $sale->SO_Number);
+            Log::info('[add] Llegó contrato: ' . $aux->SO_Number);
 
-            $hasNewElemet = $this->uploadElement($sale, 'add', 'pending');
+            $this->uploadElement($data, 'add', 'pending');
 
-            return response()->json($hasNewElemet);
+
         }
 
     }
 
     private function uploadElement($data, $type, $status)
     {
-        $so_numb = $data->SO_Number;
-        $dataString = json_encode($data, true);
+        $answer = true;
+
+        Log::info("gonna save");
+
+        //para logear
+        $aux = $data[0];
+
+        $so_numb = $data[0]->SO_Number;
+
+        //codifico data
+        $data = json_encode($data);
+
+        $element = CronosElements::create([
+            'when_date' => date("Y-m-d"),
+            'data' => $data,
+            'so_number' => $so_numb,
+            'status' => $status,
+            'type' => $type,
+            'esanet' => 0
+        ]);
+
+        Log::info("puse los datos");
+
         try {
-            $element = CronosElements::create([
-                'when_date' => date("Y-m-d"),
-                'data' => $dataString,
-                'so_number' => $so_numb,
-                'status' => $status,
-                'type' => $type,
-                'esanet' => 0
-            ]);
-
-            Log::info("uploadElement(): SO: $so_numb");
-            Log::info("Elemento guardado: ID[$element->id] - $element->so_number");
-            return [
-                'element' => [
-                    'so' => $element->so_number,
-                    'id' => $element->id
-                ]
-            ];
-
+            $element->save();
+            Log::info("guardado ok");
         } catch (\Throwable $e) {
-            Log::error("Elemento no guardado", ["context" => $e]);
-            return ($e);
+            //$this->log($e);
+            Log::error($e);
 
+            $answer = false;
         }
 
+        return ($answer);
     }
 
     private function post_spain($data)
@@ -261,7 +269,7 @@ class CronosController extends Controller
     public function cronapi()
     {
 
-        $elements = CronosElements::where('status', 'pending')->get();
+        $elements = CronosElements::where('status', '=', 'pending')->get();
 
         $count = 0;
 
@@ -329,56 +337,57 @@ class CronosController extends Controller
 
             $spainStatus = '';
 
-            //si no es omitible...
-            if (!$ignore) {
-                //primero lo mando a españa
-                //lo mando a españa primero porque si lo mando y salió ok, es españa quien luego me dice
-                //este contrato ya lo tengo, entonces en base a eso yo tengo el contrato en su estado final...
-                //y ese es el cual uso para luego crear en MSK
 
-                //envia a spain!
-                $what = $this->post_spain($dataReady);
+            //primero lo mando a españa
+            //lo mando a españa primero porque si lo mando y salió ok, es españa quien luego me dice
+            //este contrato ya lo tengo, entonces en base a eso yo tengo el contrato en su estado final...
+            //y ese es el cual uso para luego crear en MSK
 
-                $e->log = $what['log'];
+            //envia a spain!
+            $what = $this->post_spain($dataReady);
 
-                $what['answer'] = 'ok';
+            $e->log = $what['log'];
 
-                //salió bien, cambia el estado
-                if ($what['answer'] == 'ok')
-                    $spainStatus = 'success';
-                else {
-                    if ($what['answer'] == 'duplicate') {
-                        $spainStatus = 'success';
-                    } else
-                        if ($what['answer'] == 'country') {
-                            $spainStatus = 'ignore';
-                        }
-                }
+            $what['answer'] = 'ok';
 
-                //----
+            //salió bien, cambia el estado
+            if ($what['answer'] == 'ok')
+                $e->msk = 1;
+            else {
+                if ($what['answer'] == 'duplicate') {
+                    $e->msk = 1;
+                } else
+                    if ($what['answer'] == 'country') {
 
-                if ($spainStatus == 'success') {
-                    $this->NewZoho->reinit();
+                    }
+            }
 
-                    //mandar a MSK
-                    //primero reviso que no esté en MSK
-                    $exists = $this->NewZoho->fetchRecordWithValue('Sales_Orders', 'otro_so', $pack['contrato']['numero de so']);
+            //----
+        }
 
-                    if ($exists == 'error') {
-                        //no existe, lo voy a crear
-                        $result = $this->createMSK($pack);
+        foreach ($elements as $e) {
+            $pack = json_decode($e->data, true);
 
-                        if ($result) {
-                            $e->msk = 1;
-                            $e->status = "success";
-                        }
-                    } else {
-                        $e->msk = 1;
+            if ($e->msk == 1) {
+                $this->NewZoho->reinit();
+
+                //mandar a MSK
+                //primero reviso que no esté en MSK
+                $exists = $this->NewZoho->fetchRecordWithValue('Sales_Orders', 'otro_so', $pack['contrato']['numero de so']);
+
+                if ($exists == 'error') {
+                    //no existe, lo voy a crear
+                    $result = $this->createMSK($pack);
+
+                    if ($result) {
                         $e->status = "success";
                     }
+                } else {
+                    $e->status = "success";
                 }
-
             }
+
+
 
 
             try {
@@ -396,103 +405,6 @@ class CronosController extends Controller
         echo ' todo ok';
 
     }
-
-
-    //recorre los elementos success y los marca en zoho "esanet ok"
-    //sólo si corresponde! (preguntando a españa)
-
-    private function ProcessForEsanet()
-    {
-        $this->render(false);
-
-        $elements = CronosElements::where('status', '=', 'success')
-            ->where('esanet', false)
-            ->where('error_lime_to_esanet', false)
-            ->get();
-
-        $contador = 0;
-
-        foreach ($elements as $e) {
-
-            $write = false;
-            $setignore = false;
-            $contador++;
-
-            $aux = json_decode($e->data, true);
-
-
-            $result = $this->get_spain($aux['contrato']['numero de so']);
-
-            if (isset($result->data->order_status_selling)) {
-                //se anotó en esanet?
-                if ($result->data->order_status_selling == 'done_sucess') {
-
-                    //existe en zoho? tal vez lo borraron...!
-                    $exists = $this->NewZoho->fetchRecordWithValue('Sales_Orders', 'id', $aux['contrato']['id contrato']);
-
-                    if ($exists == 'error') {
-                        //no existe en zoho... ignorar!
-                        $e['log'] = "removed from zoho";
-                        $e['status'] = 'ignore';
-                        $write = true;
-                    } else {
-                        $tryUpdate = $this->NewZoho->updateRecord('Sales_Orders', ['Cargado_ESANET' => true], $aux['contrato']['id contrato'], false);
-
-                        if ($tryUpdate['result'] == 'ok') {
-                            $e['esanet'] = true;
-                            $write = true;
-                        }
-                    }
-                } else if ($result->data->order_status_selling == 'attempt_and_failed') //tal vez tira error
-                {
-
-                    //lo primero que me fijo es si este contrato tiene más de 5 días, en ese caso, lo voy a "ignorar" marcando que tuvo error
-                    //en la base de datos así no lo traigo más
-                    $daysPassed = time() - strtotime($e['when_date']);
-                    $daysPassed = round($daysPassed / (60 * 60 * 24));
-
-                    if ($daysPassed >= 5) {
-                        //marco en zoho el error que tuvo
-                        $tryUpdate = $this->NewZoho->updateRecord('Sales_Orders', ['Error_ESANET' => $result->data->order_response], $aux['contrato']['id contrato'], false);
-
-                        if ($tryUpdate['result'] == 'ok') {
-                            $write = true;
-                            $e['error_lime_to_esanet'] = 1;
-                        }
-                    } else {
-                        //me fijo en zoho porque en una de esas ya lo marcaron.
-                        $marked = $this->NewZoho->fetchRecordWithValue('Sales_Orders', 'id', $aux['contrato']['id contrato']);
-
-                        if ($marked == 'error') {
-                            //no existe en zoho... ignorar!
-                            $e['log'] = "removed from zoho";
-                            $e['status'] = 'ignore';
-                            $write = true;
-                        } else {
-                            if ($marked->getFieldValue('Cargado_ESANET')) {
-                                $e['esanet'] = true;
-                                $write = true;
-                            }
-                        }
-                    }
-
-                }
-            }
-
-            //escribir en BD lo que correspnoda, ya sea ignorado, ya sea esanet = ok....
-            if ($write)
-                $e->save();
-
-
-
-            //$this->log($e->id);
-            //$this->log($result);
-
-        }
-
-    }
-
-
 
 
     //--------------------------------
@@ -673,14 +585,10 @@ class CronosController extends Controller
         }
 
         if (
-            $this->has(
-                strtolower($pack['contrato']['modalidad de pago del anticipo']),
-                'mercado'
-            ) &&
-            $this->has(
-                strtolower($pack['contrato']['modalidad de pago del anticipo']),
-                'pago'
-            ) &&
+            $this->has(strtolower($pack['contrato']['modalidad de pago del anticipo']),
+                'mercado') &&
+            $this->has(strtolower($pack['contrato']['modalidad de pago del anticipo']),
+                'pago') &&
             $pack['contrato']['es suscripcion'] == "1"
         ) {
             $pack['contrato']['medio de pago de cuotas restantes'] = 'Mercado Pago';
@@ -1311,7 +1219,7 @@ class CronosController extends Controller
                 'Billing_Street' => $element['contrato']["domicilio de facturacion"],
                 'Currency' => $element['contrato']["moneda"],
                 'Status' => $element['contrato']["estado de contrato"],
-                //"pais", esta
+                'Pais_de_facturaci_n' => $element['contrato']["pais"],
                 "Seleccione_total_de_pagos_recurrentes" => $element['contrato']["cuotas totales"],
                 '[products]' => $productDetails,
                 'Owner' => $owner
