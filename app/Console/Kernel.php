@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Http\Controllers\CronosController;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -18,7 +19,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')->hourly();
         $schedule->command('telescope:prune --hours=48')->daily();
         $schedule->command('passport:purge')->hourly();
-        $schedule->call('App\Http\Controllers\CronosController@cronapi')->everyThirtyMinutes();
+        $schedule->call([CronosController::class, 'cronapi'])->everyMinute(); //->everyThirtyMinutes();
     }
 
     /**
