@@ -1439,11 +1439,15 @@ class CronosController extends Controller
 	{
 		$answer = array();
 		$nonexistent = false;
-	
+
+		dd('aaaaaaa');
+		
 		//arma y reemplaza sku por ID de producto en zoho
 		foreach($products as $p){
 			
-			
+			echo $p['codigo de curso'];
+			echo '<br>';
+
 			$rec = $this->NewZoho->fetchRecordWithValue('Products', 'Product_Code', $p['codigo de curso']);
 
 			//trajo ok
