@@ -350,6 +350,7 @@ class CronosController extends Controller
 					//si falla es por problemas de españa...
 					
 					$dataReady = $e->data;	
+					$pack = json_decode($e->data,true);
 				}		
 			}
 
