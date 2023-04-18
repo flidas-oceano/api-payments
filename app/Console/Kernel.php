@@ -18,6 +18,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')->hourly();
         $schedule->command('telescope:prune --hours=48')->daily();
         $schedule->command('passport:purge')->everyMinute();
+        $schedule->call('App\Http\Controllers\CronosController@cronapi')->everyThirtyMinutes();
     }
 
     /**
@@ -27,7 +28,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands()
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }
