@@ -62,6 +62,20 @@ Route::get('/msk', [CronosController::class, 'index']);
 Route::post('/addElement', [CronosController::class, 'addcontract']);
 Route::get('/province/{country}', [CronosController::class, 'getProvinces']);
 
-Route::post('/datafastGetForm', [DatafastController::class, 'requestForm']);
-Route::post('/datafastGetForm', [DatafastController::class, 'requestForm']);
-Route::post('/datafastProcessResponse', [DatafastController::class, 'processResponse']);
+Route::apiResource('professions', ProfessionController::class);
+Route::apiResource('specialities', SpecialityController::class);
+Route::apiResource('methods', MethodContactController::class);
+Route::apiResource('progress', PurchasingProcessController::class);
+
+Route::get('/contract/{id}',[ContractController::class, 'show']);
+Route::get('/msk',[CronosController::class, 'index']);
+Route::get('/province/{country}',[CronosController::class, 'getProvinces']);
+
+Route::post('/datafastGetForm',[DatafastController::class, 'requestForm']);
+
+
+Route::post('/datafastGetForm',[DatafastController::class, 'requestForm']);
+Route::post('/datafastProcessResponse',[DatafastController::class, 'processResponse']);
+
+Route::post('/addElement',[CronosController::class, 'addcontract']);
+Route::get('/processElements',[CronosController::class,'cronapi']);

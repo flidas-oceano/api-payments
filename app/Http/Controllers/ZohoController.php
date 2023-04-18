@@ -26,21 +26,23 @@ class ZohoController extends Controller
         try {
 
             ZCRMRestClient::initialize([
-                "client_id" => env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_CLIENT_ID') : env('ZOHO_API_PAYMENTS_PROD_CLIENT_ID'),
-                "client_secret" => env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_CLIENT_SECRECT') : env('ZOHO_API_PAYMENTS_PROD_CLIENT_SECRECT'),
-                "redirect_uri" => env('APP_DEBUG') ? 'https://www.zoho.com' : 'https://www.oceanomedicina.com.ar',
-                "token_persistence_path" => Storage::path("zoho"),
+                "client_id" => '1000.3RG4V6380Z6J0QJ8VGXO2V0PBMELGK',
+                "client_secret" => '81d8708344811e068588c0bf635a186f195da8bedb',
+                "redirect_uri" => 'https://www.msklatam.com',
+                "token_persistence_path" => Storage::path("zohomsk"),
                 "persistence_handler_class" => "ZohoOAuthPersistenceByFile",
-                "currentUserEmail" => env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar',
-                //'copyzoho.custom@gmail.com',
+                "currentUserEmail" => 'integraciones@msklatam.com',
                 "accounts_url" => 'https://accounts.zoho.com',
                 "access_type" => "offline"
             ]);
 
             $oAuthClient = ZohoOAuth::getClientInstance();
-            $refreshToken = env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_REFRESH_TOKEN') : env('ZOHO_API_PAYMENTS_PROD_REFRESH_TOKEN');
-            $userIdentifier = env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar';
+
+            $refreshToken = "1000.21d634af0695ff7e2ea1c783628d3ead.a5ec4489bb6cdb31c8ac2f5435f94923";
+            $userIdentifier = "integraciones@msklatam.com";
             $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier);
+            //$this->token = $oAuthClient->getAccessToken('https://www.msklatam.com');
+
         } catch (Exception $e) {
             Log::error($e);
 
@@ -112,7 +114,7 @@ class ZohoController extends Controller
     }
 
     //trae records en base a condiciones
-    private function fetchRecords($module, $conditions, $log = false)
+    public function fetchRecords($module, $conditions, $log = false)
     {
         $answer = array();
         try {
@@ -732,6 +734,28 @@ class ZohoController extends Controller
                 'error' => 'Error al obtener los productos: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    //traer usuario
+    public function getUser($id)
+    {
+        $answer = 'error';
+
+        $record = null;
+
+        try {
+
+            $apiResponse = ZCRMOrganization::getInstance()->getUser($id);
+            $user = array($apiResponse->getData());
+
+            $answer = $user[0];
+
+        } catch (\Exception $e) {
+            Log::error($e);
+        }
+
+        return ($answer);
+
     }
 
     public function getProductsWithoutIso(Request $request)
