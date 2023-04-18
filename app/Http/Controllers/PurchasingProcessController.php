@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{Lead,Contact,Address, Contract, PurchaseProgress,Product};
+use App\Models\{Lead, Contact, Address, Contract, PurchaseProgress, Product};
 use App\Http\Requests\StorePurchasingProcessRequest;
 use App\Http\Requests\UpdatePurchasingProcessRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
-use App\Http\Requests\{UpdateLeadRequest,StoreContactRequest};
+use App\Http\Requests\{UpdateLeadRequest, StoreContactRequest};
 
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Validator;
@@ -20,9 +20,9 @@ class PurchasingProcessController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $allProcess = PurchaseProgress::all();
+        $allProcess = PurchaseProgress::where('user_id', $request->user)->get();
         return response()->json($allProcess);
     }
 
@@ -44,7 +44,7 @@ class PurchasingProcessController extends Controller
      */
     public function store(StorePurchasingProcessRequest $request)
     {
-        $data = $request->only(['step_number','country','user_id']);
+        $data = $request->only(['step_number', 'country', 'user_id']);
         $newProgress = PurchaseProgress::create($data);
         return response()->json($newProgress);
     }
@@ -58,8 +58,8 @@ class PurchasingProcessController extends Controller
     public function show($id)
     {
         $progress = PurchaseProgress::getModel($id);
-        if(empty($progress)){
-            return response()->json(['message' => 'El PurchaseProgress con id '.$id.' no existe'], 404);
+        if (empty($progress)) {
+            return response()->json(['message' => 'El PurchaseProgress con id ' . $id . ' no existe'], 404);
         }
 
         $appEnv = [
@@ -91,7 +91,7 @@ class PurchasingProcessController extends Controller
      * @param  \App\Models\PurchaseProgress  $purchasingProcess
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request,$id)
+    public function update(Request $request, $id)
     {
         return PurchaseProgress::updateProgress($id, $request);
     }
@@ -107,29 +107,30 @@ class PurchasingProcessController extends Controller
         //
     }
 
-    public function stepCreateLead(UpdateLeadRequest $request){
+    public function stepCreateLead(UpdateLeadRequest $request)
+    {
         /* Datos de prueba al postman
-            {
-                area_of_work: "",
-                country: "",
-                date_of_birth: "",
-                dni: "",
-                idPurchaseProgress: "39",
-                locality: "",
-                method_contact: "",
-                name: "",
-                postal_code: "",
-                profession: "",
-                province_state: "",
-                registration_number: "",
-                sex: "",
-                speciality: "",
-                step_number: 3,
-                street: "",
-                telephone: "",
-                training_interest: "",
-                username: ""
-            }
+        {
+        area_of_work: "",
+        country: "",
+        date_of_birth: "",
+        dni: "",
+        idPurchaseProgress: "39",
+        locality: "",
+        method_contact: "",
+        name: "",
+        postal_code: "",
+        profession: "",
+        province_state: "",
+        registration_number: "",
+        sex: "",
+        speciality: "",
+        step_number: 3,
+        street: "",
+        telephone: "",
+        training_interest: "",
+        username: ""
+        }
         */
 
         $params = $request->only(['idPurchaseProgress', 'step_number']);
@@ -139,7 +140,7 @@ class PurchasingProcessController extends Controller
             'email' => $leadAttributes['email']
         ], $leadAttributes);
 
-        $purchaseProcess = PurchaseProgress::where('id',$params['idPurchaseProgress'])->first();
+        $purchaseProcess = PurchaseProgress::where('id', $params['idPurchaseProgress'])->first();
         $purchaseProcess->update(['lead_id' => $newOrUpdatedLead->id, 'step_number' => $params['step_number']]);
 
         return response()->json([
@@ -149,7 +150,8 @@ class PurchasingProcessController extends Controller
         ]);
     }
 
-    public function stepConversionContact(StoreContactRequest $request){
+    public function stepConversionContact(StoreContactRequest $request)
+    {
         $contactAttrs = $request->only(Contact::getFormAttributes());
 
         $newOrUpdatedContact = Contact::updateOrCreate([
@@ -158,8 +160,10 @@ class PurchasingProcessController extends Controller
 
         $progress = PurchaseProgress::updateProgress(
             $request->idPurchaseProgress,
-             ['step_number' => $request->step_number,
-              'contact_id' => $newOrUpdatedContact->id]
+            [
+                'step_number' => $request->step_number,
+                'contact_id' => $newOrUpdatedContact->id
+            ]
         );
 
         return response()->json([
@@ -183,10 +187,11 @@ class PurchasingProcessController extends Controller
         return $currency;
     }
 
-    public function stepConversionContract(Request $request){
+    public function stepConversionContract(Request $request)
+    {
         $progress = PurchaseProgress::updateProgress(
             $request->idPurchaseProgress,
-             ['step_number' => $request->step_number]
+            ['step_number' => $request->step_number]
         );
 
         $currency = $this->getCurrencyByCountry($progress->country);
@@ -200,16 +205,16 @@ class PurchasingProcessController extends Controller
 
         $contractId = null;
 
-        if(is_null($progress->contract)){
+        if (is_null($progress->contract)) {
             $newContract = Contract::create($contractAttributes);
             $progress->update(['contract_id' => $newContract->id]);
             $contractId = $newContract->id;
-        }else{
+        } else {
             $progress->contract->update($contractAttributes);
             $contractId = $progress->contract->id;
         }
 
-        $products = collect($request->products)->map(function($item) use ($contractId){
+        $products = collect($request->products)->map(function ($item) use ($contractId) {
             return [
                 "quantity" => $item['quantity'],
                 "product_code" => $item['product_code'],
@@ -240,12 +245,13 @@ class PurchasingProcessController extends Controller
 
 
 
-    public function updateEntityIdLeadVentas(Request $request){
+    public function updateEntityIdLeadVentas(Request $request)
+    {
         $attrLead = $request->all();
 
         $newOrUpdatedLead = Lead::updateOrCreate([
             'email' => $attrLead["email"]
-            ], $attrLead);
+        ], $attrLead);
 
         return response()->json(['lead' => $newOrUpdatedLead]);
     }

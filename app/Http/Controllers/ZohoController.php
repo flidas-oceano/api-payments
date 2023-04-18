@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\UpdateContractZohoRequest;
 use Exception;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
-use zcrmsdk\crm\crud\ZCRMInventoryLineItem;
-use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
 use zcrmsdk\oauth\ZohoOAuth;
 use zcrmsdk\crm\crud\ZCRMRecord;
-use zcrmsdk\crm\exception\ZCRMException;
-use App\Models\{Contact, Lead, Profession, PurchaseProgress, Speciality, MethodContact};
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
+use zcrmsdk\crm\exception\ZCRMException;
+use zcrmsdk\crm\crud\ZCRMInventoryLineItem;
+use App\Http\Requests\UpdateContractZohoRequest;
+use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
+use App\Models\{Contact, Lead, Profession, PurchaseProgress, Speciality, MethodContact};
 
 class ZohoController extends Controller
 {
@@ -88,6 +89,7 @@ class ZohoController extends Controller
         }
         return ($answer);
     }
+
 
     public function getContractBySO(Request $request, $so)
     {
@@ -546,52 +548,71 @@ class ZohoController extends Controller
 
     public function convertLead(Request $request)
     {
-        $contact_id = '-1';
 
         $genderOptions = [
             (object) ['id' => 1, 'name' => 'Masculino'],
             (object) ['id' => 2, 'name' => 'Femenino'],
             (object) ['id' => 3, 'name' => 'Prefiero no aclararlo']
         ];
+        $progress = PurchaseProgress::where('id', $request->idPurchaseProgress)->first();
+        $userOfProgress = User::find($progress->user_id);
+        $leadInProgress = $progress->lead->toArray();
 
         $data = $request->all();
-        $progress = PurchaseProgress::find($request->idPurchaseProgress);
         $leadId = $data['lead_id'];
 
         $gender = collect($genderOptions)->firstWhere('id', $data['contact']['sex'])->name;
 
-        $additionalData = [];
-        $additionalData['DNI'] = $data['contact']['dni'];
-        $additionalData['Sexo'] = $gender;
-        $additionalData['Date_of_Birth'] = $data['contact']['date_of_birth'];
-        $additionalData['Nro_Matr_cula'] = $data['contact']['registration_number'];
-        $additionalData['rea_donde_trabaja'] = $data['contact']['area_of_work'];
-        $additionalData['Inter_s_de_Formaci_n'] = $data['contact']['training_interest'];
-        $additionalData['Plataforma'] = 'Venta Presencial';
+        $additionalData = [
+            'DNI' => $data['contact']['dni'],
+            'Sexo' => $gender,
+            'Date_of_Birth' => $data['contact']['date_of_birth'],
+            'Nro_Matr_cula' => $data['contact']['registration_number'],
+            'rea_donde_trabaja' => $data['contact']['area_of_work'],
+            'Inter_s_de_Formaci_n' => $data['contact']['training_interest'],
+            'Plataforma' => 'Venta Presencial',
+        ];
 
-
-        $response = $this->convertRecord($leadId, 'Leads');
-
-        $fetchContact = $this->fetchRecordWithValue("Contacts", 'DNI', $data['contact']['dni']);
+        $fetchContact = $this->fetchRecordWithValue("Contacts", 'DNI', $additionalData['DNI']);
 
         if ($fetchContact != 'error') {
-            $contact_id = $fetchContact->getEntityId();
+            $entityId = $fetchContact->getEntityId();
+            $leadConvertToContact = "El lead no fue convertido, se encontro un contacto con el mismo DNI y se utilizo el contacto ya existente";
+            $additionalData['First_Name'] = $leadInProgress["name"];
+            $additionalData['Last_Name'] = $leadInProgress["username"];
+            $additionalData['Telefono_infobip'] = $leadInProgress["telephone"];
+            $additionalData['Home_Phone'] = $leadInProgress["telephone"];
+            $additionalData['Phone'] = $leadInProgress["telephone"];
+            $additionalData['Email'] = $leadInProgress["email"];
+            $additionalData['Fuente_de_Lead'] = array(0 => 'Venta Presencial'); //hay que definir donde buscamos el dato
+            $additionalData['FUENTE'] = 'Venta Presencial'; //hay que definir donde buscamos el dato
+            $additionalData['Plataforma'] = 'Venta Presencial';
+            $additionalData['Lead_Status'] = 'Contacto urgente';
+            $additionalData['Pais'] = $progress->country;
+            $additionalData['pp'] = $leadInProgress["profession"];
+            $additionalData['Especialidad'] = [$leadInProgress["speciality"]];
+            $additionalData['Canal_de_Contactaci_n'] = [$leadInProgress["method_contact"]];
+            $additionalData['EIRL'] = $userOfProgress['email'];
+            $leadModule = ZCRMRestClient::getInstance()->getModuleInstance('Leads');
+            $leadModule->deleteRecords([$leadId]);
         } else {
-            if (!empty($response['id']))
-                $contact_id = $response['id'];
+            $leadConvertToContact = $this->convertRecord($leadId, 'Leads');
+
+            if (!empty($leadConvertToContact['id'])) {
+                $entityId = $leadConvertToContact['id'];
+            }
         }
 
-        $updatedContact = $this->updateRecord("Contacts", $additionalData, $contact_id, false);
+        $updatedContact = $this->updateRecord("Contacts", $additionalData, $entityId, false);
 
-        $addressParams = array_merge($data, ['contact_id' => $response['id']]);
-        $addressParams = array_merge($data, ['contact_id' => $response['id']]);
+        $addressParams = array_merge($data, ['contact_id' => $entityId]);
         $address = $this->createAddress($addressParams);
 
-        if ($address['result'] == 'error' || $updatedContact['result'] == 'error')
-            return response()->json(['lead' => $response, 'contact' => $updatedContact, 'address' => $address], 500);
-        else
-            return response()->json(['lead' => $response, 'contact' => $updatedContact, 'address' => $address]);
-
+        if ($address['result'] == 'error' || $updatedContact['result'] == 'error') {
+            return response()->json(['lead' => $leadConvertToContact, 'contact' => $updatedContact, 'address' => $address], 500);
+        } else {
+            return response()->json(['lead' => $leadConvertToContact, 'contact' => $updatedContact, 'address' => $address]);
+        }
     }
 
     private function convertRecord($id, $type)

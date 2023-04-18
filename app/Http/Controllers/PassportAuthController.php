@@ -1,5 +1,6 @@
 <?php
 namespace App\Http\Controllers;
+
 use Carbon\Carbon;
 use App\Models\User;
 use Laravel\Passport\Token;
@@ -38,7 +39,7 @@ class PassportAuthController extends Controller
 
 
         return response()->json([
-            'message'=>'Usuario creado.',
+            'message' => 'Usuario creado.',
         ], 200);
     }
 
@@ -59,19 +60,19 @@ class PassportAuthController extends Controller
             ], 422);
         }
 
-        $credentials= ['email' => $request->email, 'password' => $request->password];
+        $credentials = ['email' => $request->email, 'password' => $request->password];
 
-        if(auth()->attempt($credentials)){
+        if (auth()->attempt($credentials)) {
             $token = $request->user()->createToken($request->email)->accessToken;
 
 
             return response()->json([
-                'access_token'=> $token,
-                'token_type'=>'Bearer',
+                'access_token' => $token,
+                'token_type' => 'Bearer',
             ]);
 
-        }else{
-            return response()->json(['messagge' => 'Error en las credenciales.'],401);
+        } else {
+            return response()->json(['messagge' => 'Error en las credenciales.'], 401);
         }
 
 
@@ -84,9 +85,9 @@ class PassportAuthController extends Controller
 
         if ($user) {
 
-            $user->tokens->each(function($token, $key) {
+            $user->tokens->each(function ($token, $key) {
                 $token->revoke();
-             });
+            });
 
             return response()->json([
                 'message' => 'Successfully logged out',
@@ -101,11 +102,12 @@ class PassportAuthController extends Controller
 
     public function user(Request $request)
     {
-        $users=User::all();
+        $users = User::all();
         return response()->json($users);
     }
 
-    public function expiredToken(Request $request){
+    public function expiredToken(Request $request)
+    {
         $credentials = $request->only('email', 'password');
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
@@ -135,16 +137,17 @@ class PassportAuthController extends Controller
         }
     }
 
-    public function tokenIsValid(Request $request){
+    public function tokenIsValid(Request $request)
+    {
         try {
             $data = $request->user()->token();
 
             $check = Auth::guard('api')->check();
-        return response()->json([
-            'data' => $data,
-            'isValid' => $check,
-            'user' => $request->user()
-        ]);
+            return response()->json([
+                'data' => $data,
+                'isValid' => $check,
+                'user' => $request->user()
+            ]);
         } catch (ValidationException $e) {
             return response()->json([
                 'status' => 'error',
