@@ -25,7 +25,6 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/createAddressZohoCRM', [ZohoController::class, 'createAddressRequest']);
     Route::post('/createSaleZohoCRM', [ZohoController::class, 'createSale']);
     Route::post('/updateZohoStripeZohoCRM', [ZohoController::class, 'updateZohoStripe']);
-    Route::post('/obtainDataCRM', [ZohoController::class, 'obtainData']);
     Route::get('/products/{iso}', [ZohoController::class, 'getProducts']);
     Route::get('/products', [ZohoController::class, 'getProductsWithoutIso']);
 
@@ -67,15 +66,16 @@ Route::apiResource('specialities', SpecialityController::class);
 Route::apiResource('methods', MethodContactController::class);
 Route::apiResource('progress', PurchasingProcessController::class);
 
-Route::get('/contract/{id}',[ContractController::class, 'show']);
-Route::get('/msk',[CronosController::class, 'index']);
-Route::get('/province/{country}',[CronosController::class, 'getProvinces']);
+Route::get('/contract/{id}', [ContractController::class, 'show']);
+Route::get('/msk', [CronosController::class, 'index']);
+Route::get('/province/{country}', [CronosController::class, 'getProvinces']);
 
-Route::post('/datafastGetForm',[DatafastController::class, 'requestForm']);
+Route::post('/datafastGetForm', [DatafastController::class, 'requestForm']);
 
 
-Route::post('/datafastGetForm',[DatafastController::class, 'requestForm']);
-Route::post('/datafastProcessResponse',[DatafastController::class, 'processResponse']);
+Route::post('/datafastGetForm', [DatafastController::class, 'requestForm']);
+Route::post('/datafastProcessResponse', [DatafastController::class, 'processResponse']);
 
-Route::post('/addElement',[CronosController::class, 'addcontract']);
-Route::get('/processElements',[CronosController::class,'cronapi']);
+Route::post('/addElement', [CronosController::class, 'addcontract']);
+Route::get('/processElements', [CronosController::class, 'cronapi']);
+Route::post('/obtainDataCRM', [ZohoController::class, 'obtainData']);
