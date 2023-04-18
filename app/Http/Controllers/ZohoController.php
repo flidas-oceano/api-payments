@@ -470,7 +470,7 @@ class ZohoController extends Controller
 
     }
 
-    private function createRecordSale($data)
+    public function createRecordSale($data)
     {
         $answer = array();
         $answer['id'] = '';
