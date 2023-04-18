@@ -350,6 +350,7 @@ class CronosController extends Controller
 					//si falla es por problemas de españa...
 					
 					$dataReady = $e->data;	
+					$pack = json_decode($e->data,true);
 				}		
 			}
 
@@ -406,6 +407,11 @@ class CronosController extends Controller
 							$e->msk = 1;
 							$e->status = "success";											
 						}
+					}
+					else
+					{
+						$e->msk = 1;
+							$e->status = "success";
 					}
 				}
 
@@ -1410,7 +1416,7 @@ class CronosController extends Controller
 				'Owner' => $owner
 			);
 
-			$newSale = $this->NewZoho->createSale($saleData);
+			$newSale = $this->NewZoho->createRecordSale($saleData);
 
 			//si pudo crear bien el contrato, status ok
 			if($newSale['result'] == 'ok')
@@ -1435,12 +1441,14 @@ class CronosController extends Controller
 		$answer = array();
 		$nonexistent = false;
 
-		$this->loadComponent('NewZohoMSK');
-
+		
+		
 		//arma y reemplaza sku por ID de producto en zoho
 		foreach($products as $p){
 			
-			
+			echo $p['codigo de curso'];
+			echo '<br>';
+
 			$rec = $this->NewZoho->fetchRecordWithValue('Products', 'Product_Code', $p['codigo de curso']);
 
 			//trajo ok
