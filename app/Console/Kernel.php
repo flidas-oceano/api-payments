@@ -21,7 +21,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('telescope:prune --hours=48')->daily();
         $schedule->command('passport:purge')->hourly();
         $schedule->call(function () {
-            $response = Http::get('http://oceanomedicina.net/api-payments/public/api/cronapi');
+            $response = Http::get('https://oceanomedicina.net/api-payments/public/api/cronapi');
             return response()->json($response);
         })->everyMinute(); //->everyThirtyMinutes();
     }
