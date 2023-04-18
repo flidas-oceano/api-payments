@@ -1,5 +1,6 @@
 <?php
 namespace App\Http\Controllers;
+
 use Carbon\Carbon;
 use App\Models\User;
 use Laravel\Passport\Token;
@@ -7,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Laravel\Passport\Passport;
+use Laravel\Passport\TokenRepository;
 
 class PassportAuthController extends Controller
 {
@@ -36,7 +39,7 @@ class PassportAuthController extends Controller
 
 
         return response()->json([
-            'message'=>'Usuario creado.',
+            'message' => 'Usuario creado.',
         ], 200);
     }
 
@@ -57,33 +60,54 @@ class PassportAuthController extends Controller
             ], 422);
         }
 
-        if(!Auth::attempt(['email' => $request->email, 'password' => $request->password])){
-            return response()->json(['messagge' => 'Error en las credenciales.'],401);
-}
-        $user = $request->user();
-        $token = $user->createToken($user->email)->accessToken;
+        $credentials = ['email' => $request->email, 'password' => $request->password];
+
+        if (auth()->attempt($credentials)) {
+            $token = $request->user()->createToken($request->email)->accessToken;
 
 
-        return response()->json([
-            'access_token'=> $token,
-            'token_type'=>'Bearer',
-        ]);
+            return response()->json([
+                'access_token' => $token,
+                'token_type' => 'Bearer',
+            ]);
+
+        } else {
+            return response()->json(['messagge' => 'Error en las credenciales.'], 401);
+        }
+
+
+
     }
 
     public function logout(Request $request)
     {
-        $request->user()->token()->revoke();
+        $user = User::find($request->user_id);
+
+        if ($user) {
+
+            $user->tokens->each(function ($token, $key) {
+                $token->revoke();
+            });
+
+            return response()->json([
+                'message' => 'Successfully logged out',
+            ]);
+
+        }
+
         return response()->json([
-            'messagge' => 'Successfully logged out'
-        ]);
+            'message' => 'Error logging out',
+        ], 401);
     }
+
     public function user(Request $request)
     {
-        $users=User::all();
+        $users = User::all();
         return response()->json($users);
     }
 
-    public function expiredToken(Request $request){
+    public function expiredToken(Request $request)
+    {
         $credentials = $request->only('email', 'password');
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
@@ -111,51 +135,19 @@ class PassportAuthController extends Controller
         } else {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
-        // $credentials = $request->only('email', 'password');
-        // if (Auth::attempt($credentials)) {
-        //     $user = Auth::user();
-        //     $tokens = $user->tokens->filter(function ($token) {
-        //         return $token->expires_at === null || $token->expires_at->gt(Carbon::now());
-        //     })->map(function ($token) {
-        //         $tiempo_restante = $token->expires_at ? $token->expires_at->diffInSeconds(Carbon::now()) : null;
-        //         return [
-        //             'id' => $token->id,
-        //             'name' => $token->name,
-        //             'abilities' => $token->abilities,
-        //             'last_used_at' => $token->last_used_at,
-        //             "user_id" => $token->user_id,
-        //             "client_id" => $token->client_id,
-        //             "name" => $token->name,
-        //             "scopes" => $token->scopes,
-        //             "revoked" => $token->revoked,
-        //             "created_at" => $token->created_at,
-        //             "updated_at" => $token->updated_at,
-        //             "expires_at" => $token->expires_at,
-        //             'tiempo_restante' => $tiempo_restante,
-        //             'tiempo_restante2' => $token->expires_at && $token->expires_at->lt(Carbon::now()),
-
-        //         ];
-        //     });
-
-        //     return response()->json([
-        //         'tokens' => $tokens
-        //     ]);
-        // } else {
-        //     return response()->json([
-        //         'message' => 'Invalid credentials'
-        //     ], 401);
-        // }
     }
-    public function tokenIsValid(Request $request){
+
+    public function tokenIsValid(Request $request)
+    {
         try {
             $data = $request->user()->token();
 
             $check = Auth::guard('api')->check();
-        return response()->json([
-            'data' => $data,
-            'isValid' => $check,
-            'user' => $request->user()
-        ]);
+            return response()->json([
+                'data' => $data,
+                'isValid' => $check,
+                'user' => $request->user()
+            ]);
         } catch (ValidationException $e) {
             return response()->json([
                 'status' => 'error',
