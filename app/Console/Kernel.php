@@ -3,6 +3,7 @@
 namespace App\Console;
 
 use App\Http\Controllers\CronosController;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -19,7 +20,10 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')->hourly();
         $schedule->command('telescope:prune --hours=48')->daily();
         $schedule->command('passport:purge')->hourly();
-        $schedule->call([CronosController::class, 'cronapi'])->everyMinute(); //->everyThirtyMinutes();
+        $schedule->call(function () {
+            $response = Http::get('http://oceanomedicina.net/api-payments/public/api/cronapi');
+            return response()->json($response);
+        })->everyMinute(); //->everyThirtyMinutes();
     }
 
     /**
