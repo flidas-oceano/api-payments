@@ -474,7 +474,6 @@ class CronosController extends Controller
             $idpr = $pd->product->id;
             $productIds[] = $idpr;
 
-            echo $pd->getDiscountPercentage;
             dd($pd);
 
             $auxProdata[$idpr] = array();
