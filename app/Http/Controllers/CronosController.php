@@ -323,8 +323,6 @@ class CronosController extends Controller
 
                     $pack = $this->packData($crude, $e->type);
 
-                    dd($pack);
-
                     //====== termina empaquetado de datos
 
                     //dado que terminó de empaquetar (procesar)
@@ -476,13 +474,10 @@ class CronosController extends Controller
             $idpr = $pd->product->id;
             $productIds[] = $idpr;
 
-            dd($pd);
-
             $auxProdata[$idpr] = array();
             $auxProdata[$idpr]['cantidad'] = $pd->quantity;
             $auxProdata[$idpr]['total'] = $pd->net_total;
             $auxProdata[$idpr]['descuento'] = $pd->Discount;
-            $auxProdata[$idpr]['descuento_perc'] = $pd->DiscountPercentage;
             $auxProdata[$idpr]['precio de lista'] = $pd->list_price;
 
         }
@@ -886,7 +881,6 @@ private function filter($data, $type)
 			$answer['cantidad'] = $this->pax2($data['auxiliar_data'],'cantidad');
 			$answer['total'] = $this->pax2($data['auxiliar_data'],'total');
 			$answer['descuento'] = $this->pax2($data['auxiliar_data'],'descuento');
-			$answer['descuento_perc'] = $this->pax2($data['auxiliar_data'],'descuento_perc');
 			$answer['precio de lista'] = $this->pax2($data['auxiliar_data'],'precio de lista');
 			$answer['nombre proveedor'] = $this->pax2($data,'Vendor Name');
 		}
@@ -1322,13 +1316,20 @@ private function filter($data, $type)
 
             //trajo ok
             if ($rec != 'error') {
+
+                $total = $p['precio de lista'];
+                $discount = $p['descuento'];
+
+                $perc = ($total - $discount) * 100 / $total;
+                $perc = round(100 - $perc,2);
+
                 $answer[] = array(
                     'Product Id' => $rec->getEntityId(),
                     'Quantity' => $p['cantidad'],
                     'List Price' => $p['precio de lista'],
                     //'List Price #USD' => (float)$p['price_usd'],
                     //'List Price #Local Currency' => (float)$p['price'],
-                    'Discount' => $p['descuento']
+                    'Discount' => $perc
                 );
             } else //dió error, entonces voy a romper todo a propósito así da mal el contrato
             {
