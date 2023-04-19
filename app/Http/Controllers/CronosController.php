@@ -381,12 +381,10 @@ class CronosController extends Controller
         }
 
         foreach ($elements as $e) {
-            $pack = json_decode($e->data, true);
+            $pack = json_decode($pack, true);
 
             if ($e->msk == 1) {
                 $this->NewZoho->reinit();
-
-                dd($pack);
 
                 //mandar a MSK
                 //primero reviso que no esté en MSK
