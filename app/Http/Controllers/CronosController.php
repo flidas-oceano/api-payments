@@ -299,14 +299,6 @@ class CronosController extends Controller
 
         $elements = $this->removeduplicates($elements);
 
-        foreach($elements as $e)
-        {
-            echo $e->id . ' ' . $e->status;
-            echo '<br>';
-        }
-
-        dd('bye');
-
         foreach ($elements as $e) {
             $dataReady = ''; //para pasarle a LIME
             $pack = ''; //datos procesador, sin encodear
@@ -388,8 +380,10 @@ class CronosController extends Controller
             //----
         }
 
+        dd($elements);
+
         foreach ($elements as $e) {
-            $pack = json_decode($pack, true);
+            $pack = json_decode($e->data, true);
 
             if ($e->msk == 1) {
                 $this->NewZoho->reinit();
