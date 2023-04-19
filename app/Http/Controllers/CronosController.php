@@ -386,6 +386,8 @@ class CronosController extends Controller
             if ($e->msk == 1) {
                 $this->NewZoho->reinit();
 
+                dd($pack);
+
                 //mandar a MSK
                 //primero reviso que no esté en MSK
                 $exists = $this->NewZoho->fetchRecordWithValue('Sales_Orders', 'otro_so', $pack['contrato']['numero de so']);
