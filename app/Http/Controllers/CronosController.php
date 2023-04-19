@@ -161,7 +161,6 @@ class CronosController extends Controller
 	private function removeduplicates($elements)
 	{
 		$answer = [];
-		$toremove = [];
 
 		foreach ($elements as $e)
 		{
@@ -169,24 +168,21 @@ class CronosController extends Controller
 			$existe = false;
 
 			foreach($answer as $k => $a)
-			{
-				if($e->so_number == $a->so_number)
-				{
-					$toremove[] = $k;
-					$existe = true;
-				}
-			}
+            {
+                //existe
+                if($a->so_number == $e->so_number)
+                {
+                    //lo marco para omitir
+                    $answer[$k]->status = 'omit';
+                    $existe = true;
+                }
+            }
 
 			//agregar dado que no existe
 			if(!$existe)
 			{
 				$answer[] = $e;
 			}
-		}
-
-		foreach($toremove as $t)
-		{
-			unset($answer[$t]);
 		}
 
 		return($answer);
