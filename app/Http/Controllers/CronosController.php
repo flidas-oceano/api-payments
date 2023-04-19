@@ -339,7 +339,7 @@ class CronosController extends Controller
 
 
                     $dataReady = $encodeToJson;
-
+                    $pack = $encodeToJson;
 
                 } else {
                     //ya se procesó pero sigue pendiente, bueno, intentamos de nuevo!
