@@ -274,6 +274,39 @@ class CronosController extends Controller
 	}
 	*/
     
+	private function removeduplicates($elements)
+	{
+		$answer = [];
+		$toremove = [];
+
+		foreach ($elements as $e)
+		{
+			//primero reviso si ya existe uno con el mismo so
+			$existe = false;
+
+			foreach($answer as $k => $a)
+			{
+				if($e->so_number == $a->so_number)
+				{
+					$toremove = $k;
+					$existe = true;
+				}
+			}
+
+			//agregar dado que no existe
+			if(!$existe)
+			{
+				$answer[] = $e;
+			}
+		}
+
+		foreach($toremove as $t)
+		{
+			unset($answer[$t]);
+		}
+
+		return($answer);
+	}
 
 	public function cronapi()
 	{
@@ -282,18 +315,9 @@ class CronosController extends Controller
 
 		$count = 0;
 
-		//OPTIMIZACION
-		//---- hacer que al guardar cada elemento sea único, esto se logra
-		/*
+		$elements = $this->removeduplicates($elements);
 
-			haciendo que en so_number se guarde el SO o el ID del contrato al llegar.
-			es decir, que las rows sean únicas en base al so o id, y que al actualizar lo que haga es pisar el mismo row
-
-		*/
-
-
-
-		//------------------
+		dd($elements);
 
 		foreach($elements as $e)
 		{		
@@ -938,6 +962,7 @@ class CronosController extends Controller
 			$answer['nombre y apellido'] = $this->pax($data,'L_nea_nica_6');
 			$answer['razon social'] = $this->pax($data,'Razon_Social');
 			$answer['tipo iva'] = $this->filter($this->pax($data,'Tipo_IVA'),'guion');
+			$answer['tipo iva puro'] = $this->pax($data,'Tipo_IVA');
 			$answer['fecha contrato efectivo'] = $this->pax($data,'Fecha_Contrato_Efectivo');
 			$answer['acuerdo'] = $this->filter($this->pax($data,'Acuerdo'),'guion');
 			$answer['numero de so'] = $this->pax($data,'SO_Number');
@@ -963,6 +988,7 @@ class CronosController extends Controller
 			$answer['banco emisor'] = $this->pax($data,'Banco_emisor');
 			$answer['membresia'] = (int) filter_var($this->pax($data,'Membresia'), FILTER_SANITIZE_NUMBER_INT);
 			$answer['tipo de cuenta'] = $this->pax($data,'Tipo_de_Cuenta');
+			$answer['telefono facturacion'] = $this->pax($data,'Tel_fono_Facturacion');
 			$answer['num de cuenta'] = $this->pax($data,'N_mero_de_Cuenta');
 			//$answer['notas'] = $this->fetchNotes($this->pax($data,'id'));
 			$answer['notas'] = '';
@@ -997,6 +1023,7 @@ class CronosController extends Controller
 			$answer['genero'] = $this->pax3($data,'Sexo');
 			$answer['fecha de nacimiento'] = $this->pax3($data,'Date_of_Birth');
 			$answer['lugar de trabajo'] = $this->pax3($data,'Lugar_de_Trabajo');
+			$answer['area de trabajo'] = $this->pax3($data,'rea_donde_trabaja');
 			$answer['relacion laboral'] = $this->pax3($data,'Relaci_n_Laboral'); //si luego el pais es diferente de ecuador, esto se saca
 		}
 		else if($who == 'domicilio')
@@ -1235,7 +1262,7 @@ class CronosController extends Controller
 			'First_Name' => $name,
 			'Last_Name' => $surname,
 			'Email' => $element['contacto']["correo electronico"],
-			'Home_Phone'=>$element['contacto']["telefono particular"],
+			'Phone'=>$element['contacto']["telefono particular"],
 			'Other_Phone' => $element['contacto']["otro telefono"],
 			'Pais' => $element['contacto']["pais"],
 			'Profesi_n' => $element['contacto']["profesion o estudio"],
@@ -1249,6 +1276,7 @@ class CronosController extends Controller
 			'Estado' => $element['domicilio']["region"],
 			'Ciudad' => $element['domicilio']["localidad"],
 			'Mailing_State' => $element['domicilio']["provincia"],
+			'rea_donde_tabaja' => $element['contacto']["area de trabajo"],
 		);
 
 		$newContact = $this->NewZoho->createNewRecord('Contacts',$contactData);
@@ -1285,6 +1313,17 @@ class CronosController extends Controller
 			
 			$owner = '5344455000001853001';
 
+			$mododepago = 'Cobro cuotificado';
+
+			if ($element['contrato']['es suscripcion'] == 1)
+			{
+				$mododepago = 'Cobro Recurrente';
+			}
+			else if($element['contrato']['cuotas totales'] == 1)
+			{
+				$mododepago = 'Cobro total en un pago';
+			}
+
             //armamos dato de la venta (contrato) y a crear
 			$saleData = array(
 				'Subject' => 'test',
@@ -1292,13 +1331,17 @@ class CronosController extends Controller
 				'Grand_Total' => $element['contrato']["total general"],
 				//"dni", id persona
 				"CUIT_CUIL_o_DNI" => $element['contrato']["cuit"],
+				"RFC" => $element['contrato']["cuit"],
 				'Nombre_Raz_n_social' => $element['contrato']["nombre y apellido"] . $element['contrato']["razon social"],
-				"Tipo_de_factura" => $element['contrato']["tipo iva"],
+				'Modo_de_pago' => $mododepago,
+				"Tipo_de_factura" => $element['contrato']["tipo iva puro"],
 				'otro_so' => $element['contrato']["numero de so"],
 				'Billing_Street' => $element['contrato']["domicilio de facturacion"],
 				'Currency' => $element['contrato']["moneda"],
 				'Status' => $element['contrato']["estado de contrato"],
 				'Pais_de_facturaci_n' => $element['contrato']["pais"],
+				'Tel_fono' => $element['contrato']["telefono facturacion"],
+				'M_todo_de_pago' => $element['contrato']["modalidad de pago del anticipo"],
                 "Seleccione_total_de_pagos_recurrentes" => $element['contrato']["cuotas totales"],
 				'[products]' => $productDetails,
 				'Owner' => $owner
