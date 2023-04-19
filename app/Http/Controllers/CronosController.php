@@ -299,7 +299,7 @@ class CronosController extends Controller
 
         $elements = $this->removeduplicates($elements);
 
-        foreach ($elements as $e) {
+        foreach ($elements as $k => $e) {
             $dataReady = ''; //para pasarle a LIME
             $pack = ''; //datos procesador, sin encodear
 
@@ -333,7 +333,7 @@ class CronosController extends Controller
                     if ($encodeToJson === false) {
                         //apa, salió mal! no hagas nada!!!
                     } else {
-                        $e->data = $encodeToJson;
+                        $elements[$k]->data = $encodeToJson;
                         $e->processed = true;
                     }
 
