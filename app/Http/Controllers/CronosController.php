@@ -474,8 +474,6 @@ class CronosController extends Controller
             $idpr = $pd->product->id;
             $productIds[] = $idpr;
 
-            dd($pd);
-
             $auxProdata[$idpr] = array();
             $auxProdata[$idpr]['cantidad'] = $pd->quantity;
             $auxProdata[$idpr]['total'] = $pd->net_total;
@@ -1323,7 +1321,7 @@ private function filter($data, $type)
                 $discount = $p['descuento'];
 
                 $perc = ($total - $discount) * 100 / $total;
-                $perc = round(100 - $perc,2);
+                $perc = 100 - $perc;
 
                 echo $total;
                 echo $discount;
