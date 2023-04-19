@@ -293,6 +293,8 @@ class CronosController extends Controller
     public function cronapi()
     {
 
+        $packs = [];
+
         $elements = CronosElements::where('status', '=', 'pending')->get();
 
         $count = 0;
@@ -333,7 +335,7 @@ class CronosController extends Controller
                     if ($encodeToJson === false) {
                         //apa, salió mal! no hagas nada!!!
                     } else {
-                        $elements[$k]->data = $encodeToJson;
+                        $e->data = $encodeToJson;                      
                         $e->processed = true;
                     }
 
@@ -349,6 +351,8 @@ class CronosController extends Controller
                     $pack = $e->data;
                 }
             }
+
+            $packs[$e->id] = $pack;
 
             $spainStatus = '';
 
@@ -380,10 +384,10 @@ class CronosController extends Controller
             //----
         }
 
-        dd($elements);
+        dd($packs);
 
         foreach ($elements as $e) {
-            $pack = json_decode($e->data, true);
+            $pack = json_decode($packs[$e->id], true);
 
             if ($e->msk == 1) {
                 $this->NewZoho->reinit();
