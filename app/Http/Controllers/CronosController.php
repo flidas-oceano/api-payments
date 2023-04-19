@@ -1323,6 +1323,10 @@ private function filter($data, $type)
                 $perc = ($total - $discount) * 100 / $total;
                 $perc = round(100 - $perc,2);
 
+                echo $total;
+                echo $discount;
+                dd($perc);
+
                 $answer[] = array(
                     'Product Id' => $rec->getEntityId(),
                     'Quantity' => $p['cantidad'],
