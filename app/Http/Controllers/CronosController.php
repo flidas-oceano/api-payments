@@ -384,12 +384,10 @@ class CronosController extends Controller
             //----
         }
 
-        dd($packs);
-
         foreach ($elements as $e) {
             $pack = json_decode($packs[$e->id], true);
 
-            if ($e->msk == 1) {
+            if ($e->msk == 1 && $e->status != 'omit') {
                 $this->NewZoho->reinit();
 
                 //mandar a MSK
