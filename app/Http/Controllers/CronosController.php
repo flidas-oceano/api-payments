@@ -164,9 +164,7 @@ class CronosController extends Controller
 
 		foreach ($elements as $e)
 		{
-			//primero reviso si ya existe uno con el mismo so
-			$existe = false;
-
+           
 			foreach($answer as $k => $a)
             {
                 //existe
@@ -174,15 +172,11 @@ class CronosController extends Controller
                 {
                     //lo marco para omitir
                     $answer[$k]->status = 'omit';
-                    $existe = true;
                 }
             }
 
-			//agregar dado que no existe
-			if(!$existe)
-			{
-				$answer[] = $e;
-			}
+            $answer[] = $e;
+
 		}
 
 		return($answer);
