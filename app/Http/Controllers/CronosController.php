@@ -299,6 +299,14 @@ class CronosController extends Controller
 
         $elements = $this->removeduplicates($elements);
 
+        foreach($elements as $e)
+        {
+            echo $e->id . ' ' . $e->status;
+            echo '<br>';
+        }
+
+        dd('bye');
+
         foreach ($elements as $e) {
             $dataReady = ''; //para pasarle a LIME
             $pack = ''; //datos procesador, sin encodear
