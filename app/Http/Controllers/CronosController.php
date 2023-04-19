@@ -476,6 +476,8 @@ class CronosController extends Controller
             $idpr = $pd->product->id;
             $productIds[] = $idpr;
 
+            dd($pd);
+
             $auxProdata[$idpr] = array();
             $auxProdata[$idpr]['cantidad'] = $pd->quantity;
             $auxProdata[$idpr]['total'] = $pd->net_total;
