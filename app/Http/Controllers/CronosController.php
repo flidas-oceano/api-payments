@@ -172,7 +172,7 @@ class CronosController extends Controller
 			{
 				if($e->so_number == $a->so_number)
 				{
-					$toremove = $k;
+					$toremove[] = $k;
 					$existe = true;
 				}
 			}
