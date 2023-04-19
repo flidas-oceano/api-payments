@@ -323,6 +323,8 @@ class CronosController extends Controller
 
                     $pack = $this->packData($crude, $e->type);
 
+                    dd($pack);
+
                     //====== termina empaquetado de datos
 
                     //dado que terminó de empaquetar (procesar)
@@ -478,6 +480,7 @@ class CronosController extends Controller
             $auxProdata[$idpr]['cantidad'] = $pd->quantity;
             $auxProdata[$idpr]['total'] = $pd->net_total;
             $auxProdata[$idpr]['descuento'] = $pd->Discount;
+            $auxProdata[$idpr]['descuento_perc'] = $pd->DiscountPercentage;
             $auxProdata[$idpr]['precio de lista'] = $pd->list_price;
 
         }
@@ -794,6 +797,7 @@ private function filter($data, $type)
 			$answer['cuit'] = $this->pax($data,'CUIT_CUIL');
 			$answer['nombre y apellido'] = $this->pax($data,'L_nea_nica_6');
 			$answer['razon social'] = $this->pax($data,'Razon_Social');
+			$answer['email'] = $this->pax($data,'Email');
 			$answer['tipo iva'] = $this->filter($this->pax($data,'Tipo_IVA'),'guion');
 			$answer['tipo iva puro'] = $this->pax($data,'Tipo_IVA');
 			$answer['fecha contrato efectivo'] = $this->pax($data,'Fecha_Contrato_Efectivo');
@@ -880,6 +884,7 @@ private function filter($data, $type)
 			$answer['cantidad'] = $this->pax2($data['auxiliar_data'],'cantidad');
 			$answer['total'] = $this->pax2($data['auxiliar_data'],'total');
 			$answer['descuento'] = $this->pax2($data['auxiliar_data'],'descuento');
+			$answer['descuento_perc'] = $this->pax2($data['auxiliar_data'],'descuento_perc');
 			$answer['precio de lista'] = $this->pax2($data['auxiliar_data'],'precio de lista');
 			$answer['nombre proveedor'] = $this->pax2($data,'Vendor Name');
 		}
@@ -1262,6 +1267,7 @@ private function filter($data, $type)
 				'Grand_Total' => $element['contrato']["total general"],
 				//"dni", id persona
 				"CUIT_CUIL_o_DNI" => $element['contrato']["cuit"],
+				"Correo_electr_nico" => $element['contrato']["email"],
 				"RFC" => $element['contrato']["cuit"],
 				'Nombre_Raz_n_social' => $element['contrato']["nombre y apellido"] . $element['contrato']["razon social"],
 				'Modo_de_pago' => $mododepago,
