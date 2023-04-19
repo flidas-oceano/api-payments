@@ -157,6 +157,40 @@ class CronosController extends Controller
 
         return ($answer);
     }
+    
+	private function removeduplicates($elements)
+	{
+		$answer = [];
+		$toremove = [];
+
+		foreach ($elements as $e)
+		{
+			//primero reviso si ya existe uno con el mismo so
+			$existe = false;
+
+			foreach($answer as $k => $a)
+			{
+				if($e->so_number == $a->so_number)
+				{
+					$toremove = $k;
+					$existe = true;
+				}
+			}
+
+			//agregar dado que no existe
+			if(!$existe)
+			{
+				$answer[] = $e;
+			}
+		}
+
+		foreach($toremove as $t)
+		{
+			unset($answer[$t]);
+		}
+
+		return($answer);
+	}
 
 
     ///limit=10&status=done_sucess&date_begin=2021-03-11
@@ -273,17 +307,10 @@ class CronosController extends Controller
 
         $count = 0;
 
-        //OPTIMIZACION
-        //---- hacer que al guardar cada elemento sea único, esto se logra
-        /*
-        haciendo que en so_number se guarde el SO o el ID del contrato al llegar.
-        es decir, que las rows sean únicas en base al so o id, y que al actualizar lo que haga es pisar el mismo row
-        */
+        $elements = $this->removeduplicates($elements);
 
-
-
-        //------------------
-
+		dd($elements);
+        
         foreach ($elements as $e) {
             $dataReady = ''; //para pasarle a LIME
             $pack = ''; //datos procesador, sin encodear
@@ -717,35 +744,157 @@ class CronosController extends Controller
         return ($answer);
     }
 
-
-    //le pasas un dato y un tipo de filtro, y aplica la acción
-    private function filter($data, $type)
+//le pasas un dato y un tipo de filtro, y aplica la acción
+private function filter($data, $type)
+{
+    $answer = $data;
+    
+    //separa por guion y se queda con el segundo dato
+    if($type == 'guion')
     {
-        $answer = $data;
+        $parts = explode('-', $data);
 
-        //separa por guion y se queda con el segundo dato
-        if ($type == 'guion') {
-            $parts = explode('-', $data);
-
-            if (isset($parts[1]))
-                $answer = trim($parts[1]);
-
-        } else if ($type == "guion_1") //separa por guion y se queda con el primer dato
-        {
-            $parts = explode('-', $data);
-
-            if (isset($parts[1])) //para quedarse con el primer dato, me interesa saber que efectivamente lo partió en 2!! sino no me sirve...
-                $answer = trim($parts[0]);
-        } else if ($type == "onlynumbers") //deja sólo numeros (mentira, porque deja los puntos)
-        {
-            $answer = preg_replace('/[^0-9.]/', '', $data);
-        } else if ($type == "code_payment") {
-            $answer = $this->tableCodPayment($data);
-        }
-
-
-        return ($answer);
+        if(isset($parts[1]))
+            $answer = trim($parts[1]);
+        
     }
+    else if($type == "guion_1") //separa por guion y se queda con el primer dato
+    {
+        $parts = explode('-', $data);
+
+        if(isset($parts[1])) //para quedarse con el primer dato, me interesa saber que efectivamente lo partió en 2!! sino no me sirve...
+            $answer = trim($parts[0]);
+    }
+    else if($type == "onlynumbers") //deja sólo numeros (mentira, porque deja los puntos)
+    {
+        $answer = preg_replace('/[^0-9.]/', '', $data);
+    }
+    else if($type == "code_payment")
+    {
+        $answer = $this->tableCodPayment($data);
+    }
+        
+    
+    return($answer);
+}
+ 
+
+
+	
+	//transforma los datos (obtiene los necesarios)
+	private function transform($data, $who)
+	{
+		$answer = array();
+		
+		if($who == 'contrato')
+		{
+						
+			$exchange_rate = floatval($this->pax($data,'Exchange_Rate'));
+			
+			if($exchange_rate == 0)
+				$exchange_rate++;
+					
+			$answer['propietario de contrato'] = $this->pax($data,'nombre_propietario');
+			//$answer['nro de cuotas'] = $this->pax($data,'Cantidad');
+			$answer['nro de cuotas'] = $this->pax($data,'Cuotas_totales');
+			$answer['total general'] = $this->pax($data,'Grand_Total');
+			$answer['dni'] = str_replace(".","",$this->filter($this->pax($data,'L_nea_nica_3'),'onlynumbers'));		
+			$answer['cuit'] = $this->pax($data,'CUIT_CUIL');
+			$answer['nombre y apellido'] = $this->pax($data,'L_nea_nica_6');
+			$answer['razon social'] = $this->pax($data,'Razon_Social');
+			$answer['tipo iva'] = $this->filter($this->pax($data,'Tipo_IVA'),'guion');
+			$answer['tipo iva puro'] = $this->pax($data,'Tipo_IVA');
+			$answer['fecha contrato efectivo'] = $this->pax($data,'Fecha_Contrato_Efectivo');
+			$answer['acuerdo'] = $this->filter($this->pax($data,'Acuerdo'),'guion');
+			$answer['numero de so'] = $this->pax($data,'SO_Number');
+			$answer['anticipo 1er cuota'] = $this->pax($data,'Anticipo');
+			$answer['cod medio de pago de cuotas restantes'] = $this->filter($this->pax($data,'Medio_de_Pago'),"code_payment");
+			$answer['medio de pago de cuotas restantes'] = $this->pax($data,'Medio_de_Pago');
+			//$answer['medio de pago de cuotas restantes'] = $this->clean_str($data->Medio_de_Pago);
+			$answer['domicilio de facturacion'] = $this->pax($data,'Billing_Street');
+			$answer['fecha vto 1er cuota'] = $this->pax($data,'Fecha_de_Vto');
+			$answer['cod modalidad de pago del anticipo'] = $this->filter($this->pax($data,'Modalidad_de_pago_del_Anticipo'),"code_payment");
+			$answer['modalidad de pago del anticipo'] = $this->pax($data,'Modalidad_de_pago_del_Anticipo');
+			$answer['moneda'] = $this->pax($data,'Currency');
+			$answer['id contrato'] = $this->pax($data,'id');
+			$answer['estado de contrato'] = $this->pax($data,'Status');	
+			$answer['pais'] = $this->pax($data,'Pais');				
+			$answer['cuotas totales'] = $this->pax($data,'Cuotas_totales');
+			$answer['es ecommerce'] = (boolean) $this->pax($data,'Es_Ecommerce');	
+			$answer['es suscripcion'] = $this->pax($data,'Es_Suscri');	
+			$answer['monto_dolares'] = round(floatval($this->pax($data,'Grand_Total')) / $exchange_rate,2);	
+			$answer['tasa'] = $exchange_rate;
+			$answer['organizacion'] = $this->pax($data, 'Organizacion');
+			$answer['stripe_subscription_id'] = $this->pax($data,'stripe_subscription_id');
+			$answer['banco emisor'] = $this->pax($data,'Banco_emisor');
+			$answer['membresia'] = (int) filter_var($this->pax($data,'Membresia'), FILTER_SANITIZE_NUMBER_INT);
+			$answer['tipo de cuenta'] = $this->pax($data,'Tipo_de_Cuenta');
+			$answer['telefono facturacion'] = $this->pax($data,'Tel_fono_Facturacion');
+			$answer['num de cuenta'] = $this->pax($data,'N_mero_de_Cuenta');
+			//$answer['notas'] = $this->fetchNotes($this->pax($data,'id'));
+			$answer['notas'] = '';
+			
+			$bonificar = intval($this->pax($data,'Bonificar'));
+
+			if($bonificar > 0)
+				$answer['fecha cobro diferido'] = $this->pax($data,'Fecha_cobro_diferido');
+			else
+				$answer['fecha cobro diferido'] = '';
+				
+			
+			if($this->pax($data,'Es_Ecommerce') == true)
+			{
+				//$answer['ecom_combos'] = $this->pax($data,'Combos');	
+				//$answer['ecom_cupones'] = $this->pax($data,'Cupones');	
+				//$answer['ecom_certificaciones'] = $this->pax($data,'Certificaciones');	
+			}
+		}
+		else if($who == 'contacto')
+		{
+			$answer['dni'] = str_replace(".","",$this->filter($this->pax3($data,'DNI'),'onlynumbers'));
+			$answer['nombre de contacto'] = $this->pax3($data,'Last_Name').', '.$this->pax3($data,'First_Name');
+			$answer['correo electronico'] = $this->pax3($data,'Email');
+			$answer['telefono particular'] = $this->filter($this->pax3($data,'Home_Phone'),'onlynumbers');
+			$answer['otro telefono'] = $this->filter($this->pax3($data,'Other_Phone'),'onlynumbers');
+			$answer['pais'] = $this->pax3($data,'Pais');
+			$answer['profesion o estudio'] = $this->pax3($data,'prof');
+			$answer['especialidad'] = $this->pax3($data,'Especialidad');
+			$answer['lead origen'] = $this->pax3($data,'Fuente_de_lead_manual_prueba');
+			$answer['estado civil'] = $this->pax3($data,'Estado_Civil');
+			$answer['genero'] = $this->pax3($data,'Sexo');
+			$answer['fecha de nacimiento'] = $this->pax3($data,'Date_of_Birth');
+			$answer['lugar de trabajo'] = $this->pax3($data,'Lugar_de_Trabajo');
+			$answer['area de trabajo'] = $this->pax3($data,'rea_donde_trabaja');
+			$answer['relacion laboral'] = $this->pax3($data,'Relaci_n_Laboral'); //si luego el pais es diferente de ecuador, esto se saca
+		}
+		else if($who == 'domicilio')
+		{		
+			$answer['tipo dom'] = $this->pax3($data,'Tipo_Dom');
+			$answer['calle y nro'] = $this->pax3($data,'Calle');
+			$answer['piso/dpto'] = $this->pax3($data,'Piso_Dpto');
+			$answer['barrio'] = $this->pax3($data,'Barrio');
+			$answer['localidad'] = $this->pax3($data,'Localidad1');
+			$answer['codigo postal'] = $this->pax3($data,'C_digo_Postal');
+			$answer['region'] = $this->pax3($data,'Regi_n');
+			$answer['ciudades'] = $this->pax3($data,'Ciudades');
+			$answer['pais'] = $this->pax3($data,'Pais');
+			$answer['provincia'] = $this->filter($this->pax3($data,'Provincia'),'guion_1');
+		} 
+		else if($who == 'curso')
+		{
+			$answer['categoria de curso'] = $this->pax2($data,'Product Category');
+			$answer['codigo de curso'] = $this->pax2($data,'Product Code');
+			$answer['#'] = $this->pax2($data['auxiliar_data'],'#');
+			$answer['cantidad'] = $this->pax2($data['auxiliar_data'],'cantidad');
+			$answer['total'] = $this->pax2($data['auxiliar_data'],'total');
+			$answer['descuento'] = $this->pax2($data['auxiliar_data'],'descuento');
+			$answer['precio de lista'] = $this->pax2($data['auxiliar_data'],'precio de lista');
+			$answer['nombre proveedor'] = $this->pax2($data,'Vendor Name');
+		}
+		
+		return($answer);
+	}
+ 
 
     private function tableCodContact($value, $type)
     {
@@ -853,110 +1002,6 @@ class CronosController extends Controller
             return '?';
 
     }
-
-    //transforma los datos (obtiene los necesarios)
-    private function transform($data, $who)
-    {
-        $answer = array();
-
-        if ($who == 'contrato') {
-
-            $exchange_rate = floatval($this->pax($data, 'Exchange_Rate'));
-
-            if ($exchange_rate == 0)
-                $exchange_rate++;
-
-            $answer['propietario de contrato'] = $this->pax($data, 'nombre_propietario');
-            //$answer['nro de cuotas'] = $this->pax($data,'Cantidad');
-            $answer['nro de cuotas'] = $this->pax($data, 'Cuotas_totales');
-            $answer['total general'] = $this->pax($data, 'Grand_Total');
-            $answer['dni'] = str_replace(".", "", $this->filter($this->pax($data, 'L_nea_nica_3'), 'onlynumbers'));
-            $answer['cuit'] = $this->pax($data, 'CUIT_CUIL');
-            $answer['nombre y apellido'] = $this->pax($data, 'L_nea_nica_6');
-            $answer['razon social'] = $this->pax($data, 'Razon_Social');
-            $answer['tipo iva'] = $this->filter($this->pax($data, 'Tipo_IVA'), 'guion');
-            $answer['fecha contrato efectivo'] = $this->pax($data, 'Fecha_Contrato_Efectivo');
-            $answer['acuerdo'] = $this->filter($this->pax($data, 'Acuerdo'), 'guion');
-            $answer['numero de so'] = $this->pax($data, 'SO_Number');
-            $answer['anticipo 1er cuota'] = $this->pax($data, 'Anticipo');
-            $answer['cod medio de pago de cuotas restantes'] = $this->filter($this->pax($data, 'Medio_de_Pago'), "code_payment");
-            $answer['medio de pago de cuotas restantes'] = $this->pax($data, 'Medio_de_Pago');
-            //$answer['medio de pago de cuotas restantes'] = $this->clean_str($data->Medio_de_Pago);
-            $answer['domicilio de facturacion'] = $this->pax($data, 'Billing_Street');
-            $answer['fecha vto 1er cuota'] = $this->pax($data, 'Fecha_de_Vto');
-            $answer['cod modalidad de pago del anticipo'] = $this->filter($this->pax($data, 'Modalidad_de_pago_del_Anticipo'), "code_payment");
-            $answer['modalidad de pago del anticipo'] = $this->pax($data, 'Modalidad_de_pago_del_Anticipo');
-            $answer['moneda'] = $this->pax($data, 'Currency');
-            $answer['id contrato'] = $this->pax($data, 'id');
-            $answer['estado de contrato'] = $this->pax($data, 'Status');
-            $answer['pais'] = $this->pax($data, 'Pais');
-            $answer['cuotas totales'] = $this->pax($data, 'Cuotas_totales');
-            $answer['es ecommerce'] = (boolean) $this->pax($data, 'Es_Ecommerce');
-            $answer['es suscripcion'] = $this->pax($data, 'Es_Suscri');
-            $answer['monto_dolares'] = round(floatval($this->pax($data, 'Grand_Total')) / $exchange_rate, 2);
-            $answer['tasa'] = $exchange_rate;
-            $answer['organizacion'] = $this->pax($data, 'Organizacion');
-            $answer['stripe_subscription_id'] = $this->pax($data, 'stripe_subscription_id');
-            $answer['banco emisor'] = $this->pax($data, 'Banco_emisor');
-            $answer['membresia'] = (int) filter_var($this->pax($data, 'Membresia'), FILTER_SANITIZE_NUMBER_INT);
-            $answer['tipo de cuenta'] = $this->pax($data, 'Tipo_de_Cuenta');
-            $answer['num de cuenta'] = $this->pax($data, 'N_mero_de_Cuenta');
-            //$answer['notas'] = $this->fetchNotes($this->pax($data,'id'));
-            $answer['notas'] = '';
-
-            $bonificar = intval($this->pax($data, 'Bonificar'));
-
-            if ($bonificar > 0)
-                $answer['fecha cobro diferido'] = $this->pax($data, 'Fecha_cobro_diferido');
-            else
-                $answer['fecha cobro diferido'] = '';
-
-
-            if ($this->pax($data, 'Es_Ecommerce') == true) {
-                //$answer['ecom_combos'] = $this->pax($data,'Combos');
-                //$answer['ecom_cupones'] = $this->pax($data,'Cupones');
-                //$answer['ecom_certificaciones'] = $this->pax($data,'Certificaciones');
-            }
-        } else if ($who == 'contacto') {
-            $answer['dni'] = str_replace(".", "", $this->filter($this->pax3($data, 'DNI'), 'onlynumbers'));
-            $answer['nombre de contacto'] = $this->pax3($data, 'Last_Name') . ', ' . $this->pax3($data, 'First_Name');
-            $answer['correo electronico'] = $this->pax3($data, 'Email');
-            $answer['telefono particular'] = $this->filter($this->pax3($data, 'Home_Phone'), 'onlynumbers');
-            $answer['otro telefono'] = $this->filter($this->pax3($data, 'Other_Phone'), 'onlynumbers');
-            $answer['pais'] = $this->pax3($data, 'Pais');
-            $answer['profesion o estudio'] = $this->pax3($data, 'prof');
-            $answer['especialidad'] = $this->pax3($data, 'Especialidad');
-            $answer['lead origen'] = $this->pax3($data, 'Fuente_de_lead_manual_prueba');
-            $answer['estado civil'] = $this->pax3($data, 'Estado_Civil');
-            $answer['genero'] = $this->pax3($data, 'Sexo');
-            $answer['fecha de nacimiento'] = $this->pax3($data, 'Date_of_Birth');
-            $answer['lugar de trabajo'] = $this->pax3($data, 'Lugar_de_Trabajo');
-            $answer['relacion laboral'] = $this->pax3($data, 'Relaci_n_Laboral'); //si luego el pais es diferente de ecuador, esto se saca
-        } else if ($who == 'domicilio') {
-            $answer['tipo dom'] = $this->pax3($data, 'Tipo_Dom');
-            $answer['calle y nro'] = $this->pax3($data, 'Calle');
-            $answer['piso/dpto'] = $this->pax3($data, 'Piso_Dpto');
-            $answer['barrio'] = $this->pax3($data, 'Barrio');
-            $answer['localidad'] = $this->pax3($data, 'Localidad1');
-            $answer['codigo postal'] = $this->pax3($data, 'C_digo_Postal');
-            $answer['region'] = $this->pax3($data, 'Regi_n');
-            $answer['ciudades'] = $this->pax3($data, 'Ciudades');
-            $answer['pais'] = $this->pax3($data, 'Pais');
-            $answer['provincia'] = $this->filter($this->pax3($data, 'Provincia'), 'guion_1');
-        } else if ($who == 'curso') {
-            $answer['categoria de curso'] = $this->pax2($data, 'Product Category');
-            $answer['codigo de curso'] = $this->pax2($data, 'Product Code');
-            $answer['#'] = $this->pax2($data['auxiliar_data'], '#');
-            $answer['cantidad'] = $this->pax2($data['auxiliar_data'], 'cantidad');
-            $answer['total'] = $this->pax2($data['auxiliar_data'], 'total');
-            $answer['descuento'] = $this->pax2($data['auxiliar_data'], 'descuento');
-            $answer['precio de lista'] = $this->pax2($data['auxiliar_data'], 'precio de lista');
-            $answer['nombre proveedor'] = $this->pax2($data, 'Vendor Name');
-        }
-
-        return ($answer);
-    }
-
 
     private function fetchNotes($id)
     {
@@ -1206,20 +1251,35 @@ class CronosController extends Controller
 
             $owner = '5344455000001853001';
 
+			$mododepago = 'Cobro cuotificado';
+
+			if ($element['contrato']['es suscripcion'] == 1)
+			{
+				$mododepago = 'Cobro Recurrente';
+			}
+			else if($element['contrato']['cuotas totales'] == 1)
+			{
+				$mododepago = 'Cobro total en un pago';
+			}
+
             //armamos dato de la venta (contrato) y a crear
-            $saleData = array(
-                'Subject' => 'test',
-                'Contact_Name' => $newContact['id'],
-                'Grand_Total' => $element['contrato']["total general"],
-                //"dni", id persona
-                "CUIT_CUIL_o_DNI" => $element['contrato']["cuit"],
-                'Nombre_Raz_n_social' => $element['contrato']["nombre y apellido"] . $element['contrato']["razon social"],
-                "Tipo_de_factura" => $element['contrato']["tipo iva"],
-                'otro_so' => $element['contrato']["numero de so"],
-                'Billing_Street' => $element['contrato']["domicilio de facturacion"],
-                'Currency' => $element['contrato']["moneda"],
-                'Status' => $element['contrato']["estado de contrato"],
-                'Pais_de_facturaci_n' => $element['contrato']["pais"],
+			$saleData = array(
+				'Subject' => 'test',
+				'Contact_Name' => $newContact['id'],
+				'Grand_Total' => $element['contrato']["total general"],
+				//"dni", id persona
+				"CUIT_CUIL_o_DNI" => $element['contrato']["cuit"],
+				"RFC" => $element['contrato']["cuit"],
+				'Nombre_Raz_n_social' => $element['contrato']["nombre y apellido"] . $element['contrato']["razon social"],
+				'Modo_de_pago' => $mododepago,
+				"Tipo_de_factura" => $element['contrato']["tipo iva puro"],
+				'otro_so' => $element['contrato']["numero de so"],
+				'Billing_Street' => $element['contrato']["domicilio de facturacion"],
+				'Currency' => $element['contrato']["moneda"],
+				'Status' => $element['contrato']["estado de contrato"],
+				'Pais_de_facturaci_n' => $element['contrato']["pais"],
+				'Tel_fono' => $element['contrato']["telefono facturacion"],
+				'M_todo_de_pago' => $element['contrato']["modalidad de pago del anticipo"],
                 "Seleccione_total_de_pagos_recurrentes" => $element['contrato']["cuotas totales"],
                 '[products]' => $productDetails,
                 'Owner' => $owner
