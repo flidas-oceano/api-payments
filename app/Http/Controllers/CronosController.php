@@ -1208,7 +1208,7 @@ private function filter($data, $type)
             'Lugar_de_trabajo' => $element['contacto']["lugar de trabajo"],
             'rea_donde_tabaja' => $element['contacto']["area de trabajo"],
             'Mailing_Street' => $element['domicilio']["calle y nro"],
-            'C_digo_postal' => $element['domicilio']["codigo postal"],
+            'Mailing_Zip' => $element['domicilio']["codigo postal"],
             'Estado' => $element['domicilio']["region"],
             'Ciudad' => $element['domicilio']["localidad"],
             'Mailing_State' => $element['domicilio']["provincia"],
