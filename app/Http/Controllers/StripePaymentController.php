@@ -191,7 +191,7 @@ class StripePaymentController extends Controller
                     break;
                 } //Perú
             case 'MX': {
-                    $answer = $is_test_environment ? /*OCEANO PLAN 'price_1HaHelBZ0DURRH2FOsEBD3Yx' */ "plan_LAc5CqAkJTxvMu" : 'price_1KX8QdE5uG7kVBQX3SIYoDwc'/* 'price_1HcZMpBZ0DURRH2FIqO53wvW' */;
+                    $answer = $is_test_environment ? "price_1Myy67LfB7wzWQD4JiGWIE8E" : 'price_1MyxzxLfB7wzWQD4eU6orxav'/* 'price_1HcZMpBZ0DURRH2FIqO53wvW' */;
                     break;
                 } //Mexico
             case 'co': {
