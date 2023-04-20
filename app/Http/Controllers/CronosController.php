@@ -1214,9 +1214,6 @@ private function filter($data, $type)
             'Mailing_State' => $element['domicilio']["provincia"],
         );
 
-        echo $element['domicilio']["localidad"];
-        dd($contactData);
-
         $newContact = $this->NewZoho->createNewRecord('Contacts', $contactData);
 
         //si pudo crear bien el contacto, status ok
