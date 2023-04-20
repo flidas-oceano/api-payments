@@ -1210,7 +1210,7 @@ private function filter($data, $type)
             'Mailing_Street' => $element['domicilio']["calle y nro"],
             'Mailing_Zip' => $element['domicilio']["codigo postal"],
             'Estado' => $element['domicilio']["region"],
-            'City' => $element['domicilio']["localidad"],
+            'City2' => $element['domicilio']["localidad"],
             'Mailing_State' => $element['domicilio']["provincia"],
         );
 
