@@ -39,8 +39,8 @@ class CronosController extends Controller
     public function __construct()
     {
 
-        $this->spain_url = 'api-dev';
-        $this->zoho_api = 'e25b3b8fd44657334be72a513f129502';
+        $this->spain_url = 'api';
+        $this->zoho_api = 'd8eff47754322c7a4ba86d13f25c5772';
         $this->NewZoho = App::make('App\Http\Controllers\ZohoController');
 
         /*
@@ -322,6 +322,7 @@ class CronosController extends Controller
                     //==========arranca empaquetado de datos
 
                     $pack = $this->packData($crude, $e->type);
+                    $pack['prueba'] = 1;
 
                     //====== termina empaquetado de datos
 
@@ -366,8 +367,6 @@ class CronosController extends Controller
             $what = $this->post_spain($dataReady);
 
             $e->log = $what['log'];
-
-            $what['answer'] = 'ok';
 
             //salió bien, cambia el estado
             if ($what['answer'] == 'ok')
