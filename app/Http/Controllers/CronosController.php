@@ -1196,7 +1196,7 @@ class CronosController extends Controller
             'Mailing_Street' => $element['domicilio']["calle y nro"],
             'Mailing_Zip' => $element['domicilio']["codigo postal"],
             'Estado' => $element['domicilio']["region"],
-            'City' => $element['domicilio']["localidad"],
+            'Ciudad_contacto' => $element['domicilio']["localidad"],
             'Mailing_State' => $element['domicilio']["provincia"],
         );
 
