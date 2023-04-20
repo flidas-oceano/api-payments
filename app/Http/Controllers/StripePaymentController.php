@@ -58,7 +58,7 @@ class StripePaymentController extends Controller
         $stripeSK = "";
 
         if($countryAlpha2Iso === 'MX' ){
-            $stripeSK = env('APP_DEBUG') ? env('STRIPE_MX_SK_TEST') : env('STRIPE_MX_SK_PROD');
+            $stripeSK = env('APP_DEBUG') ? env('STRIPE_MX_SK_MSK_TEST') : env('STRIPE_MX_SK_MSK_PROD');
           }else{
             $stripeSK = env('APP_DEBUG') ? env('STRIPE_OCEANO_SK_TEST') : env('STRIPE_OCEANO_SK_PROD');
         }
