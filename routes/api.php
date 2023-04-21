@@ -3,6 +3,7 @@
 use App\Http\Controllers\{PassportAuthController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Stripe\Stripe;
 
 // Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //     return $request->user();
@@ -24,7 +25,6 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/createContactZohoCRM', [ZohoController::class, 'createContact']);
     Route::post('/createAddressZohoCRM', [ZohoController::class, 'createAddressRequest']);
     Route::post('/createSaleZohoCRM', [ZohoController::class, 'createSale']);
-    Route::post('/updateZohoStripeZohoCRM', [ZohoController::class, 'updateZohoStripe']);
     Route::get('/products/{iso}', [ZohoController::class, 'getProducts']);
     Route::get('/products', [ZohoController::class, 'getProductsWithoutIso']);
 
@@ -50,8 +50,28 @@ Route::apiResource('methods', MethodContactController::class);
 Route::get('/db/getLead', [LeadController::class, 'index']);
 
 Route::post('/stripe/paymentIntent', [StripePaymentController::class, 'paymentIntent']);
+Route::post('/create-payment-method', function (Request $request) {
+    Stripe::setApiKey(config('services.stripe.secret_mx'));
+
+    $paymentMethod = \Stripe\PaymentMethod::create([
+        'type' => 'card',
+        'card' => [
+            'number' => $request->input('cardNumber'),
+            'exp_month' => $request->input('expMonth'),
+            'exp_year' => $request->input('expYear'),
+            'cvc' => $request->input('cvc'),
+        ],
+    ]);
+
+    return response()->json([
+        'paymentMethod' => $paymentMethod->id,
+    ]);
+});
+
 Route::post('/stripe/subscriptionPayment', [StripePaymentController::class, 'subscriptionPayment']);
 Route::get('/stripe/customer/search/{email}', [StripePaymentController::class, 'findCustomerByEmail']);
+
+Route::post('/updateZohoStripeZohoCRM', [ZohoController::class, 'updateZohoStripe']);
 
 Route::get('/db', [PurchasingProcessController::class, 'index']);
 

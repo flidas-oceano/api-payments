@@ -30,4 +30,9 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'stripe' => [
+        'secret_mx' => env('APP_DEBUG') ? env('STRIPE_MX_SK_MSK_TEST') : env('STRIPE_MX_SK_MSK_PROD'),
+        'secret_om' => env('APP_DEBUG') ? env('STRIPE_OCEANO_SK_TEST') : env('STRIPE_OCEANO_SK_PROD'),
+    ],
+
 ];
