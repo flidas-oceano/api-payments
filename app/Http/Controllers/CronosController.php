@@ -811,6 +811,7 @@ class CronosController extends Controller
             $answer['tasa'] = $exchange_rate;
             $answer['organizacion'] = $this->pax($data, 'Organizacion');
             $answer['stripe_subscription_id'] = $this->pax($data, 'stripe_subscription_id');
+            $answer['mp_subscription_id'] = $this->pax($data, 'mp_subscription_id');
             $answer['banco emisor'] = $this->pax($data, 'Banco_emisor');
             $answer['membresia'] = (int) filter_var($this->pax($data, 'Membresia'), FILTER_SANITIZE_NUMBER_INT);
             $answer['tipo de cuenta'] = $this->pax($data, 'Tipo_de_Cuenta');
