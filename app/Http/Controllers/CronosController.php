@@ -1261,15 +1261,17 @@ class CronosController extends Controller
                 'Quote_Stage' => $element['contrato']["estado de contrato"],
                 'Pais_de_facturaci_n' => $element['contrato']["pais"],
 				
-				'Modo_de_pago' => $mododepago, // ?
-				'M_todo_de_pago' => $element['contrato']["modalidad de pago del anticipo"], //?
+				'Modo_de_pago' => $mododepago,
+				'M_todo_de_pago' => $element['contrato']["modalidad de pago del anticipo"],
                 'subscription_id'=> $sub_id, //?
                 
         
-                "Seleccione_total_de_pagos_recurrentes" => $element['contrato']["cuotas totales"], //?
+                "Seleccione_total_de_pagos_recurrentes" => $element['contrato']["cuotas totales"],
                 '[products]' => $productDetails,
                 'Owner' => $owner	
             );
+
+            dd($saleData);
 
             $newSale = $this->NewZoho->createRecordQuote($saleData);
 
