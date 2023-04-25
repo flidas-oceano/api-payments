@@ -1264,7 +1264,7 @@ class CronosController extends Controller
                 'Owner' => $owner	
             );
 
-            $newSale = $this->NewZoho->createRecordSale($saleData);
+            $newSale = $this->NewZoho->createRecordQuote($saleData);
 
             //si pudo crear bien el contrato, status ok
             if ($newSale['result'] == 'ok') {
