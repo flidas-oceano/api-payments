@@ -1185,7 +1185,7 @@ class CronosController extends Controller
             'Last_Name' => $surname,
             'Email' => $element['contacto']["correo electronico"],
             'Phone' => $element['contacto']["telefono particular"],
-            'Mobile' => $element['contacto']["otro telefono"], //cambie --- NO esta el campo OTHER PHONE EN LA API de CONTACTO .. esta el campo MOVIL
+            'Mobile' => $element['contacto']["otro telefono"], 
             'Pais' => $element['contacto']["pais"],
             'Profesi_n' => $element['contacto']["profesion o estudio"],
             'Especialidad' => $element['contacto']["especialidad"],
@@ -1202,9 +1202,9 @@ class CronosController extends Controller
 			
 			"CUIT_CUIL_o_DNI" => $element['contrato']["cuit"], //cambie
 			"RFC" => $element['contrato']["cuit"], //cambie
-			'Raz_n_social' => $element['contrato']["nombre y apellido"] . $element['contrato']["razon social"], //cambie
-			"correo_facturacion" => $element['contrato']["email"], //cambie 
-			'R_gimen_fiscal'=> $element['contrato']["tipo iva puro"]); //cambio
+			'Raz_n_social' => $element['contrato']["nombre y apellido"] . $element['contrato']["razon social"],
+			"correo_facturacion" => $element['contrato']["email"], 
+			'R_gimen_fiscal'=> $element['contrato']["tipo iva puro"]);
 
         $newContact = $this->NewZoho->createNewRecord('Contacts', $contactData);
 
@@ -1245,6 +1245,11 @@ class CronosController extends Controller
                 $mododepago = 'Cobro total en un pago';
             }
 
+            $sub_id = $element['contrato']["stripe_subscription_id"];
+
+            if($element['contrato']["mp_subscription_id"] != '')
+                $sub_id = $element['contrato']["mp_subscription_id"];
+
             //armamos dato de la venta (contrato) y a crear
             $saleData = array(
                 'Subject' => 'Contrato Oceano Medicina',
@@ -1254,14 +1259,14 @@ class CronosController extends Controller
                 'SO_OM' => $element['contrato']["numero de so"],
                 'Currency' => $element['contrato']["moneda"],
                 'Quote_Stage' => $element['contrato']["estado de contrato"],
+                'Pais_de_facturaci_n' => $element['contrato']["pais"],
 				
-				'Modo_de_pago' => $mododepago,
-				'M_todo_de_pago' => $element['contrato']["modalidad de pago del anticipo"],
-                'stripe_subscription_id'=> $element['contrato']["stripe_subscription_id"],
-				'mp_subscription_id'=> $element['contrato']["mp_subscription_id"],
+				'Modo_de_pago' => $mododepago, // ?
+				'M_todo_de_pago' => $element['contrato']["modalidad de pago del anticipo"], //?
+                'subscription_id'=> $sub_id, //?
                 
         
-                "Seleccione_total_de_pagos_recurrentes" => $element['contrato']["cuotas totales"],
+                "Seleccione_total_de_pagos_recurrentes" => $element['contrato']["cuotas totales"], //?
                 '[products]' => $productDetails,
                 'Owner' => $owner	
             );
