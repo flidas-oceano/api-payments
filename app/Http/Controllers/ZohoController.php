@@ -521,6 +521,57 @@ class ZohoController extends Controller
         return ($answer);
     }
 
+
+    public function createRecordQuote($data)
+    {
+        $answer = array();
+        $answer['id'] = '';
+        $answer['result'] = 'error';
+        $answer['detail'] = '';
+
+        try {
+            $record = ZCRMRestClient::getInstance()->getRecordInstance("Quotes", null); // To get record instance
+            //campos sales orders
+            foreach ($data as $k => $v) {
+                if ($k != '[products]')
+                    $record->setFieldValue($k, $v);
+            }
+
+            //productos
+            foreach ($data['[products]'] as $p) {
+                $product = ZCRMInventoryLineItem::getInstance(null); // To get ZCRMInventoryLineItem instance
+
+                $product->setListPrice($p['List Price']);
+                $product->setProduct(ZCRMRecord::getInstance("Products", $p['Product Id']));
+                $product->setQuantity($p['Quantity']);
+
+                if ($p['Discount'] > 0)
+                    $product->setDiscountPercentage($p['Discount']);
+
+                $record->addLineItem($product);
+            }
+
+            $responseIns = $record->create();
+
+            if ($responseIns->getHttpStatusCode() == 201) {
+                $answer['result'] = 'ok';
+                $aux = $responseIns->getDetails();
+                $answer['id'] = $aux['id'];
+            }
+        } catch (ZCRMException $e) {
+
+            if (!empty($e->getExceptionDetails()))
+                $answer['detail'] = $e->getExceptionDetails();
+            else
+                $answer['detail'] = $e->getMessage();
+
+            Log::error($e);
+
+        }
+
+        return ($answer);
+    }
+
     //arma el detalle de productos para el contrato
     private function buildProductDetails($products)
     {

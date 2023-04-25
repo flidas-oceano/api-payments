@@ -1184,7 +1184,7 @@ class CronosController extends Controller
             'Last_Name' => $surname,
             'Email' => $element['contacto']["correo electronico"],
             'Phone' => $element['contacto']["telefono particular"],
-            'Other_Phone' => $element['contacto']["otro telefono"],
+            'Mobile' => $element['contacto']["otro telefono"], //cambie --- NO esta el campo OTHER PHONE EN LA API de CONTACTO .. esta el campo MOVIL
             'Pais' => $element['contacto']["pais"],
             'Profesi_n' => $element['contacto']["profesion o estudio"],
             'Especialidad' => $element['contacto']["especialidad"],
@@ -1196,9 +1196,14 @@ class CronosController extends Controller
             'Mailing_Street' => $element['domicilio']["calle y nro"],
             'Mailing_Zip' => $element['domicilio']["codigo postal"],
             'Estado' => $element['domicilio']["region"],
-            'Ciudad_contacto' => $element['domicilio']["localidad"],
+            'City' => $element['domicilio']["localidad"], 
             'Mailing_State' => $element['domicilio']["provincia"],
-        );
+			
+			"CUIT_CUIL_o_DNI" => $element['contrato']["cuit"], //cambie
+			"RFC" => $element['contrato']["cuit"], //cambie
+			'Raz_n_social' => $element['contrato']["nombre y apellido"] . $element['contrato']["razon social"], //cambie
+			"correo_facturacion" => $element['contrato']["email"], //cambie 
+			'R_gimen_fiscal'=> $element['contrato']["tipo iva puro"]); //cambio
 
         $newContact = $this->NewZoho->createNewRecord('Contacts', $contactData);
 
@@ -1240,29 +1245,26 @@ class CronosController extends Controller
 
             //armamos dato de la venta (contrato) y a crear
             $saleData = array(
-                'Subject' => 'test',
+                'Subject' => 'Contrato Oceano Medicina',
                 'Contact_Name' => $newContact['id'],
                 'Grand_Total' => $element['contrato']["total general"],
-                //"dni", id persona
-                "CUIT_CUIL_o_DNI" => $element['contrato']["cuit"],
-                "Correo_electr_nico" => $element['contrato']["email"],
-                "RFC" => $element['contrato']["cuit"],
-                'Nombre_Raz_n_social' => $element['contrato']["nombre y apellido"] . $element['contrato']["razon social"],
-                'Modo_de_pago' => $mododepago,
-                "Tipo_de_factura" => $element['contrato']["tipo iva puro"],
-                'otro_so' => $element['contrato']["numero de so"],
-                'Billing_Street' => $element['contrato']["domicilio de facturacion"],
+                
+                'SO_OM' => $element['contrato']["numero de so"],
                 'Currency' => $element['contrato']["moneda"],
-                'Status' => $element['contrato']["estado de contrato"],
-                'Pais_de_facturaci_n' => $element['contrato']["pais"],
-                'Tel_fono' => $element['contrato']["telefono facturacion"],
-                'M_todo_de_pago' => $element['contrato']["modalidad de pago del anticipo"],
+                'Quote_Stage' => $element['contrato']["estado de contrato"],
+				
+				'Modo_de_pago' => $mododepago,
+				'M_todo_de_pago' => $element['contrato']["modalidad de pago del anticipo"],
+                'stripe_subscription_id'=> $element['contrato']["stripe_subscription_id"],
+				'mp_subscription_id'=> $element['contrato']["mp_subscription_id"],
+                
+        
                 "Seleccione_total_de_pagos_recurrentes" => $element['contrato']["cuotas totales"],
                 '[products]' => $productDetails,
-                'Owner' => $owner
+                'Owner' => $owner	
             );
 
-            $newSale = $this->NewZoho->createRecordSale($saleData);
+            $newSale = $this->NewZoho->createRecordQuote($saleData);
 
             //si pudo crear bien el contrato, status ok
             if ($newSale['result'] == 'ok') {
