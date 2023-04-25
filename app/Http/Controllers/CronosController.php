@@ -1216,6 +1216,8 @@ class CronosController extends Controller
         print_r($newContact);
         echo "</pre>";
 
+        dd($contactData);
+
         //avanza si está bien todo, sino no
         if ($contactStatus) {
             //armo el product details en base a las cosas que compró el usuario...
