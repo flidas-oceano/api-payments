@@ -1200,8 +1200,8 @@ class CronosController extends Controller
             'City' => $element['domicilio']["localidad"], 
             'Mailing_State' => $element['domicilio']["provincia"],
 			
-			"CUIT_CUIL_o_DNI" => $element['contrato']["cuit"], //cambie
-			"RFC" => $element['contrato']["cuit"], //cambie
+			"CUIT_CUIL_o_DNI" => $element['contrato']["cuit"], 
+			"RFC" => $element['contrato']["cuit"], 
 			'Raz_n_social' => $element['contrato']["nombre y apellido"] . $element['contrato']["razon social"],
 			"correo_facturacion" => $element['contrato']["email"], 
 			'R_gimen_fiscal'=> $element['contrato']["tipo iva puro"]);
@@ -1263,7 +1263,7 @@ class CronosController extends Controller
 				
 				'Modo_de_pago' => $mododepago,
 				'M_todo_de_pago' => $element['contrato']["modalidad de pago del anticipo"],
-                'subscription_id'=> $sub_id, //?
+                'subscription_id'=> $sub_id,
                 
         
                 "Seleccione_total_de_pagos_recurrentes" => $element['contrato']["cuotas totales"],
