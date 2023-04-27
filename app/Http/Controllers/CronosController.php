@@ -353,26 +353,44 @@ class CronosController extends Controller
             $spainStatus = '';
 
 
+            //caso especial
+            $special = false;
+
+            foreach($pack['cursos'] as $c)
+            {
+                if($c['codigo de curso'] == '9005800')
+                    $special = true;
+            } 
+
             //primero lo mando a españa
             //lo mando a españa primero porque si lo mando y salió ok, es españa quien luego me dice
             //este contrato ya lo tengo, entonces en base a eso yo tengo el contrato en su estado final...
             //y ese es el cual uso para luego crear en MSK
 
             //envia a spain!
-            $what = $this->post_spain($dataReady);
 
-            $e->log = $what['log'];
+            if(!$special)
+            {
+                $what = $this->post_spain($dataReady);
 
-            //salió bien, cambia el estado
-            if ($what['answer'] == 'ok')
-                $e->msk = 1;
-            else {
-                if ($what['answer'] == 'duplicate') {
+                $e->log = $what['log'];
+
+                //salió bien, cambia el estado
+                if ($what['answer'] == 'ok')
                     $e->msk = 1;
-                } else
-                    if ($what['answer'] == 'country') {
+                else {
+                    if ($what['answer'] == 'duplicate') {
+                        $e->msk = 1;
+                    } else
+                        if ($what['answer'] == 'country') {
 
-                    }
+                        }
+                }
+            }
+            else
+            {
+                $e->msk = 1;
+                echo 'csao especial';
             }
 
             //----

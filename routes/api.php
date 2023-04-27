@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\{PassportAuthController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController};
+use App\Http\Controllers\{PassportAuthController, RebillController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Stripe\Stripe;
@@ -99,3 +99,5 @@ Route::post('/datafastProcessResponse', [DatafastController::class, 'processResp
 Route::post('/addElement', [CronosController::class, 'addcontract']);
 Route::get('/processElements', [CronosController::class, 'cronapi']);
 Route::post('/obtainDataCRM', [ZohoController::class, 'obtainData']);
+
+Route::get('/greet', [RebillController::class, 'hola']);
