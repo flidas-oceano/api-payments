@@ -1334,9 +1334,13 @@ class CronosController extends Controller
 
                 $total = $p['precio de lista'];
                 $discount = $p['descuento'];
+                $perc = 0;
 
-                $perc = ($total - $discount) * 100 / $total;
-                $perc = 100 - $perc;
+                if($total > 0)
+                {
+                    $perc = ($total - $discount) * 100 / $total;
+                    $perc = 100 - $perc;
+                }
 
                 $answer[] = array(
                     'Product Id' => $rec->getEntityId(),
