@@ -353,26 +353,44 @@ class CronosController extends Controller
             $spainStatus = '';
 
 
+            //caso especial
+            $special = false;
+
+            foreach($pack['cursos'] as $c)
+            {
+                if($c['codigo de curso'] == '9005800')
+                    $special = true;
+            } 
+
             //primero lo mando a españa
             //lo mando a españa primero porque si lo mando y salió ok, es españa quien luego me dice
             //este contrato ya lo tengo, entonces en base a eso yo tengo el contrato en su estado final...
             //y ese es el cual uso para luego crear en MSK
 
             //envia a spain!
-            $what = $this->post_spain($dataReady);
 
-            $e->log = $what['log'];
+            if(!$special)
+            {
+                $what = $this->post_spain($dataReady);
 
-            //salió bien, cambia el estado
-            if ($what['answer'] == 'ok')
-                $e->msk = 1;
-            else {
-                if ($what['answer'] == 'duplicate') {
+                $e->log = $what['log'];
+
+                //salió bien, cambia el estado
+                if ($what['answer'] == 'ok')
                     $e->msk = 1;
-                } else
-                    if ($what['answer'] == 'country') {
+                else {
+                    if ($what['answer'] == 'duplicate') {
+                        $e->msk = 1;
+                    } else
+                        if ($what['answer'] == 'country') {
 
-                    }
+                        }
+                }
+            }
+            else
+            {
+                $e->msk = 1;
+                echo 'csao especial';
             }
 
             //----
@@ -1200,8 +1218,8 @@ class CronosController extends Controller
             'City' => $element['domicilio']["localidad"], 
             'Mailing_State' => $element['domicilio']["provincia"],
 			
-			"CUIT_CUIL_o_DNI" => $element['contrato']["cuit"], //cambie
-			"RFC" => $element['contrato']["cuit"], //cambie
+			"CUIT_CUIL_o_DNI" => $element['contrato']["cuit"], 
+			"RFC" => $element['contrato']["cuit"], 
 			'Raz_n_social' => $element['contrato']["nombre y apellido"] . $element['contrato']["razon social"],
 			"correo_facturacion" => $element['contrato']["email"], 
 			'R_gimen_fiscal'=> $element['contrato']["tipo iva puro"]);
@@ -1263,7 +1281,7 @@ class CronosController extends Controller
 				
 				'Modo_de_pago' => $mododepago,
 				'M_todo_de_pago' => $element['contrato']["modalidad de pago del anticipo"],
-                'subscription_id'=> $sub_id, //?
+                'subscription_id'=> $sub_id,
                 
         
                 "Seleccione_total_de_pagos_recurrentes" => $element['contrato']["cuotas totales"],

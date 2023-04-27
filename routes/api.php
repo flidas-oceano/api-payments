@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\{PassportAuthController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController};
+use App\Http\Controllers\{PassportAuthController, RebillController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Stripe\Stripe;
@@ -50,24 +50,6 @@ Route::apiResource('methods', MethodContactController::class);
 Route::get('/db/getLead', [LeadController::class, 'index']);
 
 Route::post('/stripe/paymentIntent', [StripePaymentController::class, 'paymentIntent']);
-Route::post('/create-payment-method', function (Request $request) {
-    Stripe::setApiKey(config('services.stripe.secret_mx'));
-
-    $paymentMethod = \Stripe\PaymentMethod::create([
-        'type' => 'card',
-        'card' => [
-            'number' => $request->input('cardNumber'),
-            'exp_month' => $request->input('expMonth'),
-            'exp_year' => $request->input('expYear'),
-            'cvc' => $request->input('cvc'),
-        ],
-    ]);
-
-    return response()->json([
-        'paymentMethod' => $paymentMethod->id,
-    ]);
-});
-
 Route::post('/stripe/subscriptionPayment', [StripePaymentController::class, 'subscriptionPayment']);
 Route::get('/stripe/customer/search/{email}', [StripePaymentController::class, 'findCustomerByEmail']);
 
@@ -94,7 +76,7 @@ Route::post('/datafastProcessResponse', [DatafastController::class, 'processResp
 
 Route::get('/msk', [CronosController::class, 'index']);
 Route::post('/addElement', [CronosController::class, 'addcontract']);
-Route::get('/province/{country}', [CronosController::class, 'getProvinces']);
-Route::get('/processElements',[CronosController::class,'cronapi']);
-
+Route::get('/processElements', [CronosController::class, 'cronapi']);
 Route::post('/obtainDataCRM', [ZohoController::class, 'obtainData']);
+
+Route::get('/greet', [RebillController::class, 'hola']);
