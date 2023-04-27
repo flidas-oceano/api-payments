@@ -352,6 +352,7 @@ class CronosController extends Controller
 
             $spainStatus = '';
 
+            dd($dataReady);
 
             //caso especial
             $special = false;
