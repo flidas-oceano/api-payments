@@ -346,23 +346,27 @@ class CronosController extends Controller
                     $dataReady = $e->data;
                     $pack = $e->data;
                 }
+
+
             }
 
-            $packs[$e->id] = $pack;
+        //caso especial
+        $special = false;
+        $packs[$e->id] = $pack;
 
-            $spainStatus = '';
-
-            dd($dataReady);
-
-            //caso especial
-            $special = false;
-            $datos = json_decode($dataReady,true);
-
-            foreach($datos['cursos'] as $c)
+            if (!$ignore) 
             {
-                if($c['codigo de curso'] == '9005800')
-                    $special = true;
-            } 
+                $spainStatus = '';
+
+                
+                $datos = json_decode($dataReady,true);
+
+                foreach($datos['cursos'] as $c)
+                {
+                    if($c['codigo de curso'] == '9005800')
+                        $special = true;
+                } 
+            }
 
             //primero lo mando a españa
             //lo mando a españa primero porque si lo mando y salió ok, es españa quien luego me dice
