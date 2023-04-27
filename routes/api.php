@@ -50,24 +50,6 @@ Route::apiResource('methods', MethodContactController::class);
 Route::get('/db/getLead', [LeadController::class, 'index']);
 
 Route::post('/stripe/paymentIntent', [StripePaymentController::class, 'paymentIntent']);
-Route::post('/create-payment-method', function (Request $request) {
-    Stripe::setApiKey(config('services.stripe.secret_mx'));
-
-    $paymentMethod = \Stripe\PaymentMethod::create([
-        'type' => 'card',
-        'card' => [
-            'number' => $request->input('cardNumber'),
-            'exp_month' => $request->input('expMonth'),
-            'exp_year' => $request->input('expYear'),
-            'cvc' => $request->input('cvc'),
-        ],
-    ]);
-
-    return response()->json([
-        'paymentMethod' => $paymentMethod->id,
-    ]);
-});
-
 Route::post('/stripe/subscriptionPayment', [StripePaymentController::class, 'subscriptionPayment']);
 Route::get('/stripe/customer/search/{email}', [StripePaymentController::class, 'findCustomerByEmail']);
 
