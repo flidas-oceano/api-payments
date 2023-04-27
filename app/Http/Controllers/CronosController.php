@@ -355,8 +355,9 @@ class CronosController extends Controller
 
             //caso especial
             $special = false;
+            $datos = json_decode($dataReady,true);
 
-            foreach($pack['cursos'] as $c)
+            foreach($datos['cursos'] as $c)
             {
                 if($c['codigo de curso'] == '9005800')
                     $special = true;
