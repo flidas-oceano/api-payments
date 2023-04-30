@@ -490,8 +490,6 @@ class CronosController extends Controller
 
         foreach ($crude[0]->Product_Details as $pd) {
 
-            dd($pd);
-
             $idpr = $pd->product->id;
             $productIds[] = $idpr;
 
