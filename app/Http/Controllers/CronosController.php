@@ -317,7 +317,7 @@ class CronosController extends Controller
                     //==========arranca empaquetado de datos
 
                     $pack = $this->packData($crude, $e->type);
-                    //$pack['prueba'] = 1;
+                    $pack['prueba'] = 1;
 
                     //====== termina empaquetado de datos
 
@@ -489,6 +489,9 @@ class CronosController extends Controller
         $productIds = array();
 
         foreach ($crude[0]->Product_Details as $pd) {
+
+            dd($pd);
+
             $idpr = $pd->product->id;
             $productIds[] = $idpr;
 
@@ -810,6 +813,9 @@ class CronosController extends Controller
             $answer['cuit'] = $this->pax($data, 'CUIT_CUIL');
             $answer['nombre y apellido'] = $this->pax($data, 'L_nea_nica_6');
             $answer['razon social'] = $this->pax($data, 'Razon_Social');
+            $answer['caracteristica contacto'] = $this->pax($data, 'Caracter_stica_contacto');
+            $answer['requiere factura'] = $this->pax($data, 'Requiere_factura');
+            $answer['regimen fiscal'] = $this->pax($data, 'Regimen_fiscal');
             $answer['email'] = $this->pax($data, 'Email');
             $answer['tipo iva'] = $this->filter($this->pax($data, 'Tipo_IVA'), 'guion');
             $answer['tipo iva puro'] = $this->pax($data, 'Tipo_IVA');
@@ -1223,6 +1229,10 @@ class CronosController extends Controller
             'Estado' => $element['domicilio']["region"],
             'City' => $element['domicilio']["localidad"], 
             'Mailing_State' => $element['domicilio']["provincia"],
+            'Caracter_stica_contacto' => $element['contrato']["caracteristica contacto"],
+
+            'Requiere_factura' => $element['contrato']["requiere factura"],
+            'R_gimen_fiscal' => $element['contrato']["regimen fiscal"],
 			
 			"CUIT_CUIL_o_DNI" => $element['contrato']["cuit"], 
 			"RFC" => $element['contrato']["cuit"], 
@@ -1284,6 +1294,7 @@ class CronosController extends Controller
                 'Currency' => $element['contrato']["moneda"],
                 'Quote_Stage' => $element['contrato']["estado de contrato"],
                 'Pais_de_facturaci_n' => $element['contrato']["pais"],
+  
 				
 				'Modo_de_pago' => $mododepago,
 				'M_todo_de_pago' => $element['contrato']["modalidad de pago del anticipo"],
@@ -1342,10 +1353,13 @@ class CronosController extends Controller
                     $perc = 100 - $perc;
                 }
 
+                //tax
+
                 $answer[] = array(
                     'Product Id' => $rec->getEntityId(),
                     'Quantity' => $p['cantidad'],
                     'List Price' => $p['precio de lista'],
+                    'Tax ID' => 'taxname_0',
                     //'List Price #USD' => (float)$p['price_usd'],
                     //'List Price #Local Currency' => (float)$p['price'],
                     'Discount' => $perc
