@@ -3,16 +3,17 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use zcrmsdk\oauth\ZohoOAuth;
 use App\Models\{CronosElements};
+use zcrmsdk\crm\crud\ZCRMRecord;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use zcrmsdk\crm\exception\ZCRMException;
 use zcrmsdk\crm\crud\ZCRMInventoryLineItem;
 use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
-use zcrmsdk\oauth\ZohoOAuth;
-use zcrmsdk\crm\crud\ZCRMRecord;
-use zcrmsdk\crm\exception\ZCRMException;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\App;
 
 class CronosController extends Controller
 {
@@ -55,6 +56,12 @@ class CronosController extends Controller
         $this->zoho_api = 'e25b3b8fd44657334be72a513f129502';
         }
         */
+    }
+
+    public function viewCronos()
+    {
+        $elements = CronosElements::all();
+        return view('cronos', compact('elements'));
     }
 
     public function addcontract()
@@ -355,13 +362,12 @@ class CronosController extends Controller
 
             //caso especial
             $special = false;
-            $datos = json_decode($dataReady,true);
+            $datos = json_decode($dataReady, true);
 
-            foreach($datos['cursos'] as $c)
-            {
-                if($c['codigo de curso'] == '9005800')
+            foreach ($datos['cursos'] as $c) {
+                if ($c['codigo de curso'] == '9005800')
                     $special = true;
-            } 
+            }
 
             //primero lo mando a españa
             //lo mando a españa primero porque si lo mando y salió ok, es españa quien luego me dice
@@ -370,8 +376,7 @@ class CronosController extends Controller
 
             //envia a spain!
 
-            if(!$special)
-            {
+            if (!$special) {
                 $what = $this->post_spain($dataReady);
 
                 $e->log = $what['log'];
@@ -387,9 +392,7 @@ class CronosController extends Controller
 
                         }
                 }
-            }
-            else
-            {
+            } else {
                 $e->msk = 1;
                 echo 'csao especial';
             }
@@ -1204,7 +1207,7 @@ class CronosController extends Controller
             'Last_Name' => $surname,
             'Email' => $element['contacto']["correo electronico"],
             'Phone' => $element['contacto']["telefono particular"],
-            'Mobile' => $element['contacto']["otro telefono"], 
+            'Mobile' => $element['contacto']["otro telefono"],
             'Pais' => $element['contacto']["pais"],
             'Profesi_n' => $element['contacto']["profesion o estudio"],
             'Especialidad' => $element['contacto']["especialidad"],
@@ -1216,14 +1219,15 @@ class CronosController extends Controller
             'Mailing_Street' => $element['domicilio']["calle y nro"],
             'Mailing_Zip' => $element['domicilio']["codigo postal"],
             'Estado' => $element['domicilio']["region"],
-            'City' => $element['domicilio']["localidad"], 
+            'City' => $element['domicilio']["localidad"],
             'Mailing_State' => $element['domicilio']["provincia"],
-			
-			"CUIT_CUIL_o_DNI" => $element['contrato']["cuit"], 
-			"RFC" => $element['contrato']["cuit"], 
-			'Raz_n_social' => $element['contrato']["nombre y apellido"] . $element['contrato']["razon social"],
-			"correo_facturacion" => $element['contrato']["email"], 
-			'R_gimen_fiscal'=> $element['contrato']["tipo iva puro"]);
+
+            "CUIT_CUIL_o_DNI" => $element['contrato']["cuit"],
+            "RFC" => $element['contrato']["cuit"],
+            'Raz_n_social' => $element['contrato']["nombre y apellido"] . $element['contrato']["razon social"],
+            "correo_facturacion" => $element['contrato']["email"],
+            'R_gimen_fiscal' => $element['contrato']["tipo iva puro"]
+        );
 
         $newContact = $this->NewZoho->createNewRecord('Contacts', $contactData);
 
@@ -1266,7 +1270,7 @@ class CronosController extends Controller
 
             $sub_id = $element['contrato']["stripe_subscription_id"];
 
-            if($element['contrato']["mp_subscription_id"] != '')
+            if ($element['contrato']["mp_subscription_id"] != '')
                 $sub_id = $element['contrato']["mp_subscription_id"];
 
             //armamos dato de la venta (contrato) y a crear
@@ -1274,20 +1278,20 @@ class CronosController extends Controller
                 'Subject' => 'Contrato Oceano Medicina',
                 'Contact_Name' => $newContact['id'],
                 'Grand_Total' => $element['contrato']["total general"],
-                
+
                 'SO_OM' => $element['contrato']["numero de so"],
                 'Currency' => $element['contrato']["moneda"],
                 'Quote_Stage' => $element['contrato']["estado de contrato"],
                 'Pais_de_facturaci_n' => $element['contrato']["pais"],
-				
-				'Modo_de_pago' => $mododepago,
-				'M_todo_de_pago' => $element['contrato']["modalidad de pago del anticipo"],
-                'subscription_id'=> $sub_id,
-                
-        
+
+                'Modo_de_pago' => $mododepago,
+                'M_todo_de_pago' => $element['contrato']["modalidad de pago del anticipo"],
+                'subscription_id' => $sub_id,
+
+
                 "Seleccione_total_de_pagos_recurrentes" => $element['contrato']["cuotas totales"],
                 '[products]' => $productDetails,
-                'Owner' => $owner	
+                'Owner' => $owner
             );
 
             $newSale = $this->NewZoho->createRecordQuote($saleData);
