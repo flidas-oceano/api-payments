@@ -845,7 +845,13 @@ class CronosController extends Controller
             $answer['tipo de cuenta'] = $this->pax($data, 'Tipo_de_Cuenta');
             $answer['telefono facturacion'] = $this->pax($data, 'Tel_fono_Facturacion');
             $answer['num de cuenta'] = $this->pax($data, 'N_mero_de_Cuenta');
+
+            echo $this->pax($data, 'Regimen_fiscal');
+
             $answer['regimen fiscal'] = $this->pax($data, 'Regimen_fiscal');
+
+            echo $answer['regimen fiscal'];
+            
             //$answer['notas'] = $this->fetchNotes($this->pax($data,'id'));
             $answer['notas'] = '';
 
