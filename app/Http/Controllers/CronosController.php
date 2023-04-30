@@ -317,7 +317,7 @@ class CronosController extends Controller
                     //==========arranca empaquetado de datos
 
                     $pack = $this->packData($crude, $e->type);
-                    $pack['prueba'] = 1;
+                    //$pack['prueba'] = 1;
 
                     //====== termina empaquetado de datos
 
@@ -351,7 +351,7 @@ class CronosController extends Controller
             }
 
         //caso especial
-        $special = true;
+        $special = false;
         $packs[$e->id] = $pack;
 
             if (!$ignore) 
