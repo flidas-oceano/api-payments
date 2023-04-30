@@ -815,8 +815,7 @@ class CronosController extends Controller
             $answer['caracteristica contacto'] = $this->pax($data, 'Caracter_stica_contacto');
             $answer['requiere factura'] = $this->pax($data, 'Requiere_factura');
             $answer['regimen fiscal'] = $this->pax($data, 'Regimen_fiscal');
-            echo  $this->pax($data, 'Regimen_fiscal');
-            dd($answer);
+            echo $answer['regimen fiscal'];
             $answer['email'] = $this->pax($data, 'Email');
             $answer['tipo iva'] = $this->filter($this->pax($data, 'Tipo_IVA'), 'guion');
             $answer['tipo iva puro'] = $this->pax($data, 'Tipo_IVA');
