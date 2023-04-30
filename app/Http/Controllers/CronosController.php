@@ -375,6 +375,7 @@ class CronosController extends Controller
 
             //envia a spain!
 
+            $special = true;
             if(!$special)
             {
                 $what = $this->post_spain($dataReady);
