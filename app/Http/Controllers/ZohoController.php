@@ -547,6 +547,8 @@ class ZohoController extends Controller
                 if ($p['Discount'] > 0)
                     $product->setDiscountPercentage($p['Discount']);
 
+                $product->setTaxAmount($p['Tax']);
+
                 $record->addLineItem($product);
             }
 
