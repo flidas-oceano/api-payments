@@ -1239,6 +1239,8 @@ class CronosController extends Controller
 			"correo_facturacion" => $element['contrato']["email"], 
 			'R_gimen_fiscal'=> $element['contrato']["tipo iva puro"]);
 
+            dd($contactData);
+
         $newContact = $this->NewZoho->createNewRecord('Contacts', $contactData);
 
         //si pudo crear bien el contacto, status ok
