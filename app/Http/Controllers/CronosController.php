@@ -845,13 +845,7 @@ class CronosController extends Controller
             $answer['tipo de cuenta'] = $this->pax($data, 'Tipo_de_Cuenta');
             $answer['telefono facturacion'] = $this->pax($data, 'Tel_fono_Facturacion');
             $answer['num de cuenta'] = $this->pax($data, 'N_mero_de_Cuenta');
-
-            echo $this->pax($data, 'Regimen_fiscal');
-
             $answer['regimen fiscal'] = $this->pax($data, 'Regimen_fiscal');
-
-            echo $answer['regimen fiscal'];
-            
             //$answer['notas'] = $this->fetchNotes($this->pax($data,'id'));
             $answer['notas'] = '';
 
@@ -1242,10 +1236,7 @@ class CronosController extends Controller
 			"CUIT_CUIL_o_DNI" => $element['contrato']["cuit"], 
 			"RFC" => $element['contrato']["cuit"], 
 			'Raz_n_social' => $element['contrato']["nombre y apellido"] . $element['contrato']["razon social"],
-			"correo_facturacion" => $element['contrato']["email"], 
-			'R_gimen_fiscal'=> $element['contrato']["tipo iva puro"]);
-
-            dd($contactData);
+			"correo_facturacion" => $element['contrato']["email"]);
 
         $newContact = $this->NewZoho->createNewRecord('Contacts', $contactData);
 
