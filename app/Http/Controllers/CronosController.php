@@ -814,8 +814,6 @@ class CronosController extends Controller
             $answer['razon social'] = $this->pax($data, 'Razon_Social');
             $answer['caracteristica contacto'] = $this->pax($data, 'Caracter_stica_contacto');
             $answer['requiere factura'] = $this->pax($data, 'Requiere_factura');
-            $answer['regimen fiscal'] = $this->pax($data, 'Regimen_fiscal');
-            echo $answer['regimen fiscal'];
             $answer['email'] = $this->pax($data, 'Email');
             $answer['tipo iva'] = $this->filter($this->pax($data, 'Tipo_IVA'), 'guion');
             $answer['tipo iva puro'] = $this->pax($data, 'Tipo_IVA');
@@ -847,6 +845,7 @@ class CronosController extends Controller
             $answer['tipo de cuenta'] = $this->pax($data, 'Tipo_de_Cuenta');
             $answer['telefono facturacion'] = $this->pax($data, 'Tel_fono_Facturacion');
             $answer['num de cuenta'] = $this->pax($data, 'N_mero_de_Cuenta');
+            $answer['regimen fiscal'] = $this->pax($data, 'Regimen_fiscal');
             //$answer['notas'] = $this->fetchNotes($this->pax($data,'id'));
             $answer['notas'] = '';
 
