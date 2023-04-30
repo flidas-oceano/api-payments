@@ -549,10 +549,10 @@ class ZohoController extends Controller
                 if ($p['Discount'] > 0)
                     $product->setDiscountPercentage($p['Discount']);
 
-                $taxInstance1 = ZCRMTax::getInstance("taxname_0"); 
+                /*$taxInstance1 = ZCRMTax::getInstance("taxname_0"); 
                 $taxInstance1->setPercentage(10); 
                 $taxInstance1->setValue(100); 
-                $product->addLineTax($taxInstance1); 
+                $product->addLineTax($taxInstance1); */
 
                 $record->addLineItem($product);
             }
