@@ -351,7 +351,7 @@ class CronosController extends Controller
             }
 
         //caso especial
-        $special = false;
+        $special = true;
         $packs[$e->id] = $pack;
 
             if (!$ignore) 
