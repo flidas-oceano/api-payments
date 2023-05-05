@@ -57,6 +57,24 @@ class CronosController extends Controller
         */
     }
 
+    public function deletecontract()
+    {
+        if (isset($_POST['response'])) 
+        {
+            $response = json_decode($_POST['response']);
+            $data = $response->data;
+
+            $aux = $data[0];
+
+            Log::info('[delete] Llegó contrato: ' . $aux->SO_Number);
+
+            $hasSavedNewElement = $this->uploadElement($data, 'delete', 'pending');
+
+            return response()->json(['hasSavedNewElement' => $hasSavedNewElement]);
+        }
+
+    }
+
     public function addcontract()
     {
         if (isset($_POST['response'])) {
@@ -107,6 +125,47 @@ class CronosController extends Controller
                 'error' => $e
             ];
         }
+
+        return ($answer);
+    }
+
+    public function test()
+    {
+        echo 'ay hola';
+
+        $this->post_spain_delete('2000339000572900025');
+    }
+
+    private function post_spain_delete($so)
+    {
+        $answer = array();
+        $answer['answer'] = 'nope';
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, 'http://' . $this->spain_url . '.oceano.com/api/v1/shop/order/cancellation/'.$so);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        //curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        //curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE"); 
+
+        $headers = array();
+        $headers[] = 'api-key: oceano_argentina';
+        $headers[] = 'api-token: $2y$10$0tF42wa79/7hVPvPNWVKXeNyjE6XHPp21T387reNCl2Lj/OUSq/tG';
+        $headers[] = "Content-Type: application/json";
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $result = curl_exec($ch);
+        if (curl_errno($ch)) {
+            echo 'Error:' . curl_error($ch);
+        }
+        curl_close($ch);
+
+        //verificamos que haya salido bien
+
+        $encoded = json_decode($result);
+
+        dd($result);
 
         return ($answer);
     }
@@ -162,13 +221,16 @@ class CronosController extends Controller
 
         foreach ($elements as $e) {
 
-            foreach ($answer as $k => $a) {
+        
+            foreach ($answer as $k => $a) 
+            {
                 //existe
                 if ($a->so_number == $e->so_number) {
                     //lo marco para omitir
                     $answer[$k]->status = 'omit';
                 }
             }
+        
 
             $answer[] = $e;
 
@@ -284,13 +346,25 @@ class CronosController extends Controller
     }
     */
 
+    private function processDeletions()
+    {
+        $elements = CronosElements::where('status', '=', 'pending')->
+                                    where('type','=','delete')->get();
+
+        foreach($elements as $e)
+        {
+           // $spain = $this->post_spain_delete($e->so_number);
+
+        }                            
+    }
 
     public function cronapi()
     {
 
         $packs = [];
 
-        $elements = CronosElements::where('status', '=', 'pending')->get();
+        $elements = CronosElements::where('status', '=', 'pending')->
+                                    where('type','=','add')->get();
 
         $count = 0;
 
@@ -441,6 +515,10 @@ class CronosController extends Controller
         }
 
         echo ' todo ok';
+
+        echo 'procesado de borrados';
+
+        $this->processDeletions();
 
     }
 
