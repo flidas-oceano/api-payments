@@ -570,11 +570,12 @@ class CronosController extends Controller
             if (!isset($crude[0]->RFC_Solo_MX) || $crude[0]->RFC_Solo_MX == null)
                 $pack['contrato']['cuit'] = "XAXX010101000";
             else
-                $pack['contrato']['cuit'] = $crude[0]->RFC_Solo_MX;
+                $pack['contrato']['cuit'] = str_replace(" ", "", $crude[0]->RFC_Solo_MX);
 
             $pack['contrato']['dni'] = $crude[0]->Cliente_MX;
         }
 
+        
         //--------
         if ($pack['contrato']['pais'] == 'Ecuador') {
             if ($pack['contrato']['es ecommerce'])

@@ -24,6 +24,9 @@ class RebillController extends Controller
         echo ' ay holi';
 
         
+
+        /*
+        
         $checkout = new \Rebill\SDK\Models\Checkout();
         $checkout->amount = 100.0;
         $checkout->currency = 'USD';
@@ -31,8 +34,8 @@ class RebillController extends Controller
 
         $checkout->redirectUrl = 'https://example.com/checkout/success';
 
-        $response = $checkout->create($checkout);
-        echo 'Checkout URL: ' . $response->url;
+        //$response = $checkout->create($checkout);
+       // echo 'Checkout URL: ' . $response->url;
         
 
         $customer = $this->createCustomer(['email' => 'test@gm.com', 
@@ -42,6 +45,7 @@ class RebillController extends Controller
 
 
         dd($customer);
+        */
         
     }
 
