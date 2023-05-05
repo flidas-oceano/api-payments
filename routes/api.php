@@ -76,7 +76,9 @@ Route::post('/datafastProcessResponse', [DatafastController::class, 'processResp
 
 Route::get('/msk', [CronosController::class, 'index']);
 Route::post('/addElement', [CronosController::class, 'addcontract']);
+Route::post('/deleteElement', [CronosController::class, 'deletecontract']);
 Route::get('/processElements', [CronosController::class, 'cronapi']);
+Route::get('/cronostest', [CronosController::class, 'test']);
 Route::post('/obtainDataCRM', [ZohoController::class, 'obtainData']);
 
 Route::get('/greet', [RebillController::class, 'hola']);
