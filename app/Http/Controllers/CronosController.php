@@ -1287,7 +1287,7 @@ class CronosController extends Controller
 
         $razonsocial = $element['contrato']["razon social"];
         
-        if($razonsocial = '')
+        if($razonsocial == '')
             $razonsocial = $element['contrato']["nombre y apellido"];
 
         //lo primero que haremos es intentar crear el contacto
