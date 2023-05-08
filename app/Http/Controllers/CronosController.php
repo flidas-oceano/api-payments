@@ -133,7 +133,7 @@ class CronosController extends Controller
     {
         echo 'ay hola';
 
-        $this->post_spain_delete('2000339000572900025');
+        $this->post_spain_delete('2000339000575832524');
     }
 
     private function post_spain_delete($so)
@@ -1285,6 +1285,10 @@ class CronosController extends Controller
         if (isset($explodedName[1]))
             $name = $explodedName[1];
 
+        $razonsocial = $element['contrato']["razon social"];
+        
+        if($razonsocial = '')
+            $razonsocial = $element['contrato']["nombre y apellido"];
 
         //lo primero que haremos es intentar crear el contacto
         $contactData = array(
@@ -1314,7 +1318,7 @@ class CronosController extends Controller
 			
 			"CUIT_CUIL_o_DNI" => $element['contrato']["cuit"], 
 			"RFC" => $element['contrato']["cuit"], 
-			'Raz_n_social' => $element['contrato']["nombre y apellido"] . $element['contrato']["razon social"],
+			'Raz_n_social' => $razonsocial,
 			"correo_facturacion" => $element['contrato']["email"]);
 
         $newContact = $this->NewZoho->createNewRecord('Contacts', $contactData);
