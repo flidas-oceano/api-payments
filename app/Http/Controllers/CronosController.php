@@ -1269,7 +1269,7 @@ class CronosController extends Controller
     {
         $answer = false;
 
-        //para ir viendo si avanzar o no, los status
+        //para ir viendo si avanzarf o no, los status
         $contactStatus = false;
         $saleStatus = false;
         $prodStatus = false;
@@ -1371,7 +1371,7 @@ class CronosController extends Controller
                 'Contact_Name' => $newContact['id'],
                 'Grand_Total' => $element['contrato']["total general"],
                 
-                'SO_OM' => $element['contrato']["numero de so"],
+                'otro_so' => $element['contrato']["numero de so"],
                 'Currency' => $element['contrato']["moneda"],
                 'Quote_Stage' => $element['contrato']["estado de contrato"],
                 'Pais_de_facturaci_n' => $element['contrato']["pais"],
