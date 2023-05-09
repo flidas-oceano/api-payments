@@ -1288,14 +1288,9 @@ class CronosController extends Controller
         $answer = false;
 
         //lo primero que haremos es intentar crear el contacto
-        $contactData = array(
-            "ID_Personal" => $element['contacto']['dni'],
-            'Email' => $element['contacto']["correo electronico"],
-           );
+        $contactData = $this->buildContact($element);
 
         $newContact = $this->NewZoho->createNewRecord('Contacts', $contactData);
-
-        dd($newContact);
 
         $contactData = $this->buildContact($element);
 
