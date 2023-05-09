@@ -490,7 +490,7 @@ class CronosController extends Controller
                 //primero reviso que no esté en MSK
                 $exists = $this->NewZoho->fetchRecordWithValue('Sales_Orders', 'otro_so', $pack['contrato']['numero de so']);
 
-                dd($exists);
+                dd($pack['contrato']['numero de so']);
 
                 if ($exists == 'error') 
                 {
