@@ -206,7 +206,7 @@ class ZohoController extends Controller
     }
 
     //actualiza un record, le pasas el id separado
-    private function updateRecord($type, $data, $id, $workflow = true)
+    public function updateRecord($type, $data, $id, $workflow = true)
     {
         $answer = array();
 
