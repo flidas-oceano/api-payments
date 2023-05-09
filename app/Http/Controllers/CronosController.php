@@ -450,28 +450,31 @@ class CronosController extends Controller
             //envia a spain!
 
            // $special = true;
-            if(!$special)
+            if(!$ignore)
             {
-                $what = $this->post_spain($dataReady);
+                if(!$special)
+                {
+                    $what = $this->post_spain($dataReady);
 
-                $e->log = $what['log'];
+                    $e->log = $what['log'];
 
-                //salió bien, cambia el estado
-                if ($what['answer'] == 'ok')
-                    $e->msk = 1;
-                else {
-                    if ($what['answer'] == 'duplicate') {
+                    //salió bien, cambia el estado
+                    if ($what['answer'] == 'ok')
                         $e->msk = 1;
-                    } else
-                        if ($what['answer'] == 'country') {
+                    else {
+                        if ($what['answer'] == 'duplicate') {
+                            $e->msk = 1;
+                        } else
+                            if ($what['answer'] == 'country') {
 
-                        }
+                            }
+                    }
                 }
-            }
-            else
-            {
-                $e->msk = 1;
-                echo 'csao especial';
+                else
+                {
+                    $e->msk = 1;
+                    echo 'csao especial';
+                }
             }
 
             //----
@@ -486,6 +489,8 @@ class CronosController extends Controller
                 //mandar a MSK
                 //primero reviso que no esté en MSK
                 $exists = $this->NewZoho->fetchRecordWithValue('Sales_Orders', 'otro_so', $pack['contrato']['numero de so']);
+
+                dd($exists);
 
                 if ($exists == 'error') 
                 {
