@@ -487,15 +487,21 @@ class CronosController extends Controller
                 //primero reviso que no esté en MSK
                 $exists = $this->NewZoho->fetchRecordWithValue('Sales_Orders', 'otro_so', $pack['contrato']['numero de so']);
 
-                if ($exists == 'error') {
+                if ($exists == 'error') 
+                {
                     //no existe, lo voy a crear
                     $result = $this->createMSK($pack);
 
                     if ($result) {
                         $e->status = "success";
                     }
-                } else {
-                    $e->status = "success";
+                } 
+                else //ya existe, update contact
+                {
+                    $result = $this->updateMSK($pack);
+
+                    if($result)
+                        $e->status = "success";
                 }
             }
 
@@ -1265,15 +1271,30 @@ class CronosController extends Controller
         return ($iso[$country]);
     }
 
-    private function createMSK($element)
+    private function updateMSK($element)
     {
         $answer = false;
 
-        //para ir viendo si avanzarf o no, los status
-        $contactStatus = false;
-        $saleStatus = false;
-        $prodStatus = false;
+        //lo primero que haremos es intentar crear el contacto
+        $contactData = array(
+            "ID_Personal" => $element['contacto']['dni'],
+            'Email' => $element['contacto']["correo electronico"],
+           );
 
+        $newContact = $this->NewZoho->createNewRecord('Contacts', $contactData);
+
+        $contactData = $this->buildContact($element);
+
+        $updateContact = $this->NewZoho->updateRecord("Contacts", $contactData, $newContact['id'], false);
+
+        if($updateContact['result'] != 'error')
+           $answer = true;
+
+        return($answer);
+    }
+
+    private function buildContact($element)
+    {
         $explodedName = explode(",", $element['contacto']["nombre de contacto"]);
 
         $surname = '-';
@@ -1290,7 +1311,6 @@ class CronosController extends Controller
         if($razonsocial == '')
             $razonsocial = $element['contrato']["nombre y apellido"];
 
-        //lo primero que haremos es intentar crear el contacto
         $contactData = array(
             "ID_Personal" => $element['contacto']['dni'],
             'First_Name' => $name,
@@ -1320,6 +1340,20 @@ class CronosController extends Controller
 			"RFC" => $element['contrato']["cuit"], 
 			'Raz_n_social' => $razonsocial,
 			"correo_facturacion" => $element['contrato']["email"]);
+
+            return($contactData);
+    }
+
+    private function createMSK($element)
+    {
+        $answer = false;
+
+        //para ir viendo si avanzarf o no, los status
+        $contactStatus = false;
+        $saleStatus = false;
+        $prodStatus = false;
+
+        $contactData = $this->buildContact($element);
 
         $newContact = $this->NewZoho->createNewRecord('Contacts', $contactData);
 
