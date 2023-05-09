@@ -1295,6 +1295,8 @@ class CronosController extends Controller
 
         $newContact = $this->NewZoho->createNewRecord('Contacts', $contactData);
 
+        dd($newContact);
+
         $contactData = $this->buildContact($element);
 
         $updateContact = $this->NewZoho->updateRecord("Contacts", $contactData, $newContact['id'], false);
