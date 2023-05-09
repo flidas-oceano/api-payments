@@ -174,7 +174,13 @@ class CronosController extends Controller
 
         $encoded = json_decode($result);
 
-        dd($result);
+        $answer['log'] = $result;
+
+        if (isset($encoded->code)) 
+        {
+            if ($encoded->code == 200)
+                $answer['answer'] = 'ok';
+        }
 
         return ($answer);
     }
@@ -362,8 +368,15 @@ class CronosController extends Controller
 
         foreach($elements as $e)
         {
-           // $spain = $this->post_spain_delete($e->so_number);
+            $spain = $this->post_spain_delete($e->so_number);
 
+            if($spain['answer'] == 'ok')
+            {
+                $e->status = "success";   
+            }
+
+            $e->log = $spain['log'];
+            $e->save();
         }                            
     }
 
