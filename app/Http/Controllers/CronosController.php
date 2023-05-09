@@ -133,7 +133,16 @@ class CronosController extends Controller
     {
         echo 'ay hola';
 
-        $this->post_spain_delete('2000339000575832524');
+        $this->NewZoho->reinit();
+
+        //mandar a MSK
+        //primero reviso que no esté en MSK
+       // $exists = $this->NewZoho->fetchRecordWithValue('Sales_Orders', 'otro_so', "2000339000576998123");
+        $exists = $this->NewZoho->fetchRecordWithValue('Quotes', 'id', "5344455000003683051");
+
+        dd($exists);
+
+       // $this->post_spain_delete('2000339000575832524');
     }
 
     private function post_spain_delete($so)
@@ -488,7 +497,7 @@ class CronosController extends Controller
 
                 //mandar a MSK
                 //primero reviso que no esté en MSK
-                $exists = $this->NewZoho->fetchRecordWithValue('Sales_Orders', 'otro_so', $pack['contrato']['numero de so']);
+                $exists = $this->NewZoho->fetchRecordWithValue('Quotes', 'otro_so', $pack['contrato']['numero de so']);
 
                 if ($exists == 'error') 
                 {
