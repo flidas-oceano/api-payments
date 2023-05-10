@@ -495,7 +495,7 @@ class CronosController extends Controller
                 else
                 {
                     $e->msk = 1;
-                    echo 'csao especial';
+                    
                 }
             }
 
@@ -536,20 +536,15 @@ class CronosController extends Controller
             try {
                 $e->save();
             } catch (\Throwable $t) {
-                echo ' no pude grabar';
-
-                dd($t);
-
+                
                 Log::error($t);
             }
 
         }
 
-        echo ' todo ok';
-
-        echo 'procesado de borrados';
-
         $this->processDeletions();
+
+        return response()->json('proceso cronapi completado');
 
     }
 
@@ -1305,9 +1300,9 @@ class CronosController extends Controller
 
         $newContact = $this->NewZoho->createNewRecord('Contacts', $contactData);
 
-        $contactData = $this->buildContact($element);
-
         $updateContact = $this->NewZoho->updateRecord("Contacts", $contactData, $newContact['id'], false);
+
+        Log::info($updateContact);
 
         if($updateContact['result'] != 'error')
            $answer = true;
@@ -1379,15 +1374,12 @@ class CronosController extends Controller
 
         $newContact = $this->NewZoho->createNewRecord('Contacts', $contactData);
 
+        Log::info($newContact);
+
         //si pudo crear bien el contacto, status ok
         if ($newContact['result'] == 'ok' || $newContact['result'] == 'duplicate') {
             $contactStatus = true;
         }
-
-        echo "estado de contacto <pre>";
-        print_r($newContact);
-        echo "</pre>";
-
 
         //avanza si está bien todo, sino no
         if ($contactStatus) {
@@ -1399,9 +1391,7 @@ class CronosController extends Controller
             }
         }
 
-        echo "orod status <pre>";
-        print_r($prodStatus);
-        echo "</pre>";
+        Log::info($productDetails);
 
         //si pudo crear los product details
         if ($prodStatus) {
@@ -1445,15 +1435,13 @@ class CronosController extends Controller
 
             $newSale = $this->NewZoho->createRecordQuote($saleData);
 
+            Log::info($newSale);
+
             //si pudo crear bien el contrato, status ok
             if ($newSale['result'] == 'ok') {
                 $saleStatus = true;
             }
         }
-
-        echo "sale status <pre>";
-        print_r($newSale);
-        echo "</pre>";
 
         if ($contactStatus && $saleStatus && $prodStatus)
             $answer = true;
@@ -1472,8 +1460,7 @@ class CronosController extends Controller
         //arma y reemplaza sku por ID de producto en zoho
         foreach ($products as $p) {
 
-            echo $p['codigo de curso'];
-            echo '<br>';
+            
 
             $rec = $this->NewZoho->fetchRecordWithValue('Products', 'Product_Code', $p['codigo de curso']);
 
