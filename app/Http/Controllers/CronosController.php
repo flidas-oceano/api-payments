@@ -1302,7 +1302,7 @@ class CronosController extends Controller
 
         $updateContact = $this->NewZoho->updateRecord("Contacts", $contactData, $newContact['id'], false);
 
-        Log::info($updateContact);
+        Log::info("update contact", $updateContact);
 
         if($updateContact['result'] != 'error')
            $answer = true;
@@ -1374,7 +1374,7 @@ class CronosController extends Controller
 
         $newContact = $this->NewZoho->createNewRecord('Contacts', $contactData);
 
-        Log::info($newContact);
+        Log::info('new contact',$newContact);
 
         //si pudo crear bien el contacto, status ok
         if ($newContact['result'] == 'ok' || $newContact['result'] == 'duplicate') {
@@ -1391,7 +1391,7 @@ class CronosController extends Controller
             }
         }
 
-        Log::info($productDetails);
+        Log::info('prod details',$productDetails);
 
         //si pudo crear los product details
         if ($prodStatus) {
@@ -1435,7 +1435,7 @@ class CronosController extends Controller
 
             $newSale = $this->NewZoho->createRecordQuote($saleData);
 
-            Log::info($newSale);
+            Log::info('new sale',$newSale);
 
             //si pudo crear bien el contrato, status ok
             if ($newSale['result'] == 'ok') {
