@@ -135,14 +135,14 @@ class CronosController extends Controller
 
         $this->NewZoho->reinit();
 
-        //mandar a MSK
-        //primero reviso que no esté en MSK
-       // $exists = $this->NewZoho->fetchRecordWithValue('Sales_Orders', 'otro_so', "2000339000576998123");
-        $exists = $this->NewZoho->fetchRecordWithValue('Quotes', 'id', "5344455000003683051");
+       // $exists = $this->NewZoho->fetchRecordWithValue('Quotes', 'otro_so', 2000339000574080235);
+        //$exists = $this->NewZoho->fetchRecordWithValue('Quotes', 'Quote_Number', "5344455000003383107");
+       // $exists = $this->NewZoho->fetchRecordWithValue('Contacts', 'id', "5344455000003383061");
+
+       $exists = $this->NewZoho->fetchRecordWithValue('Sales_Orders', 'id', "5344455000003490130");
 
         dd($exists);
 
-       // $this->post_spain_delete('2000339000575832524');
     }
 
     private function post_spain_delete($so)
@@ -502,17 +502,20 @@ class CronosController extends Controller
             //----
         }
 
+        $this->NewZoho->reinit();
+
         foreach ($elements as $e) {
             $pack = json_decode($packs[$e->id], true);
 
             if ($e->msk == 1 && $e->status != 'omit') {
-                $this->NewZoho->reinit();
+                
 
                 //mandar a MSK
                 //primero reviso que no esté en MSK
                 $exists = $this->NewZoho->fetchRecordWithValue('Quotes', 'otro_so', $pack['contrato']['numero de so']);
+                $exists2 = $this->NewZoho->fetchRecordWithValue('Sales_Orders', 'otro_so', $pack['contrato']['numero de so']);
 
-                if ($exists == 'error') 
+                if ($exists == 'error' && $exists2 == 'error') 
                 {
                     //no existe, lo voy a crear
                     $result = $this->createMSK($pack);
