@@ -124,57 +124,163 @@ class RebillController extends Controller
 
         $customer = $this->findOrCreateCustomer($customerData);
 
-        $checkout = new \Rebill\SDK\Models\Checkout();
-        $checkout->amount = 100.0;
+        // Creamos un Item con un Price (Si aun no existe)
+        $result = (new \Rebill\SDK\Models\Item)->setAttributes([
+            'name' => 'Testing checkout',
+            'description' => 'Test of Checkout',
+            'metadata' => [
+                'key_of_meta1' => 'example meta 1',
+                'key_of_meta2' => 'example meta 2',
+            ],
+            'prices' => [
+                (new \Rebill\SDK\Models\Price)->setAttributes([
+                    'amount' => '2.5',
+                    'type' => 'fixed',
+                    'description' => 'Example of Subscription with infinite repetitions',
+                    'frequency' => (new \Rebill\SDK\Models\Shared\Frequency)->setAttributes([
+                        'type' => 'months',
+                        'quantity' => 3
+                    ]),
+                    'repetitions' => null,
+                    'currency' => env('REBILL_GATEWAY_CURRENCY'),
+                    'gatewayId' => env('REBILL_GATEWAY_MP_ID')
+                ]),
+                (new \Rebill\SDK\Models\Price)->setAttributes([
+                    'amount' => 1.5,
+                    'type' => 'fixed',
+                    'description' => 'Example of Subscription with only two payment',
+                    'frequency' => (new \Rebill\SDK\Models\Shared\Frequency)->setAttributes([
+                        'type' => 'months',
+                        'quantity' => 2
+                    ]),
+                    'repetitions' => 2,
+                    'currency' => env('REBILL_GATEWAY_CURRENCY'),
+                    'gatewayId' => env('REBILL_GATEWAY_MP_ID')
+                ]),
+                (new \Rebill\SDK\Models\Price)->setAttributes([
+                    'amount' => 0.5,
+                    'type' => 'fixed',
+                    'description' => 'Example of Unique Payment',
+                    'frequency' => (new \Rebill\SDK\Models\Shared\Frequency)->setAttributes([
+                        'type' => 'months',
+                        'quantity' => 1
+                    ]),
+                    'repetitions' => 1,
+                    'currency' => env('REBILL_GATEWAY_CURRENCY'),
+                    'gatewayId' => env('REBILL_GATEWAY_MP_ID')
+                ]),
+            ]
+        ])->create();
+
+
+        $prices = [];
+        foreach ($result->prices as $p) {
+            $prices[] = (new \Rebill\SDK\Models\Shared\CheckoutPrice)->setAttributes([
+                'id' => $p->id,
+                'quantity' => 1
+            ]);
+        }
+
+        $checkout = (new \Rebill\SDK\Models\Checkout())->setAttributes([
+            'prices' => $prices,
+            'customer' => (new \Rebill\SDK\Models\Shared\CheckoutCustomer)->setAttributes([
+                'email' => 'testuser@clientdomain.com',
+                'firstName' => 'APRO Test',
+                'lastName' => 'Name',
+                'phone' => [
+                    "countryCode" => "52",
+                    // Optional with this value: "-"
+                    "areaCode" => "1",
+                    // Optional with this value: "-"
+                    "phoneNumber" => "302390203929039"
+                ],
+                'address' => [
+                    "street" => "San Jose",
+                    "number" => "1120",
+                    // Optional with this value: "0"
+                    "state" => "Buenos Aires",
+                    "city" => "San Isidro",
+                    "country" => "AR",
+                    "zipCode" => "2000"
+                ],
+                'taxId' => [
+                    'type' => 'CUIT',
+                    // See Rebill\SDK\Models\GatewayIdentificationTypes::get
+                    'value' => '222999333'
+                ],
+                'personalId' => [
+                    'type' => 'DNI',
+                    // See Rebill\SDK\Models\GatewayIdentificationTypes::get
+                    'value' => '111222333'
+                ],
+                'card' => (new \Rebill\SDK\Models\Card)->setAttributes([
+                    'cardNumber' => '4509953566233704',
+                    'cardHolder' => [
+                        'name' => 'APRO Test Name',
+                        'identification' => [
+                            'type' => 'DNI',
+                            // See Rebill\SDK\Models\GatewayIdentificationTypes::get
+                            'value' => '111222333'
+                        ]
+                    ],
+                    'securityCode' => '123',
+                    'expiration' => [
+                        'month' => 11,
+                        'year' => 2025
+                    ],
+                ])
+            ])
+        ]);
+        /* $checkout->amount = 100.0;
         $checkout->currency = 'MXN';
         $checkout->description = 'Test checkout';
         $checkout->customer = [
-            'email' => 'testuser@clientdomain.com',
-            'firstName' => 'APRO Test',
-            'lastName' => 'Name',
-            'phone' => [
-                "countryCode" => "52",
-                // Optional with this value: "-"
-                "areaCode" => "1",
-                // Optional with this value: "-"
-                "phoneNumber" => "302390203929039"
-            ],
-            'address' => [
-                "street" => "San Jose",
-                "number" => "1120",
-                // Optional with this value: "0"
-                "state" => "Buenos Aires",
-                "city" => "San Isidro",
-                "country" => "AR",
-                "zipCode" => "2000"
-            ],
-            'taxId' => [
-                'type' => 'CUIT',
-                // See Rebill\SDK\Models\GatewayIdentificationTypes::get
-                'value' => '222999333'
-            ],
-            'personalId' => [
-                'type' => 'DNI',
-                // See Rebill\SDK\Models\GatewayIdentificationTypes::get
-                'value' => '111222333'
-            ],
-            'card' => (new \Rebill\SDK\Models\Card)->setAttributes([
-                'cardNumber' => '4509953566233704',
-                'cardHolder' => [
-                    'name' => 'APRO Test Name',
-                    'identification' => [
-                        'type' => 'DNI',
-                        // See Rebill\SDK\Models\GatewayIdentificationTypes::get
-                        'value' => '111222333'
-                    ]
-                ],
-                'securityCode' => '123',
-                'expiration' => [
-                    'month' => 11,
-                    'year' => 2025
-                ],
-            ])
-        ];
+        'email' => 'testuser@clientdomain.com',
+        'firstName' => 'APRO Test',
+        'lastName' => 'Name',
+        'phone' => [
+        "countryCode" => "52",
+        // Optional with this value: "-"
+        "areaCode" => "1",
+        // Optional with this value: "-"
+        "phoneNumber" => "302390203929039"
+        ],
+        'address' => [
+        "street" => "San Jose",
+        "number" => "1120",
+        // Optional with this value: "0"
+        "state" => "Buenos Aires",
+        "city" => "San Isidro",
+        "country" => "AR",
+        "zipCode" => "2000"
+        ],
+        'taxId' => [
+        'type' => 'CUIT',
+        // See Rebill\SDK\Models\GatewayIdentificationTypes::get
+        'value' => '222999333'
+        ],
+        'personalId' => [
+        'type' => 'DNI',
+        // See Rebill\SDK\Models\GatewayIdentificationTypes::get
+        'value' => '111222333'
+        ],
+        'card' => (new \Rebill\SDK\Models\Card)->setAttributes([
+        'cardNumber' => '4509953566233704',
+        'cardHolder' => [
+        'name' => 'APRO Test Name',
+        'identification' => [
+        'type' => 'DNI',
+        // See Rebill\SDK\Models\GatewayIdentificationTypes::get
+        'value' => '111222333'
+        ]
+        ],
+        'securityCode' => '123',
+        'expiration' => [
+        'month' => 11,
+        'year' => 2025
+        ],
+        ])
+        ]; */
         $checkout->redirectUrl = 'http://example.com/checkout/success';
 
         $response = $checkout->create($checkout);
