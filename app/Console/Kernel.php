@@ -20,10 +20,10 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')->hourly();
         $schedule->command('telescope:prune --hours=48')->daily();
         $schedule->command('passport:purge')->hourly();
-        $schedule->call(function () {
-            $response = Http::get('https://oceanomedicina.net/api-payments/public/api/processElements');
-            return response()->json($response);
-        })->everyThirtyMinutes(); //->everyMinute(); everyThirtyMinutes //
+        /* $schedule->call(function () {
+        $response = Http::get('https://oceanomedicina.net/api-payments/public/api/processElements');
+        return response()->json($response);
+        })->everyThirtyMinutes(); *///->everyMinute(); everyThirtyMinutes //
     }
 
     /**
