@@ -82,4 +82,9 @@ Route::post('/addElement', [CronosController::class, 'addcontract']);
 Route::get('/processElements', [CronosController::class, 'cronapi']);
 Route::post('/obtainDataCRM', [ZohoController::class, 'obtainData']);
 
-Route::get('/greet', [RebillController::class, 'hola']);
+Route::prefix("/rebill")->group(function () {
+    Route::get('/login', [RebillController::class, 'login']);
+    Route::get('/getAllCustomers', [RebillController::class, 'getAllCustomers']);
+    Route::get('/addStripeGateway', [RebillController::class, 'addStripeGateway']);
+    Route::get('/generateCheckourRebill', [RebillController::class, 'generateCheckourRebill']);
+});
