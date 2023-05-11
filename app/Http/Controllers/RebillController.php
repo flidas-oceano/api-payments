@@ -38,11 +38,24 @@ class RebillController extends Controller
             'password' => env('REBILL_MSKLATAM_PW_TEST'),
         ])->object();
 
+
+        /*
+        $checkout = new \Rebill\SDK\Models\Checkout();
+        $checkout->amount = 100.0;
+        $checkout->currency = 'USD';
+        $checkout->description = 'Test checkout';
         $token = $response->authToken;
-
         Storage::disk('local')->put('rebill/token.txt', $token);
-
         return $response;
+        //$response = $checkout->create($checkout);
+        // echo 'Checkout URL: ' . $response->url;
+        $customer = $this->createCustomer(['email' => 'test@gm.com',
+        'first_name' => 'test',
+        'last_name' => 'tost',
+        'country' => 'MX']);
+        dd($customer);
+        */
+
     }
 
     public function getAllCustomers()
