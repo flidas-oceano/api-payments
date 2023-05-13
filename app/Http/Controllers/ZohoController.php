@@ -27,6 +27,8 @@ class ZohoController extends Controller
     {
         try {
 
+            $this->emi_owner = 'x';
+
             ZCRMRestClient::initialize([
                 "client_id" => '1000.3RG4V6380Z6J0QJ8VGXO2V0PBMELGK',
                 "client_secret" => '81d8708344811e068588c0bf635a186f195da8bedb',
