@@ -139,9 +139,20 @@ class CronosController extends Controller
         //$exists = $this->NewZoho->fetchRecordWithValue('Quotes', 'Quote_Number', "5344455000003383107");
        // $exists = $this->NewZoho->fetchRecordWithValue('Contacts', 'id', "5344455000003383061");
 
-       $exists = $this->NewZoho->fetchRecordWithValue('Sales_Orders', 'id', "5344455000003490130");
+       $contactId = '';
+       $exists = $this->NewZoho->fetchRecordWithValue('Quotes', 'otro_so', "123415");
 
-        dd($exists);
+       if($exists != 'error') 
+            $contactId = $exists->getFieldValue('Contact_Name')->getEntityId();
+       else
+       {
+            $exists = $this->NewZoho->fetchRecordWithValue('Sales_Orders', 'otro_so', "12345");
+
+            if($exists != 'error') 
+                $contactId = $exists->getFieldValue('Contact_Name')->getEntityId();
+       }
+       
+       
 
     }
 
@@ -370,6 +381,8 @@ class CronosController extends Controller
         {
             $spain = $this->post_spain_delete($e->so_number);
 
+            Log::info('process deletion: ',$e->so_number);
+
             if($spain['answer'] == 'ok')
             {
                 $e->status = "success";   
@@ -393,6 +406,9 @@ class CronosController extends Controller
         $elements = $this->removeduplicates($elements);
 
         foreach ($elements as $k => $e) {
+
+            Log::info('process element: ',$e->so_number);
+
             $dataReady = ''; //para pasarle a LIME
             $pack = ''; //datos procesador, sin encodear
 
@@ -476,7 +492,11 @@ class CronosController extends Controller
             {
                 if(!$special)
                 {
+                    Log::info('envio a españa');
+
                     $what = $this->post_spain($dataReady);
+
+                    Log::info('españa responde ',$what['log']);
 
                     $e->log = $what['log'];
 
@@ -505,6 +525,9 @@ class CronosController extends Controller
         $this->NewZoho->reinit();
 
         foreach ($elements as $e) {
+
+            Log::info('proceso para zoho crm ', $e->so_number);
+
             $pack = json_decode($packs[$e->id], true);
 
             if ($e->msk == 1 && $e->status != 'omit') {
@@ -532,9 +555,6 @@ class CronosController extends Controller
                         $e->status = "success";
                 }
             }
-
-
-
 
             try {
                 $e->save();
@@ -1298,12 +1318,23 @@ class CronosController extends Controller
     {
         $answer = false;
 
-        //lo primero que haremos es intentar crear el contacto
+        $contactId = '';
+
+        $exists = $this->NewZoho->fetchRecordWithValue('Quotes', 'otro_so', $element['contrato']["numero de so"]);
+ 
+        if($exists != 'error') 
+             $contactId = $exists->getFieldValue('Contact_Name')->getEntityId();
+        else
+        {
+             $exists = $this->NewZoho->fetchRecordWithValue('Sales_Orders', 'otro_so', $element['contrato']["numero de so"]);
+ 
+             if($exists != 'error') 
+                 $contactId = $exists->getFieldValue('Contact_Name')->getEntityId();
+        }
+
         $contactData = $this->buildContact($element);
 
-        $newContact = $this->NewZoho->createNewRecord('Contacts', $contactData);
-
-        $updateContact = $this->NewZoho->updateRecord("Contacts", $contactData, $newContact['id'], false);
+        $updateContact = $this->NewZoho->updateRecord("Contacts", $contactData, $contactId, false);
 
         Log::info("update contact", $updateContact);
 
