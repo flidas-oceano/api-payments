@@ -405,7 +405,8 @@ class CronosController extends Controller
 
         $elements = $this->removeduplicates($elements);
 
-        foreach ($elements as $k => $e) {
+        foreach ($elements as $k => $e) 
+        {
 
             Log::info('process element: ',$e->so_number);
 
@@ -524,7 +525,8 @@ class CronosController extends Controller
 
         $this->NewZoho->reinit();
 
-        foreach ($elements as $e) {
+        foreach ($elements as $e) 
+        {
 
             Log::info('proceso para zoho crm ', $e->so_number);
 
@@ -555,6 +557,9 @@ class CronosController extends Controller
                         $e->status = "success";
                 }
             }
+
+
+
 
             try {
                 $e->save();
