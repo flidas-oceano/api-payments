@@ -381,7 +381,7 @@ class CronosController extends Controller
         {
             $spain = $this->post_spain_delete($e->so_number);
 
-            Log::info('process deletion: ',$e->so_number);
+            Log::info('process deletion: '. $e->so_number);
 
             if($spain['answer'] == 'ok')
             {
@@ -408,7 +408,7 @@ class CronosController extends Controller
         foreach ($elements as $k => $e) 
         {
 
-            Log::info('process element: ',$e->so_number);
+            Log::info('process element: ' . $e->so_number);
 
             $dataReady = ''; //para pasarle a LIME
             $pack = ''; //datos procesador, sin encodear
@@ -497,7 +497,7 @@ class CronosController extends Controller
 
                     $what = $this->post_spain($dataReady);
 
-                    Log::info('españa responde ',$what['log']);
+                    Log::info('españa responde ' . $what['log']);
 
                     $e->log = $what['log'];
 
@@ -528,7 +528,7 @@ class CronosController extends Controller
         foreach ($elements as $e) 
         {
 
-            Log::info('proceso para zoho crm ', $e->so_number);
+            Log::info('proceso para zoho crm ' . $e->so_number);
 
             $pack = json_decode($packs[$e->id], true);
 
