@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Support\Facades\Log;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -104,9 +104,10 @@ class StripePaymentController extends Controller
                 'payment_behavior' => 'error_if_incomplete',
                 'proration_behavior' => 'none',
             ]);
-
+		Log::info($stripeSubscription);
             return response()->json($stripeSubscription);
         } catch (Exception $e) {
+		Log::error($e);
             return response()->json($e->getMessage(), 500);
         }
     }
