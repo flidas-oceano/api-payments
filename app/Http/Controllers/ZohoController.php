@@ -245,7 +245,7 @@ class ZohoController extends Controller
 
     public function updateZohoStripe(UpdateContractZohoRequest $request)
     {
-        dd($request->all());
+        //   dd($request->all());
         $dataUpdate = [
             'Email' => $request->email,
             'Monto_de_Anticipo' => $request->installment_amount,
@@ -277,7 +277,6 @@ class ZohoController extends Controller
 
     public function updateZohoMP(UpdateContractZohoRequest $request)
     {
-        dd($request->all());
         $dataUpdate = [
             'Email' => $request->email,
             'Monto_de_Anticipo' => $request->installment_amount,
@@ -288,12 +287,13 @@ class ZohoController extends Controller
             //Costo de cada cuota
             'Cuotas_restantes_sin_anticipo' => $request->installments - 1,
             'DNI' => $request->dni,
+            //RFC_Solo_MX
             'Fecha_de_Vto' => date('Y-m-d'),
             'Status' => 'Contrato Efectivo',
-            'Modalidad_de_pago_del_Anticipo' => 'Mercado pago (Vs)',
-            'Medio_de_Pago' => 'Mercado pago (Vs)',
+            'Modalidad_de_pago_del_Anticipo' => 'Mercado pago',
+            'Medio_de_Pago' => 'Mercado pago',
             'Es_Suscri' => boolval($request->is_suscri),
-            'stripe_subscription_id' => $request->subscriptionId,
+            'mp_subscription_id' => $request->subscriptionId,
             'L_nea_nica_6' => $request->fullname,
             'Billing_Street' => $request->address,
             'L_nea_nica_3' => strval($request->dni),

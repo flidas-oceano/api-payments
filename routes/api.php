@@ -55,6 +55,7 @@ Route::post('/stripe/subscriptionPayment', [StripePaymentController::class, 'sub
 Route::get('/stripe/customer/search/{email}', [StripePaymentController::class, 'findCustomerByEmail']);
 
 Route::post('/updateZohoStripeZohoCRM', [ZohoController::class, 'updateZohoStripe']);
+Route::post('/updateZohoMPZohoCRM', [ZohoController::class, 'updateZohoMP']);
 
 Route::get('/db', [PurchasingProcessController::class, 'index']);
 

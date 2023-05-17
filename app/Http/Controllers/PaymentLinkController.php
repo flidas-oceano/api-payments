@@ -29,7 +29,7 @@ class PaymentLinkController extends Controller
         $customer = RebillCustomer::updateOrCreate(["email" => $rebillCustomerData["email"]], $rebillCustomerData);
         $paymentLinkData['rebill_customer_id'] = $customer->id;
         //  dd($paymentLinkData);
-        $paymentLink = PaymentLink::create($paymentLinkData);
+        $paymentLink = PaymentLink::updateOrCreate(["so" => $paymentLinkData["contract_so"]], $paymentLinkData);
 
         return response()->json(["customer" => $customer, "payment" => $paymentLink]);
 
