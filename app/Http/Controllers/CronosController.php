@@ -3,17 +3,16 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use zcrmsdk\oauth\ZohoOAuth;
-use App\Models\{CronosElements};
-use zcrmsdk\crm\crud\ZCRMRecord;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use App\Models\{CronosElements};
 use Illuminate\Support\Facades\Storage;
-use zcrmsdk\crm\exception\ZCRMException;
 use zcrmsdk\crm\crud\ZCRMInventoryLineItem;
 use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
+use zcrmsdk\oauth\ZohoOAuth;
+use zcrmsdk\crm\crud\ZCRMRecord;
+use zcrmsdk\crm\exception\ZCRMException;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\App;
 
 class CronosController extends Controller
 {
@@ -56,6 +55,24 @@ class CronosController extends Controller
         $this->zoho_api = 'e25b3b8fd44657334be72a513f129502';
         }
         */
+    }
+
+    public function deletecontract()
+    {
+        if (isset($_POST['response'])) 
+        {
+            $response = json_decode($_POST['response']);
+            $data = $response->data;
+
+            $aux = $data[0];
+
+            Log::info('[delete] Llegó contrato: ' . $aux->SO_Number);
+
+            $hasSavedNewElement = $this->uploadElement($data, 'delete', 'pending');
+
+            return response()->json(['hasSavedNewElement' => $hasSavedNewElement]);
+        }
+
     }
 
     public function addcontract()
@@ -122,9 +139,20 @@ class CronosController extends Controller
         //$exists = $this->NewZoho->fetchRecordWithValue('Quotes', 'Quote_Number', "5344455000003383107");
        // $exists = $this->NewZoho->fetchRecordWithValue('Contacts', 'id', "5344455000003383061");
 
-       $exists = $this->NewZoho->fetchRecordWithValue('Sales_Orders', 'id', "5344455000003490130");
+       $contactId = '';
+       $exists = $this->NewZoho->fetchRecordWithValue('Quotes', 'otro_so', "123415");
 
-        dd($exists);
+       if($exists != 'error') 
+            $contactId = $exists->getFieldValue('Contact_Name')->getEntityId();
+       else
+       {
+            $exists = $this->NewZoho->fetchRecordWithValue('Sales_Orders', 'otro_so', "12345");
+
+            if($exists != 'error') 
+                $contactId = $exists->getFieldValue('Contact_Name')->getEntityId();
+       }
+       
+       
 
     }
 
@@ -135,11 +163,11 @@ class CronosController extends Controller
 
         $ch = curl_init();
 
-        curl_setopt($ch, CURLOPT_URL, 'http://' . $this->spain_url . '.oceano.com/api/v1/shop/order/cancellation/' . $so);
+        curl_setopt($ch, CURLOPT_URL, 'http://' . $this->spain_url . '.oceano.com/api/v1/shop/order/cancellation/'.$so);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         //curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
         //curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE"); 
 
         $headers = array();
         $headers[] = 'api-key: oceano_argentina';
@@ -159,7 +187,8 @@ class CronosController extends Controller
 
         $answer['log'] = $result;
 
-        if (isset($encoded->code)) {
+        if (isset($encoded->code)) 
+        {
             if ($encoded->code == 200)
                 $answer['answer'] = 'ok';
         }
@@ -218,15 +247,16 @@ class CronosController extends Controller
 
         foreach ($elements as $e) {
 
-
-            foreach ($answer as $k => $a) {
+        
+            foreach ($answer as $k => $a) 
+            {
                 //existe
                 if ($a->so_number == $e->so_number) {
                     //lo marco para omitir
                     $answer[$k]->status = 'omit';
                 }
             }
-
+        
 
             $answer[] = $e;
 
@@ -345,18 +375,22 @@ class CronosController extends Controller
     private function processDeletions()
     {
         $elements = CronosElements::where('status', '=', 'pending')->
-            where('type', '=', 'delete')->get();
+                                    where('type','=','delete')->get();
 
-        foreach ($elements as $e) {
+        foreach($elements as $e)
+        {
             $spain = $this->post_spain_delete($e->so_number);
 
-            if ($spain['answer'] == 'ok') {
-                $e->status = "success";
+            Log::info('process deletion: '. $e->so_number);
+
+            if($spain['answer'] == 'ok')
+            {
+                $e->status = "success";   
             }
 
             $e->log = $spain['log'];
             $e->save();
-        }
+        }                            
     }
 
     public function cronapi()
@@ -365,13 +399,17 @@ class CronosController extends Controller
         $packs = [];
 
         $elements = CronosElements::where('status', '=', 'pending')->
-            where('type', '=', 'add')->get();
+                                    where('type','=','add')->get();
 
         $count = 0;
 
         $elements = $this->removeduplicates($elements);
 
-        foreach ($elements as $k => $e) {
+        foreach ($elements as $k => $e) 
+        {
+
+            Log::info('process element: ' . $e->so_number);
+
             $dataReady = ''; //para pasarle a LIME
             $pack = ''; //datos procesador, sin encodear
 
@@ -392,7 +430,7 @@ class CronosController extends Controller
                     //==========arranca empaquetado de datos
 
                     $pack = $this->packData($crude, $e->type);
-                    $pack['prueba'] = 1;
+                    //$pack['prueba'] = 1;
 
                     //====== termina empaquetado de datos
 
@@ -421,20 +459,26 @@ class CronosController extends Controller
                     $dataReady = $e->data;
                     $pack = $e->data;
                 }
+
+
             }
 
-            $packs[$e->id] = $pack;
+        //caso especial
+        $special = false;
+        $packs[$e->id] = $pack;
 
-            $spainStatus = '';
+            if (!$ignore) 
+            {
+                $spainStatus = '';
 
+                
+                $datos = json_decode($dataReady,true);
 
-            //caso especial
-            $special = false;
-            $datos = json_decode($dataReady, true);
-
-            foreach ($datos['cursos'] as $c) {
-                if ($c['codigo de curso'] == '9005800')
-                    $special = true;
+                foreach($datos['cursos'] as $c)
+                {
+                    if($c['codigo de curso'] == '9005800')
+                        $special = true;
+                } 
             }
 
             //primero lo mando a españa
@@ -444,26 +488,36 @@ class CronosController extends Controller
 
             //envia a spain!
 
-            // $special = true;
-            if (!$special) {
-                $what = $this->post_spain($dataReady);
+           // $special = true;
+            if(!$ignore)
+            {
+                if(!$special)
+                {
+                    Log::info('envio a españa');
 
-                $e->log = $what['log'];
+                    $what = $this->post_spain($dataReady);
 
-                //salió bien, cambia el estado
-                if ($what['answer'] == 'ok')
-                    $e->msk = 1;
-                else {
-                    if ($what['answer'] == 'duplicate') {
+                    Log::info('españa responde ' . $what['log']);
+
+                    $e->log = $what['log'];
+
+                    //salió bien, cambia el estado
+                    if ($what['answer'] == 'ok')
                         $e->msk = 1;
-                    } else
-                        if ($what['answer'] == 'country') {
+                    else {
+                        if ($what['answer'] == 'duplicate') {
+                            $e->msk = 1;
+                        } else
+                            if ($what['answer'] == 'country') {
 
-                        }
+                            }
+                    }
                 }
-            } else {
-                $e->msk = 1;
-                echo 'csao especial';
+                else
+                {
+                    $e->msk = 1;
+                    
+                }
             }
 
             //----
@@ -471,34 +525,35 @@ class CronosController extends Controller
 
         $this->NewZoho->reinit();
 
-        foreach ($elements as $e) {
+        foreach ($elements as $e) 
+        {
+
+            Log::info('proceso para zoho crm ' . $e->so_number);
+
             $pack = json_decode($packs[$e->id], true);
 
             if ($e->msk == 1 && $e->status != 'omit') {
-
+                
 
                 //mandar a MSK
                 //primero reviso que no esté en MSK
                 $exists = $this->NewZoho->fetchRecordWithValue('Quotes', 'otro_so', $pack['contrato']['numero de so']);
                 $exists2 = $this->NewZoho->fetchRecordWithValue('Sales_Orders', 'otro_so', $pack['contrato']['numero de so']);
 
-<<<<<<< HEAD
-                if ($exists == 'error') {
-=======
-                if ($exists == 'error' && $exists2 == 'error')
+                if ($exists == 'error' && $exists2 == 'error') 
                 {
->>>>>>> 82789a09af54f02457ef167f297ff9cb855432f2
                     //no existe, lo voy a crear
                     $result = $this->createMSK($pack);
 
                     if ($result) {
                         $e->status = "success";
                     }
-                } else //ya existe, update contact
+                } 
+                else //ya existe, update contact
                 {
                     $result = $this->updateMSK($pack);
 
-                    if ($result)
+                    if($result)
                         $e->status = "success";
                 }
             }
@@ -509,7 +564,7 @@ class CronosController extends Controller
             try {
                 $e->save();
             } catch (\Throwable $t) {
-
+                
                 Log::error($t);
             }
 
@@ -567,6 +622,7 @@ class CronosController extends Controller
         $productIds = array();
 
         foreach ($crude[0]->Product_Details as $pd) {
+
             $idpr = $pd->product->id;
             $productIds[] = $idpr;
 
@@ -651,6 +707,7 @@ class CronosController extends Controller
             $pack['contrato']['dni'] = $crude[0]->Cliente_MX;
         }
 
+        
         //--------
         if ($pack['contrato']['pais'] == 'Ecuador') {
             if ($pack['contrato']['es ecommerce'])
@@ -888,6 +945,8 @@ class CronosController extends Controller
             $answer['cuit'] = $this->pax($data, 'CUIT_CUIL');
             $answer['nombre y apellido'] = $this->pax($data, 'L_nea_nica_6');
             $answer['razon social'] = $this->pax($data, 'Razon_Social');
+            $answer['caracteristica contacto'] = $this->pax($data, 'Caracter_stica_contacto');
+            $answer['requiere factura'] = $this->pax($data, 'Requiere_factura');
             $answer['email'] = $this->pax($data, 'Email');
             $answer['tipo iva'] = $this->filter($this->pax($data, 'Tipo_IVA'), 'guion');
             $answer['tipo iva puro'] = $this->pax($data, 'Tipo_IVA');
@@ -919,6 +978,7 @@ class CronosController extends Controller
             $answer['tipo de cuenta'] = $this->pax($data, 'Tipo_de_Cuenta');
             $answer['telefono facturacion'] = $this->pax($data, 'Tel_fono_Facturacion');
             $answer['num de cuenta'] = $this->pax($data, 'N_mero_de_Cuenta');
+            $answer['regimen fiscal'] = $this->pax($data, 'Regimen_fiscal');
             //$answer['notas'] = $this->fetchNotes($this->pax($data,'id'));
             $answer['notas'] = '';
 
@@ -1263,19 +1323,30 @@ class CronosController extends Controller
     {
         $answer = false;
 
-        //lo primero que haremos es intentar crear el contacto
+        $contactId = '';
+
+        $exists = $this->NewZoho->fetchRecordWithValue('Quotes', 'otro_so', $element['contrato']["numero de so"]);
+ 
+        if($exists != 'error') 
+             $contactId = $exists->getFieldValue('Contact_Name')->getEntityId();
+        else
+        {
+             $exists = $this->NewZoho->fetchRecordWithValue('Sales_Orders', 'otro_so', $element['contrato']["numero de so"]);
+ 
+             if($exists != 'error') 
+                 $contactId = $exists->getFieldValue('Contact_Name')->getEntityId();
+        }
+
         $contactData = $this->buildContact($element);
 
-        $newContact = $this->NewZoho->createNewRecord('Contacts', $contactData);
-
-        $updateContact = $this->NewZoho->updateRecord("Contacts", $contactData, $newContact['id'], false);
+        $updateContact = $this->NewZoho->updateRecord("Contacts", $contactData, $contactId, false);
 
         Log::info("update contact", $updateContact);
 
-        if ($updateContact['result'] != 'error')
-            $answer = true;
+        if($updateContact['result'] != 'error')
+           $answer = true;
 
-        return ($answer);
+        return($answer);
     }
 
     private function buildContact($element)
@@ -1292,8 +1363,8 @@ class CronosController extends Controller
             $name = $explodedName[1];
 
         $razonsocial = $element['contrato']["razon social"];
-
-        if ($razonsocial == '')
+        
+        if($razonsocial == '')
             $razonsocial = $element['contrato']["nombre y apellido"];
 
         $contactData = array(
@@ -1302,7 +1373,7 @@ class CronosController extends Controller
             'Last_Name' => $surname,
             'Email' => $element['contacto']["correo electronico"],
             'Phone' => $element['contacto']["telefono particular"],
-            'Mobile' => $element['contacto']["otro telefono"],
+            'Mobile' => $element['contacto']["otro telefono"], 
             'Pais' => $element['contacto']["pais"],
             'Profesi_n' => $element['contacto']["profesion o estudio"],
             'Especialidad' => $element['contacto']["especialidad"],
@@ -1314,19 +1385,19 @@ class CronosController extends Controller
             'Mailing_Street' => $element['domicilio']["calle y nro"],
             'Mailing_Zip' => $element['domicilio']["codigo postal"],
             'Estado' => $element['domicilio']["region"],
-            'City' => $element['domicilio']["localidad"],
+            'City' => $element['domicilio']["localidad"], 
             'Mailing_State' => $element['domicilio']["provincia"],
+            'Caracter_stica_contacto' => $element['contrato']["caracteristica contacto"],
 
             'Requiere_factura' => $element['contrato']["requiere factura"],
             'R_gimen_fiscal' => $element['contrato']["regimen fiscal"],
+			
+			"CUIT_CUIL_o_DNI" => $element['contrato']["cuit"], 
+			"RFC" => $element['contrato']["cuit"], 
+			'Raz_n_social' => $razonsocial,
+			"correo_facturacion" => $element['contrato']["email"]);
 
-            "CUIT_CUIL_o_DNI" => $element['contrato']["cuit"],
-            "RFC" => $element['contrato']["cuit"],
-            'Raz_n_social' => $element['contrato']["nombre y apellido"] . $element['contrato']["razon social"],
-            "correo_facturacion" => $element['contrato']["email"]
-        );
-
-        return ($contactData);
+            return($contactData);
     }
 
     private function createMSK($element)
@@ -1342,7 +1413,7 @@ class CronosController extends Controller
 
         $newContact = $this->NewZoho->createNewRecord('Contacts', $contactData);
 
-        Log::info('new contact', $newContact);
+        Log::info('new contact',$newContact);
 
         //si pudo crear bien el contacto, status ok
         if ($newContact['result'] == 'ok' || $newContact['result'] == 'duplicate') {
@@ -1359,7 +1430,7 @@ class CronosController extends Controller
             }
         }
 
-        Log::info('prod details', $productDetails);
+        Log::info('prod details',$productDetails);
 
         //si pudo crear los product details
         if ($prodStatus) {
@@ -1376,7 +1447,7 @@ class CronosController extends Controller
 
             $sub_id = $element['contrato']["stripe_subscription_id"];
 
-            if ($element['contrato']["mp_subscription_id"] != '')
+            if($element['contrato']["mp_subscription_id"] != '')
                 $sub_id = $element['contrato']["mp_subscription_id"];
 
             //armamos dato de la venta (contrato) y a crear
@@ -1384,25 +1455,26 @@ class CronosController extends Controller
                 'Subject' => 'Contrato Oceano Medicina',
                 'Contact_Name' => $newContact['id'],
                 'Grand_Total' => $element['contrato']["total general"],
-
-                'SO_OM' => $element['contrato']["numero de so"],
+                
+                'otro_so' => $element['contrato']["numero de so"],
                 'Currency' => $element['contrato']["moneda"],
                 'Quote_Stage' => $element['contrato']["estado de contrato"],
                 'Pais_de_facturaci_n' => $element['contrato']["pais"],
-
-                'Modo_de_pago' => $mododepago,
-                'M_todo_de_pago' => $element['contrato']["modalidad de pago del anticipo"],
-                'subscription_id' => $sub_id,
-
-
+  
+				
+				'Modo_de_pago' => $mododepago,
+				'M_todo_de_pago' => $element['contrato']["modalidad de pago del anticipo"],
+                'subscription_id'=> $sub_id,
+                
+        
                 "Seleccione_total_de_pagos_recurrentes" => $element['contrato']["cuotas totales"],
                 '[products]' => $productDetails,
-                'Owner' => $owner
+                'Owner' => $owner	
             );
 
             $newSale = $this->NewZoho->createRecordQuote($saleData);
 
-            Log::info('new sale', $newSale);
+            Log::info('new sale',$newSale);
 
             //si pudo crear bien el contrato, status ok
             if ($newSale['result'] == 'ok') {
@@ -1427,7 +1499,7 @@ class CronosController extends Controller
         //arma y reemplaza sku por ID de producto en zoho
         foreach ($products as $p) {
 
-
+            
 
             $rec = $this->NewZoho->fetchRecordWithValue('Products', 'Product_Code', $p['codigo de curso']);
 
@@ -1436,14 +1508,22 @@ class CronosController extends Controller
 
                 $total = $p['precio de lista'];
                 $discount = $p['descuento'];
+                $perc = 0;
 
-                $perc = ($total - $discount) * 100 / $total;
-                $perc = 100 - $perc;
+                if($total > 0)
+                {
+                    $perc = ($total - $discount) * 100 / $total;
+                    $perc = 100 - $perc;
+                }
+
+                //tax
+                $tax = ($p['precio de lista'] - $p['descuento']) * 0.16;
 
                 $answer[] = array(
                     'Product Id' => $rec->getEntityId(),
                     'Quantity' => $p['cantidad'],
                     'List Price' => $p['precio de lista'],
+                    'Tax' => $tax,
                     //'List Price #USD' => (float)$p['price_usd'],
                     //'List Price #Local Currency' => (float)$p['price'],
                     'Discount' => $perc
