@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\{PassportAuthController, RebillController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController};
+use App\Http\Controllers\MercadoPagoController;
 use App\Http\Controllers\PaymentLinkController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -93,4 +94,9 @@ Route::prefix("/rebill")->group(function () {
     Route::get('/generateCheckourRebill', [RebillController::class, 'generateCheckourRebill']);
     Route::post('/generatePaymentLink', [PaymentLinkController::class, 'create']);
     Route::get('/getPaymentLink/{saleId}', [PaymentLinkController::class, 'show']);
+});
+
+Route::prefix("/webhook")->group(function () {
+    Route::post('/mp', [MercadoPagoController::class, '']);
+    Route::post('/stripe', [StripePaymentController::class, '']);
 });
