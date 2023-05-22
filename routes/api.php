@@ -1,11 +1,21 @@
 <?php
 
-use App\Http\Controllers\{PassportAuthController, RebillController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController};
-use App\Http\Controllers\MercadoPagoController;
+use App\Http\Controllers\{ContactController,
+    ContractController,
+    CronosController,
+    DatafastController,
+    LeadController,
+    MethodContactController,
+    PassportAuthController,
+    ProfessionController,
+    PurchasingProcessController,
+    RebillController,
+    SpecialityController,
+    StripePaymentController,
+    ZohoController};
 use App\Http\Controllers\PaymentLinkController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Webhooks\WebhookController;
 use Illuminate\Support\Facades\Route;
-use Stripe\Stripe;
 
 // Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //     return $request->user();
@@ -97,6 +107,5 @@ Route::prefix("/rebill")->group(function () {
 });
 
 Route::prefix("/webhook")->group(function () {
-    Route::post('/mp', [MercadoPagoController::class, '']);
-    Route::post('/stripe', [StripePaymentController::class, '']);
+    Route::post('', [WebhookController::class, 'newWebhook']);
 });
