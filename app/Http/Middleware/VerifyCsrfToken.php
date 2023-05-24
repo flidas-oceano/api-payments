@@ -12,6 +12,6 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        'https://oceanomedicina.net/api-payments/public/api/stripe/subscriptionPayment'
+        //
     ];
 }
