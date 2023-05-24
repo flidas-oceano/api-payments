@@ -52,7 +52,7 @@ Route::apiResource('methods', MethodContactController::class);
 Route::get('/db/getLead', [LeadController::class, 'index']);
 
 Route::post('/stripe/paymentIntent', [StripePaymentController::class, 'paymentIntent']);
-Route::post('/stripe/subscriptionPayment', [StripePaymentController::class, 'subscriptionPayment']);
+Route::middleware('cors')->post('/stripe/subscriptionPayment', [StripePaymentController::class, 'subscriptionPayment']);
 Route::get('/stripe/customer/search/{email}', [StripePaymentController::class, 'findCustomerByEmail']);
 
 Route::post('/updateZohoStripeZohoCRM', [ZohoController::class, 'updateZohoStripe']);
