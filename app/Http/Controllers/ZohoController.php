@@ -278,10 +278,6 @@ class ZohoController extends Controller
 
     public function updateZohoMP(UpdateContractZohoRequest $request)
     {
-<<<<<<< HEAD
-       // dd($request->all());
-=======
->>>>>>> e915bc3082e056d57b32ccae1c5907f992792746
         $dataUpdate = [
             'Email' => $request->email,
             'Monto_de_Anticipo' => $request->installment_amount,
