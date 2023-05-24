@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 
-class CorsMiddleware
+class Cors
 {
     /**
      * Handle an incoming request.
@@ -16,12 +16,12 @@ class CorsMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-       /*  $response = $next($request);
+         $response = $next($request);
 
         $response->header('Access-Control-Allow-Origin', 'https://pagos.msklatam.com');
         $response->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
         $response->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-        return $response; */
+        return $response;
     }
 }
