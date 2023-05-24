@@ -211,7 +211,7 @@ class GeneratorController extends Controller
 					
 				}	
 				
-				//$this->saveInBD($POST);
+				$this->saveInBD($POST);
 			}
 			else
 			{
@@ -232,14 +232,12 @@ class GeneratorController extends Controller
 	
 	private function saveInBD($post)
 	{
-		$this->loadModel('Pasarelaux');
-		$pasaTable = TableRegistry::get('Pasarelaux');
-		$pasa = $pasaTable->newEntity();
+		$pasa = new Pasarelaux();
 
 		$pasa->sale_id = $post['sale_id'];
 		$pasa->data = json_encode($post);
 
-		$pasaTable->save($pasa);
+		$pasa->save();
 	}
 
 	
