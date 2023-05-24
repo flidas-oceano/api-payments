@@ -98,5 +98,5 @@ Route::prefix("/rebill")->group(function () {
 
 Route::prefix("/webhook")->group(function () {
     Route::post('/mp', [MercadoPagoController::class, '']);
-    Route::post('/stripe', [StripePaymentController::class, '']);
+    Route::post('/stripe', [StripePaymentController::class, 'handleWebhook']);
 });

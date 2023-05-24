@@ -5,9 +5,13 @@ namespace App\Http\Controllers;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Stripe;
+use Stripe\Exception\SignatureVerificationException;
 use Stripe\StripeClient;
+use Stripe\Webhook;
 use Throwable;
+use UnexpectedValueException;
 
 class StripePaymentController extends Controller
 {
@@ -20,6 +24,54 @@ class StripePaymentController extends Controller
         $STRIPE_SECRET = env('APP_DEBUG') ? env('STRIPE_OCEANO_SK_TEST') : env('STRIPE_OCEANO_SK');
         $this->stripe = new StripeClient($STRIPE_SECRET);
     } */
+
+    public function handleWebhook(Request $request){
+        // The library needs to be configured with your account's secret key.
+        // Ensure the key is kept out of any version control system you might be using.
+        $stripe = new StripeClient(env('STRIPE_MX_SK_MSK_TEST'));
+
+        // This is your Stripe CLI webhook secret for testing your endpoint locally.
+        $endpoint_secret = env('STRIPE_MX_WEBHOOK_SK');
+
+        $payload = $request->getContent();
+        $sig_header = $request->header('Stripe-Signature');
+        $event = null;
+
+        try {
+            $event = Webhook::constructEvent($payload, $sig_header, $endpoint_secret);
+
+            Log::channel('stripe')->notice($event);
+        } catch (UnexpectedValueException $e) {
+            // Invalid payload
+            Log::channel('stripe')->error($e);
+            return response()->json([], 400);
+        } catch (SignatureVerificationException $e) {
+            // Invalid signature
+            Log::channel('stripe')->error($e);
+            return response()->json([], 400);
+        }
+
+        // Handle the event
+        switch ($event->type) {
+            case 'invoice.payment_failed':
+                $invoice = $event->data->object;
+                // Handle payment failed event
+            Log::channel('stripe')->info($invoice);
+
+                break;
+            case 'invoice.payment_succeeded':
+                $invoice = $event->data->object;
+            Log::channel('stripe')->info($invoice);
+
+                // Handle payment succeeded event
+                break;
+            // ... handle other event types
+            default:
+                return response()->json(['message' => 'Received unknown event type ' . $event->type]);
+        }
+
+        return response()->json([], 200);
+    }
 
     public function paymentIntent(Request $request)
     {
