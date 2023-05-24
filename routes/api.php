@@ -14,7 +14,8 @@ use App\Http\Controllers\{ContactController,
     StripePaymentController,
     ZohoController};
 use App\Http\Controllers\PaymentLinkController;
-use App\Http\Controllers\Webhooks\WebhookController;
+use App\Http\Controllers\Webhooks\WebhookGatewayController;
+use App\Http\Controllers\Webhooks\WebhookGatewayToCrmController;
 use Illuminate\Support\Facades\Route;
 
 // Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
@@ -107,5 +108,6 @@ Route::prefix("/rebill")->group(function () {
 });
 
 Route::prefix("/webhook")->group(function () {
-    Route::post('', [WebhookController::class, 'newWebhook']);
+    Route::post('payment', [WebhookGatewayController::class, 'newWebhook']);
+    Route::post('send_to_crm', [WebhookGatewayToCrmController::class, 'send2Crm']);
 });

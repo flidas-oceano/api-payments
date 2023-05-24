@@ -7,7 +7,7 @@ use App\Services\Webhooks\CreateSubPaymentsRegistryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class WebhookController extends Controller
+class WebhookGatewayController extends Controller
 {
     /**
      * @var CreateSubPaymentsRegistryService
