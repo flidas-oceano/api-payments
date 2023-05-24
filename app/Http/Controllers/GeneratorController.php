@@ -232,6 +232,8 @@ class GeneratorController extends Controller
 	
 	private function saveInBD($post)
 	{
+
+		
 		$pasa = Pasarelaux::create([
             'sale_id' => $post['sale_id'],
             'data' => json_encode($post)
