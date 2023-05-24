@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use App\Models\{CronosElements};
+use App\Models\{Pasarelaux};
 use Illuminate\Support\Facades\Storage;
 use zcrmsdk\crm\crud\ZCRMInventoryLineItem;
 use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
