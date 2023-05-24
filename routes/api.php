@@ -1,18 +1,6 @@
 <?php
 
-use App\Http\Controllers\{ContactController,
-    ContractController,
-    CronosController,
-    DatafastController,
-    LeadController,
-    MethodContactController,
-    PassportAuthController,
-    ProfessionController,
-    PurchasingProcessController,
-    RebillController,
-    SpecialityController,
-    StripePaymentController,
-    ZohoController};
+use App\Http\Controllers\{PassportAuthController,GeneratorController, RebillController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController};
 use App\Http\Controllers\PaymentLinkController;
 use App\Http\Controllers\Webhooks\WebhookGatewayController;
 use App\Http\Controllers\Webhooks\WebhookGatewayToCrmController;
@@ -111,3 +99,5 @@ Route::prefix("/webhook")->group(function () {
     Route::post('payment', [WebhookGatewayController::class, 'newWebhook']);
     Route::post('send_to_crm', [WebhookGatewayToCrmController::class, 'send2Crm']);
 });
+//msk chckt pro
+Route::post('/generateForm', [GeneratorController::class, 'generateCheckoutPro']);
