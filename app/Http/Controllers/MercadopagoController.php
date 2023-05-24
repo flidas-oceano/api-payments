@@ -35,7 +35,7 @@ class MercadopagoController extends Controller
 
     public function createPlan($data,$country)
 	{
-		$checkout = 'e';
+		$plan = 'e';
 		
 		try
 		{
@@ -55,14 +55,14 @@ class MercadopagoController extends Controller
 		}
 		catch(\Exception $e)
 		{
-			$checkout = 'MP ERROR: ' . $e->getMessage();
+			$plan = 'MP ERROR: ' . $e->getMessage();
 			//echo 'aaaaaaaaa';
-			dd($e);
+			//dd($e);
 
 			Log::error($e);
 		}
 		
-		return($checkout);
+		return($plan);
 	}
 
     public function createCheckout($data,$country)
