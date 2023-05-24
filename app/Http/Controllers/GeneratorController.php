@@ -187,8 +187,7 @@ class GeneratorController extends Controller
 		$check = $this->checkCall($POST);
 		
 		if($check['status'] == 1)
-		{
-			
+		{			
 			if($POST['type'] == 'trad')
 				$request = $this->prepareCheckout($POST);
 			else if($POST['type'] == 'susc')
@@ -205,10 +204,8 @@ class GeneratorController extends Controller
 				} 
 				else if($POST['type'] == 'susc')
 				{
-					
 					$response['url'] = $request->init_point;
-					$response['id'] =  $request->id;
-					
+					$response['id'] =  $request->id;	
 				}	
 				
 				$this->saveInBD($POST);
@@ -232,8 +229,6 @@ class GeneratorController extends Controller
 	
 	private function saveInBD($post)
 	{
-
-		
 		$pasa = Pasarelaux::create([
             'sale_id' => $post['sale_id'],
             'data' => json_encode($post)
@@ -241,8 +236,5 @@ class GeneratorController extends Controller
 
 		$pasa->save();
 	}
-
-	
-
 
 }
