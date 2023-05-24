@@ -57,7 +57,8 @@ class MercadopagoController extends Controller
 		{
 			$checkout = 'MP ERROR: ' . $e->getMessage();
 			//echo 'aaaaaaaaa';
-			
+			dd($e);
+
 			Log::error($e);
 		}
 		
