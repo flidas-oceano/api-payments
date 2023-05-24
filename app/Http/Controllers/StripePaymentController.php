@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Stripe;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\StripeClient;
@@ -26,7 +25,7 @@ class StripePaymentController extends Controller
     } */
 
     public function handleWebhook(Request $request){
-        // The library needs to be configured with your account's secret key.
+/*         // The library needs to be configured with your account's secret key.
         // Ensure the key is kept out of any version control system you might be using.
         $stripe = new StripeClient(env('STRIPE_MX_SK_MSK_TEST'));
 
@@ -70,7 +69,7 @@ class StripePaymentController extends Controller
                 return response()->json(['message' => 'Received unknown event type ' . $event->type]);
         }
 
-        return response()->json([], 200);
+        return response()->json([], 200); */
     }
 
     public function paymentIntent(Request $request)
