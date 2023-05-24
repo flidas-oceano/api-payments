@@ -246,7 +246,7 @@ class ZohoController extends Controller
 
     public function updateZohoStripe(UpdateContractZohoRequest $request)
     {
-        dd($request->all());
+        //dd($request->all());
         $dataUpdate = [
             'Email' => $request->email,
             'Monto_de_Anticipo' => $request->installment_amount,
@@ -278,7 +278,7 @@ class ZohoController extends Controller
 
     public function updateZohoMP(UpdateContractZohoRequest $request)
     {
-        dd($request->all());
+       // dd($request->all());
         $dataUpdate = [
             'Email' => $request->email,
             'Monto_de_Anticipo' => $request->installment_amount,
