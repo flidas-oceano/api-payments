@@ -24,7 +24,7 @@ class WebhooksController extends Controller
     {
         $this->Mercadopago = App::make('App\Http\Controllers\MercadopagoController');
         $this->Util = App::make('App\Http\Controllers\UtilController');
-        $this->NewZoho = App::make('App\Http\Controllers\NewZohoController');
+        $this->NewZoho = App::make('App\Http\Controllers\ZohoController');
 	}
 
 	public function processEvents($key = null)
