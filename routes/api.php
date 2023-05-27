@@ -99,5 +99,7 @@ Route::prefix("/webhook")->group(function () {
     Route::post('payment', [WebhookGatewayController::class, 'newWebhook']);
     Route::post('send_to_crm', [WebhookGatewayToCrmController::class, 'send2Crm']);
 });
+
 //msk chckt pro
 Route::post('/generateForm', [GeneratorController::class, 'generateCheckoutPro']);
+Route::post('/hook_mx', [WebhooksController::class, 'updateMxmsk']);

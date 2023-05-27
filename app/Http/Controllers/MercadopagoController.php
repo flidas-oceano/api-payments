@@ -70,7 +70,7 @@ class MercadopagoController extends Controller
 
 		$checkout = 'e';
 		
-		$data['notification_url'] = 'https://www.oceanomedicina.net/api-payments2/api/hook_mx';
+		$data['notification_url'] = 'https://www.oceanomedicina.net/api-payments2/public/api/hook_mx';
 
 		try
 		{
