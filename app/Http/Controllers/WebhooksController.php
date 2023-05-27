@@ -334,6 +334,8 @@ class WebhooksController extends Controller
 	{
 		
 		$event = $this->Util->takeWebhook(); 
+
+		Log::info('vino evento',$event);
 		
 		//guardo el evento para procesar luego
 		$save = $this->saveEvent($event, $country);
