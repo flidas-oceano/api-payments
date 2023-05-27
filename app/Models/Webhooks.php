@@ -5,17 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-// php artisan make:model PasarelaAuth -mc
-
-class Pasarelaux extends Model
+class Webhooks extends Model
 {
     use HasFactory;
 
-    protected $table = 'pasarelaux';
+    protected $table = 'webhooks';
     public $timestamps = false;
-    protected $primaryKey = 'sale_id';
+    protected $primaryKey = 'id';
 
     protected $fillable = [
-        'sale_id', 'data'
+        'moment', 'type', 'country', 'event_id','so', 'status'
     ];
 }

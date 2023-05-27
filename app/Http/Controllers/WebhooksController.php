@@ -20,6 +20,13 @@ class WebhooksController extends Controller
 
     public $Mercadopago, $Util, $NewZoho;
 
+	public function __construct()
+    {
+        $this->Mercadopago = App::make('App\Http\Controllers\MercadopagoController');
+        $this->Util = App::make('App\Http\Controllers\UtilController');
+        $this->NewZoho = App::make('App\Http\Controllers\NewZohoController');
+	}
+
 	public function processEvents($key = null)
 	{
 		$this->render(false);
@@ -321,22 +328,15 @@ class WebhooksController extends Controller
 			
 		return($answer);
 	}
+
+
 	public function updateX($country)
 	{
-		$this->render(false); 
-		
-		$this->loadComponent('Mercadopago');
-		$this->loadComponent('Util');
-		$this->loadComponent('EventHandler');
-
 		
 		$event = $this->Util->takeWebhook(); 
 		
-		$this->log($event);
-		$this->log('nuevo evento');
-		
 		//guardo el evento para procesar luego
-		$save = $this->EventHandler->saveEvent($event, $country);
+		$save = $this->saveEvent($event, $country);
 		
 		if($save)
 		{
@@ -357,7 +357,35 @@ class WebhooksController extends Controller
 		
 	}
 
+	//guarda en DB un evento de MP
+	public function saveEvent($raw_event, $country)
+	{
+		$answer = false;
+		
+		//primero reviso que tenga ALGO
+		if(isset($raw_event->data->id) && $raw_event->data->id != null)
+		{
+			
+		}
+		else
+		{
+			return false;
+		}
 	
+		$ev = CronosElements::create([
+			'type' => $raw_event->type,
+			'moment' => date('Y-m-d G:i:s'),
+			'country' => $country,
+			'event_id' => $raw_event->data->id,
+			'status' => 'pending'
+        ]);
+
+		
+		if($ev->save())
+			$answer = true;
+	
+		return($answer);
+	}
 
 
 }
