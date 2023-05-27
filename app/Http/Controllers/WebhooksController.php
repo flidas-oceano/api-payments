@@ -354,9 +354,7 @@ class WebhooksController extends Controller
 	
 	public function updateMxmsk()
 	{
-		$this->render(false);
-		$this->updateX('mx_msk');
-		
+		$this->updateX('mx_msk');	
 	}
 
 	//guarda en DB un evento de MP
