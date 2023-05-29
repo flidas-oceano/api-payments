@@ -31,7 +31,7 @@ class PaymentLinkController extends Controller
         //  dd($paymentLinkData);
         $paymentLink = PaymentLink::updateOrCreate(["so" => $paymentLinkData["contract_so"]], $paymentLinkData);
 
-        return response()->json(["customer" => $customer, "payment" => $paymentLink]);
+        return response()->json(["customer" => $customer, "payment" => $paymentLink, "type" => "paymentLink"]);
 
     }
 
