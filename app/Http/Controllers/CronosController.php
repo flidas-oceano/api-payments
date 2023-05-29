@@ -476,7 +476,7 @@ class CronosController extends Controller
 
                 foreach($datos['cursos'] as $c)
                 {
-                    if($c['codigo de curso'] == '9005800')
+                    if($c['codigo de curso'] == '9005800' || $c['codigo de curso'] == '9005801')
                         $special = true;
                 } 
             }
