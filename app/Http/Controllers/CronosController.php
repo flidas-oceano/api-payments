@@ -771,8 +771,10 @@ class CronosController extends Controller
         }
 
         //pasa precios a dolares, depende el pais
+        /*
         if ($pack['contrato']['pais'] != 'Argentina' && $pack['contrato']['pais'] != 'México') {
             //agrega la tasa uruguaya
+            
             $tasa_uy = $this->NewZoho->fetchExchRate('Uruguay');
 
             if ($tasa_uy != 'error') {
@@ -799,6 +801,7 @@ class CronosController extends Controller
             $pack['contrato']['monto_dolares'] = $pack['contrato']['monto_dolares'];
 
         }
+        */
 
         //si es méxico va una cosa, sino otra
         if ($pack['contrato']['pais'] == 'México') {
