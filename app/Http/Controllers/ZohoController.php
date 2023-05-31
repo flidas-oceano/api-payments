@@ -253,7 +253,7 @@ class ZohoController extends Controller
             'Monto_de_Saldo' => $request->amount - $request->installment_amount,
             'Cantidad' => $request->installments,
             //Nro de cuotas
-            'Valor_Cuota' => $request->installment_amount,
+            'Valor_Cuota' =>  $request->is_advanceSuscription? $request->payPerMonthAdvance : $request->installment_amount, 
             //Costo de cada cuota
             'Cuotas_restantes_sin_anticipo' => $request->installments - 1,
             'Fecha_de_Vto' => date('Y-m-d'),

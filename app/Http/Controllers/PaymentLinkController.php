@@ -24,11 +24,10 @@ class PaymentLinkController extends Controller
         $rebillCustomerData = $request->only(['email', 'phone', 'personalId', 'address', 'fullName', 'zip']);
         $paymentLinkData = $request->only(['gateway', 'type', 'contract_entity_id', 'contract_so', 'status', 'quotes', 'country']);
 
-        //  dd($rebillCustomerData);
 
         $customer = RebillCustomer::updateOrCreate(["email" => $rebillCustomerData["email"]], $rebillCustomerData);
         $paymentLinkData['rebill_customer_id'] = $customer->id;
-        //  dd($paymentLinkData);
+
         $paymentLink = PaymentLink::updateOrCreate(["so" => $paymentLinkData["contract_so"]], $paymentLinkData);
 
         return response()->json(["customer" => $customer, "payment" => $paymentLink, "type" => "paymentLink"]);
