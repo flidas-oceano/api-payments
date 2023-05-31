@@ -167,10 +167,10 @@ class StripePaymentController extends Controller
                 'payment_behavior' => 'error_if_incomplete',
                 'proration_behavior' => 'none',
             ]);
-		Log::info($stripeSubscription);
+		// Log::info($stripeSubscription);
             return response()->json($stripeSubscription);
         } catch (Exception $e) {
-		Log::error($e);
+		// Log::error($e);
             return response()->json($e->getMessage(), 500);
         }
     }
