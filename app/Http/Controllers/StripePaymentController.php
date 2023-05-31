@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\InfoWebhook;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -25,6 +26,8 @@ class StripePaymentController extends Controller
     } */
 
     public function handleWebhook(Request $request){
+
+
 /*         // The library needs to be configured with your account's secret key.
         // Ensure the key is kept out of any version control system you might be using.
         $stripe = new StripeClient(env('STRIPE_MX_SK_MSK_TEST'));
@@ -70,6 +73,15 @@ class StripePaymentController extends Controller
         }
 
         return response()->json([], 200); */
+
+        $dataJson = $request->getContent();
+
+        InfoWebhook::Create([
+            "json_data" => $dataJson
+        ]);
+
+        return response()->json([$dataJson], 200); 
+
     }
 
     public function paymentIntent(Request $request)
