@@ -62,10 +62,6 @@ Route::get('/db', [PurchasingProcessController::class, 'index']);
 
 Route::get('/contract/{id}', [ContractController::class, 'show']);
 
-Route::get('/msk', [CronosController::class, 'index']);
-Route::post('/addElement', [CronosController::class, 'addcontract']);
-Route::get('/province/{country}', [CronosController::class, 'getProvinces']);
-
 Route::apiResource('professions', ProfessionController::class);
 Route::apiResource('specialities', SpecialityController::class);
 Route::apiResource('methods', MethodContactController::class);
@@ -81,6 +77,7 @@ Route::post('/datafastGetForm', [DatafastController::class, 'requestForm']);
 Route::post('/datafastGetForm', [DatafastController::class, 'requestForm']);
 Route::post('/datafastProcessResponse', [DatafastController::class, 'processResponse']);
 
+Route::get('/msk', [CronosController::class, 'index']);
 Route::post('/addElement', [CronosController::class, 'addcontract']);
 Route::post('/deleteElement', [CronosController::class, 'deletecontract']);
 Route::get('/processElements', [CronosController::class, 'cronapi']);

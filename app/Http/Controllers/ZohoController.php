@@ -16,6 +16,7 @@ use zcrmsdk\crm\crud\ZCRMInventoryLineItem;
 use zcrmsdk\crm\crud\ZCRMTax;
 use App\Http\Requests\UpdateContractZohoRequest;
 use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
+
 use App\Models\{Contact, Lead, Profession, PurchaseProgress, Speciality, MethodContact};
 
 class ZohoController extends Controller
@@ -42,13 +43,13 @@ class ZohoController extends Controller
 
             $oAuthClient = ZohoOAuth::getClientInstance();
 
-            $refreshToken = "1000.21d634af0695ff7e2ea1c783628d3ead.a5ec4489bb6cdb31c8ac2f5435f94923";
-            $userIdentifier = "integraciones@msklatam.com";
-            $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier);
-            //$this->token = $oAuthClient->getAccessToken('https://www.msklatam.com');
+			$refreshToken = "1000.21d634af0695ff7e2ea1c783628d3ead.a5ec4489bb6cdb31c8ac2f5435f94923";
+			$userIdentifier = "integraciones@msklatam.com";
+			$oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken,$userIdentifier); 
+			//$this->token = $oAuthClient->getAccessToken('https://www.msklatam.com');
 
-        } catch (Exception $e) {
-            Log::error($e);
+       }catch(Exception $e){
+        Log::error($e);
 
         }
     }
@@ -829,30 +830,32 @@ class ZohoController extends Controller
         }
     }
 
-    //traer usuario
-    public function getUser($id)
-    {
-        $answer = 'error';
+    	//traer usuario
+	public function getUser($id)
+	{
+		$answer = 'error';
+		
+		$record = null;
 
-        $record = null;
+		try 
+		{
 
-        try {
+			$apiResponse=ZCRMOrganization::getInstance()->getUser($id);
+			$user = array($apiResponse->getData());
+			
+			$answer = $user[0];
+			
+		} 
+		catch(\Exception $e) 
+		{
+			 Log::error($e);
+		}
+		
+		return($answer);
 
-            $apiResponse = ZCRMOrganization::getInstance()->getUser($id);
-            $user = array($apiResponse->getData());
+	}
 
-            $answer = $user[0];
-
-        } catch (\Exception $e) {
-            Log::error($e);
-        }
-
-        return ($answer);
-
-    }
-
-    public function getProductsWithoutIso(Request $request)
-    {
+    public function getProductsWithoutIso(Request $request){
         $data = $request->all();
         try {
             $response = Http::asForm()->post("https://www.oceanomedicina.net/proxy/proxy2.php?url=https://www.oceanomedicina.com/api_landing.php", ['pais' => 'ar']);
