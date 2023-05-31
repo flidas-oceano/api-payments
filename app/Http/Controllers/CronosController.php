@@ -707,6 +707,13 @@ class CronosController extends Controller
             $pack['contrato']['dni'] = $crude[0]->Cliente_MX;
         }
 
+        $pack['contrato']['rut'] = '';
+
+        if($pack['contrato']['pais'] == 'Chile')
+        {
+            $pack['contrato']['rut'] =  $pack['contrato']['dni'];
+        }
+
         
         //--------
         if ($pack['contrato']['pais'] == 'Ecuador') {
@@ -1394,6 +1401,8 @@ class CronosController extends Controller
 
             'Requiere_factura' => $element['contrato']["requiere factura"],
             'R_gimen_fiscal' => $element['contrato']["regimen fiscal"],
+
+            'RUT' => $element['contrato']["rut"],
 			
 			"CUIT_CUIL_o_DNI" => $element['contrato']["cuit"], 
 			"RFC" => $element['contrato']["cuit"], 
