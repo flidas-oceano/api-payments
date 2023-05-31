@@ -13,21 +13,21 @@ class CreateCronosElementsTable extends Migration
      */
     public function up()
     {
-        Schema::create('cronos_elements', function (Blueprint $table) {
-            $table->id();
-            $table->date('when_date');
-            $table->string('so_number', 90);
-            $table->string('type', 60);
-            $table->string('status', 100);
-            $table->text('data')->nullable();
-            $table->text('log')->nullable();
-            $table->tinyInteger('processed')->nullable();
-            $table->tinyInteger('esanet')->nullable();
-            $table->tinyInteger('error_lime_to_esanet')->nullable();
-            $table->tinyInteger('send_to_foc')->nullable();
-            $table->tinyInteger('msk')->nullable();
-            $table->timestamps();
-        });
+        // Schema::create('cronos_elements', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->date('when_date');
+        //     $table->string('so_number', 90);
+        //     $table->string('type', 60);
+        //     $table->string('status', 100);
+        //     $table->text('data')->nullable();
+        //     $table->text('log')->nullable();
+        //     $table->tinyInteger('processed')->nullable();
+        //     $table->tinyInteger('esanet')->nullable();
+        //     $table->tinyInteger('error_lime_to_esanet')->nullable();
+        //     $table->tinyInteger('send_to_foc')->nullable();
+        //     $table->tinyInteger('msk')->nullable();
+        //     $table->timestamps();
+        // });
     }
 
     /**
