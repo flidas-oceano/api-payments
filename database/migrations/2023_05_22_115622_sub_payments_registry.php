@@ -15,6 +15,7 @@ class SubPaymentsRegistry extends Migration
     {
         Schema::create('sub_payments_registry', function (Blueprint $table) {
             $table->id();
+            $table->string('number_so_om', 255)->nullable(true);
             $table->double('amount')->nullable(true);
             $table->string('payment_id', 255)->nullable(true);
             $table->dateTime('pay_date')->nullable(true);

@@ -20,6 +20,9 @@ class SubPaymentFactory
         }
         $model->created_at = ($date);
 
+        if (isset($data['number_so_om'])) {
+            $model->number_so_om = ($data['number_so_om']);
+        }
         if (isset($data['amount'])) {
             $model->amount = ($data['amount']);
         }
