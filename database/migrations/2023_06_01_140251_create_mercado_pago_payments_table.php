@@ -19,7 +19,7 @@ class CreateMercadoPagoPaymentsTable extends Migration
             $table->string('checkout_url')->nullable()->default(null);
             $table->string('so');
             $table->string('sub_id');
-            $table->integer('event_id');
+            $table->string('event_id');
             $table->string('status');
             $table->string('status_detail');
             $table->string('date_approved')->nullable()->default(null);
