@@ -7,8 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Interfaces\ISaveWebhookCrmService;
 use App\Services\Webhooks\SaveWebhookZohoCrmService;
 use Illuminate\Http\Request;
-
-class WebhookGatewayToCrmController extends Controller
+use Illuminate\Http\JsonResponse;
+class CrmOrderSalesStep5ChargeDetailsController extends Controller
 {
     private ISaveWebhookCrmService $service;
 
@@ -18,10 +18,11 @@ class WebhookGatewayToCrmController extends Controller
         $this->service = new SaveWebhookZohoCrmService($client);
     }
 
-    public function send2Crm(Request $request): \Illuminate\Http\JsonResponse
+    public function send2Crm(Request $request): JsonResponse
     {
         try {
             $response = $this->service->saveWebhook2Crm($request->all());
+
             return response()->json([
                 "data" => $response
             ]);

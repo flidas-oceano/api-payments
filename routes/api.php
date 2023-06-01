@@ -3,7 +3,7 @@
 use App\Http\Controllers\{PassportAuthController,WebhooksController, NotificationsController, GeneratorController, RebillController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController};
 use App\Http\Controllers\PaymentLinkController;
 use App\Http\Controllers\Webhooks\WebhookGatewayController;
-use App\Http\Controllers\Webhooks\WebhookGatewayToCrmController;
+use App\Http\Controllers\Webhooks\CrmOrderSalesStep5ChargeDetailsController;
 use Illuminate\Support\Facades\Route;
 
 // Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
@@ -97,7 +97,7 @@ Route::prefix("/rebill")->group(function () {
 
 Route::prefix("/webhook")->group(function () {
     Route::post('payment', [WebhookGatewayController::class, 'newWebhook']);
-    Route::post('send_to_crm', [WebhookGatewayToCrmController::class, 'send2Crm']);
+    Route::post('crm_charge_details', [CrmOrderSalesStep5ChargeDetailsController::class, 'send2Crm']);
 });
 
 //msk chckt pro
