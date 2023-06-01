@@ -43,13 +43,13 @@ class ZohoController extends Controller
 
             $oAuthClient = ZohoOAuth::getClientInstance();
 
-			$refreshToken = "1000.21d634af0695ff7e2ea1c783628d3ead.a5ec4489bb6cdb31c8ac2f5435f94923";
-			$userIdentifier = "integraciones@msklatam.com";
-			$oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken,$userIdentifier); 
-			//$this->token = $oAuthClient->getAccessToken('https://www.msklatam.com');
+            $refreshToken = "1000.21d634af0695ff7e2ea1c783628d3ead.a5ec4489bb6cdb31c8ac2f5435f94923";
+            $userIdentifier = "integraciones@msklatam.com";
+            $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier);
+            //$this->token = $oAuthClient->getAccessToken('https://www.msklatam.com');
 
-       }catch(Exception $e){
-        Log::error($e);
+        } catch (Exception $e) {
+            Log::error($e);
 
         }
     }
@@ -253,7 +253,7 @@ class ZohoController extends Controller
             'Monto_de_Saldo' => $request->amount - $request->installment_amount,
             'Cantidad' => $request->installments,
             //Nro de cuotas
-            'Valor_Cuota' =>  $request->is_advanceSuscription? $request->payPerMonthAdvance : $request->installment_amount, 
+            'Valor_Cuota' => $request->is_advanceSuscription ? $request->payPerMonthAdvance : $request->installment_amount,
             //Costo de cada cuota
             'Cuotas_restantes_sin_anticipo' => $request->installments - 1,
             'Fecha_de_Vto' => date('Y-m-d'),
@@ -830,32 +830,30 @@ class ZohoController extends Controller
         }
     }
 
-    	//traer usuario
-	public function getUser($id)
-	{
-		$answer = 'error';
-		
-		$record = null;
+    //traer usuario
+    public function getUser($id)
+    {
+        $answer = 'error';
 
-		try 
-		{
+        $record = null;
 
-			$apiResponse=ZCRMOrganization::getInstance()->getUser($id);
-			$user = array($apiResponse->getData());
-			
-			$answer = $user[0];
-			
-		} 
-		catch(\Exception $e) 
-		{
-			 Log::error($e);
-		}
-		
-		return($answer);
+        try {
 
-	}
+            $apiResponse = ZCRMOrganization::getInstance()->getUser($id);
+            $user = array($apiResponse->getData());
 
-    public function getProductsWithoutIso(Request $request){
+            $answer = $user[0];
+
+        } catch (\Exception $e) {
+            Log::error($e);
+        }
+
+        return ($answer);
+
+    }
+
+    public function getProductsWithoutIso(Request $request)
+    {
         $data = $request->all();
         try {
             $response = Http::asForm()->post("https://www.oceanomedicina.net/proxy/proxy2.php?url=https://www.oceanomedicina.com/api_landing.php", ['pais' => 'ar']);
@@ -878,5 +876,50 @@ class ZohoController extends Controller
             ], 500);
         }
     }
+
+    /* public function updateRecordBySO($type, $data, $id, $workflow = true)
+    {
+        $answer = array();
+
+        $answer['result'] = 'error';
+        $answer['id'] = '';
+        $answer['detail'] = '';
+
+        try {
+            $zcrmRecordIns = ZCRMRecord::getInstance($type, $id);
+
+            foreach ($data as $k => $v)
+                $zcrmRecordIns->setFieldValue($k, $v);
+
+            //workflow?
+            if ($workflow)
+                $apiResponse = $zcrmRecordIns->update();
+            else
+                $apiResponse = $zcrmRecordIns->update(array());
+
+            if ($apiResponse->getCode() == 'SUCCESS') {
+                $answer['result'] = 'ok';
+                $answer['id'] = $id;
+            }
+        } catch (ZCRMException $e) {
+            Log::error($e);
+
+            if (!empty($e->getExceptionDetails()))
+                $answer['detail'] = $e->getExceptionDetails();
+            else
+                $answer['detail'] = $e->getMessage();
+        }
+
+        return ($answer);
+    }
+
+    public function sendMercadoPagoPayment(){
+        $payments = MercadoPagoPayment::where('send_crm', 0)->get();
+
+        foreach($payments as $p){
+            $this->upda
+        }
+
+    } */
 
 }
