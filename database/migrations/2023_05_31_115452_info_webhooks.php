@@ -15,7 +15,7 @@ class InfoWebhooks extends Migration
     {
         Schema::create('info_webhooks', function (Blueprint $table) {
             $table->id();
-            $table->string("json_data");
+            $table->longText("json_data");
 
             $table->timestamps();
         });
