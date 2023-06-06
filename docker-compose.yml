@@ -1,0 +1,66 @@
+version: '3'
+services:
+
+    #PHP Service
+    msk-api-payment:
+        build:
+            context: .
+            dockerfile: ./docker/php/Dockerfile
+        container_name: msk-api-payment
+        restart: unless-stopped
+        tty: true
+        environment:
+            SERVICE_NAME: msk-api-payment
+            SERVICE_TAGS: dev
+        working_dir: /var/www
+        volumes:
+            - ./:/var/www
+            - ./docker/php/php.ini:/usr/local/etc/php/php.ini
+            - ${SSH_PATH}:/root/.ssh
+        networks:
+            - app-network
+
+    #Nginx Service
+    msk-web-payment:
+        image: nginx:alpine
+        container_name: msk-web-payment
+        restart: unless-stopped
+        tty: true
+        ports:
+            - ${WEB_PORT}:80
+        volumes:
+            - ./:/var/www
+            - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
+            - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+        networks:
+            app-network:
+                ipv4_address: ${WEB_IP}
+
+    #MySQL Service
+    msk-db-payment:
+        build:
+            context: docker/mariadb
+            dockerfile: Dockerfile
+        container_name: msk-db-payment
+        restart: unless-stopped
+        tty: true
+        ports:
+            - ${DOCKER_MAP_DB_PORT}:3306
+        environment:
+            MYSQL_DATABASE: db-msk-payment
+            MYSQL_USER: ${DB_USER}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+            SERVICE_TAGS: dev
+            SERVICE_NAME: mariadb
+        volumes:
+            - ${DATA_PATH_HOST}/mariadb:/var/lib/mysql/
+            - ./docker/mariadb/my.cnf:/etc/mysql/my.cnf
+            - ./docker/mariadb/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+        networks:
+            - app-network
+
+#Docker Networks
+networks:
+    app-network:
+        external: true

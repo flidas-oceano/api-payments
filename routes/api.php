@@ -2,11 +2,10 @@
 
 use App\Http\Controllers\{PassportAuthController, RebillController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController};
 use App\Http\Controllers\MercadoPagoController;
-use App\Http\Controllers\MercadoPagoPaymentController;
 use App\Http\Controllers\PaymentLinkController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Webhooks\WebhookGatewayController;
+use App\Http\Controllers\Webhooks\CrmOrderSalesStep5ChargeDetailsController;
 use Illuminate\Support\Facades\Route;
-use Stripe\Stripe;
 
 // Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //     return $request->user();
@@ -96,8 +95,7 @@ Route::prefix("/rebill")->group(function () {
 
 Route::prefix("/webhook")->group(function () {
     Route::post('/mp', [MercadoPagoController::class, '']);
-    Route::post('/stripe', [StripePaymentController::class, 'handleWebhook']);
+    Route::post('/stripe', [StripePaymentController::class, '']);
 });
-
 
 Route::get("/mp/searchPaymentApprove/{so}", [MercadoPagoPaymentController::class, 'searchPaymentApprove']);

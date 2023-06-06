@@ -8,7 +8,7 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "7.4.*",
+        "php": "7.4.33",
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.0.1",
         "laravel/framework": "^8.75",
@@ -17,6 +17,7 @@
         "laravel/telescope": "^4.10",
         "laravel/tinker": "^2.5",
         "laravel/ui": "^3.4",
+        "mercadopago/dx-php": "2.5.3",
         "rebillto/sdk-php": "^2.0",
         "stripe/stripe-php": "^10.0",
         "webpatser/laravel-countries": "^1.5",
