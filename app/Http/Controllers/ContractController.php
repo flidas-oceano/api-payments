@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Contact;
 use App\Models\Contract;
+use App\Models\PaymentLink;
 use App\Models\Product;
 use App\Models\PurchaseProgress;
 use Illuminate\Http\Request;
+use Laravel\Telescope\Console\PauseCommand;
 
 class ContractController extends Controller
 {
@@ -141,5 +143,20 @@ class ContractController extends Controller
         }
 
         return response()->json(['products' => $products,'contract' => $progress->contract ,'contact' => $progress->contact ,'lead' => $progress->lead , 'progress' => $progress]);
+    }
+
+    public function setContractStatus(Request $request)
+    {
+        $setPaymentLink = PaymentLink::where('contract_entity_id', $request->contractId)
+        ->update(['status' => $request->status]);
+
+        return response()->json([
+            $setPaymentLink
+            // 'products' => $products,
+            // 'contract' => $progress->contract ,
+            // 'contact' => $progress->contact ,
+            // 'lead' => $progress->lead , 
+            // 'progress' => $progress
+        ]);
     }
 }

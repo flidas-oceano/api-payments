@@ -58,6 +58,8 @@ Route::get('/stripe/customer/search/{email}', [StripePaymentController::class, '
 
 Route::post('/updateZohoStripeZohoCRM', [ZohoController::class, 'updateZohoStripe']);
 Route::post('/updateZohoMPZohoCRM', [ZohoController::class, 'updateZohoMP']);
+Route::post('/setContractStatus', [ContractController::class, 'setContractStatus']);
+
 
 Route::get('/db', [PurchasingProcessController::class, 'index']);
 
