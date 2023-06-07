@@ -101,3 +101,6 @@ Route::prefix("/webhook")->group(function () {
 });
 
 Route::get("/mp/searchPaymentApprove/{so}", [MercadoPagoPaymentController::class, 'searchPaymentApprove']);
+
+Route::get('/getPaymentsStatusDistintContratoEfectivo', [PaymentLinkController::class, 'getPaymentsStatusDistintContratoEfectivo']);
+

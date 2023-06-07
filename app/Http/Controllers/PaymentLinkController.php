@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PaymentLink;
 use App\Models\RebillCustomer;
+use Faker\Provider\ar_EG\Payment;
 use Illuminate\Http\Request;
 
 class PaymentLinkController extends Controller
@@ -28,10 +29,21 @@ class PaymentLinkController extends Controller
         $customer = RebillCustomer::updateOrCreate(["email" => $rebillCustomerData["email"]], $rebillCustomerData);
         $paymentLinkData['rebill_customer_id'] = $customer->id;
 
-        $paymentLink = PaymentLink::updateOrCreate(["so" => $paymentLinkData["contract_so"]], $paymentLinkData);
+        $paymentLinks = PaymentLink::where([
+            ["contract_so", $paymentLinkData["contract_so"]],
+            ["status", "!=", "Contrato Efectivo"]
+        ])->get();
+
+        if($paymentLinks->count() > 0){
+            $paymentLinks->first()->update($paymentLinkData);
+            $paymentLink = PaymentLink::where(
+                "contract_so" , $paymentLinkData["contract_so"]
+            )->get()->first();
+        }else{
+            $paymentLink = PaymentLink::create($paymentLinkData);
+        }
 
         return response()->json(["customer" => $customer, "payment" => $paymentLink, "type" => "paymentLink"]);
-
     }
 
     /**
@@ -44,7 +56,6 @@ class PaymentLinkController extends Controller
     {
         //
     }
-
 
     public function show(Request $request, $saleId)
     {
@@ -87,4 +98,12 @@ class PaymentLinkController extends Controller
     {
         //
     }
+
+    public function getPaymentsStatusDistintContratoEfectivo(Request $request, ){
+        $noEfectivos  = PaymentLink::where( "status", "!=" , "Contrato Efectivo"  )->get();
+        return response()->json([
+            "noEfectivos" => $noEfectivos,
+        ]);
+    }
+
 }
