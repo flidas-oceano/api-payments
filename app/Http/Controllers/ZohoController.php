@@ -249,11 +249,11 @@ class ZohoController extends Controller
         //   dd($request->all());
         $dataUpdate = [
             'Email' => $request->email,
-            'Monto_de_Anticipo' => $request->installment_amount,
-            'Monto_de_Saldo' => $request->amount - $request->installment_amount,
+            'Anticipo' => $request->installment_amount,
+            'Saldo' => $request->amount - $request->installment_amount,
             'Cantidad' => $request->installments,
             //Nro de cuotas
-            'Valor_Cuota' => $request->is_advanceSuscription ? $request->payPerMonthAdvance : $request->installment_amount,
+            'Monto_de_cuotas_restantes' => $request->is_advanceSuscription ? $request->payPerMonthAdvance : $request->installment_amount,
             //Costo de cada cuota
             'Cuotas_restantes_sin_anticipo' => $request->installments - 1,
             'Fecha_de_Vto' => date('Y-m-d'),
@@ -261,6 +261,7 @@ class ZohoController extends Controller
             'Modalidad_de_pago_del_Anticipo' => 'Stripe',
             'Medio_de_Pago' => 'Stripe',
             'Es_Suscri' => boolval($request->is_suscri),
+            'Suscripcion_con_Parcialidad' => boolval($request->is_suscri),
             'stripe_subscription_id' => $request->subscriptionId,
             'L_nea_nica_6' => $request->fullname,
             'Billing_Street' => $request->address,
@@ -280,13 +281,13 @@ class ZohoController extends Controller
     {
         $dataUpdate = [
             'Email' => $request->email,
-            'Monto_de_Anticipo' => $request->installment_amount,
-            'Monto_de_Saldo' => $request->amount - $request->installment_amount,
+            'Anticipo' => $request->installment_amount,
+            'Saldo' => $request->amount - $request->installment_amount,
             'Cantidad' => $request->installments,
             //Nro de cuotas
             'Valor_Cuota' => $request->installment_amount,
             //Costo de cada cuota
-            'Cuotas_restantes_sin_anticipo' => $request->installments - 1,
+            'Monto_de_cuotas_restantes' => $request->installments - 1,
             'DNI' => $request->dni,
             //RFC_Solo_MX
             'Fecha_de_Vto' => date('Y-m-d'),
@@ -294,6 +295,7 @@ class ZohoController extends Controller
             'Modalidad_de_pago_del_Anticipo' => 'Mercado pago',
             'Medio_de_Pago' => 'Mercado pago',
             'Es_Suscri' => boolval($request->is_suscri),
+            'Suscripcion_con_Parcialidad' => boolval($request->is_suscri),
             'mp_subscription_id' => $request->subscriptionId,
             'L_nea_nica_6' => $request->fullname,
             'Billing_Street' => $request->address,
