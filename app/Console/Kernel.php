@@ -2,7 +2,6 @@
 
 namespace App\Console;
 
-use App\Http\Controllers\CronosController;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -26,7 +25,6 @@ class Kernel extends ConsoleKernel
             $response = Http::get('https://oceanomedicina.net/api-payments/public/api/processElements');
             return response()->json($response);
         })->everyFifteenMinutes(); //->everyMinute(); everyFifteenMinutes //
-
     }
 
     /**
