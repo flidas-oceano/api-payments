@@ -339,10 +339,13 @@ class RebillController extends Controller
     public function addPendingPayment(Request $request)
     {
         $payment = $request->only(['id', 'status']);
-
+        $type = $request->type;
+        $contractId = $request->contract_id;
         $response = DB::table('pending_payments_rebill')->insert([
             'payment_id' => $payment['id'],
             'status' => $payment['status'],
+            'type' => $type,
+            'contract_id' => $contractId
         ]);
 
         return response()->json($response);

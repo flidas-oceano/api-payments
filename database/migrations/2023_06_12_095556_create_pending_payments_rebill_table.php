@@ -17,7 +17,9 @@ class CreatePendingPaymentsRebillTable extends Migration
             $table->id();
             $table->string('payment_id');
             $table->string('status');
+            $table->string('type');
             $table->string('subscription_id')->nullable()->default(null);
+            $table->string('contract_id');
             $table->timestamps();
         });
     }
