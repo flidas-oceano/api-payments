@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Exception;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Rebill\SDK\Models\Customer;
-use Rebill\SDK\Models\GatewayStripe;
-use Rebill\SDK\Rebill;
 use Storage;
+use Exception;
+use Rebill\SDK\Rebill;
+use Illuminate\Http\Request;
+use Rebill\SDK\Models\Customer;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Rebill\SDK\Models\GatewayStripe;
 
 class RebillController extends Controller
 {
@@ -322,4 +323,28 @@ class RebillController extends Controller
         dump($result);
     }
 
+    public function checkPendingPayments()
+    {
+        $pendingPayments = DB::table('pending_payments_rebill')->get();
+        $token = env('REBILL_TOKEN_PRD');
+
+        foreach ($pendingPayments as $payment) {
+            $response = Http::withHeaders([
+                'accept' => 'application/json',
+                'authorization' => 'Bearer ' . $token,
+            ])->get("https://api.rebill.to/v2/payments/" . $payment->payment_id)->json();
+        }
+    }
+
+    public function addPendingPayment(Request $request)
+    {
+        $payment = $request->payment;
+
+        $response = DB::table('pending_payments_rebill')->insert([
+            'payment_id' => $payment['id'],
+            'status' => $payment['status'],
+        ]);
+
+        return response()->json($response);
+    }
 }
