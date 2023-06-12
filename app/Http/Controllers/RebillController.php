@@ -13,22 +13,20 @@ use Rebill\SDK\Models\GatewayStripe;
 
 class RebillController extends Controller
 {
-    public function __construct()
-    {
-        Rebill::getInstance()->isDebug = true;
-        Rebill::getInstance()->setProp([
-            'user' => env('REBILL_MSKLATAM_USER_TEST'),
-            'pass' => env('REBILL_MSKLATAM_PW_TEST'),
-            'orgAlias' => env('REBILL_MSKLATAM_ORG_TEST'),
-            'orgId' => env('REBILL_MSKLATAM_ORG_ID_TEST') //'c14f14fe-03f9-45e5-b83f-166107567e06'
-        ]);
-        Rebill::getInstance()->setCallBackDebugLog(function ($data) {
-            file_put_contents(storage_path('logs/rebill.log'), '---------- ' . date('c') . " -------------- \n$data\n\n", FILE_APPEND | LOCK_EX);
-        });
+    /*    public function __construct()
+       {
+           Rebill::getInstance()->isDebug = true;
+           Rebill::getInstance()->setProp([
+               'user' => env('REBILL_MSKLATAM_USER_TEST'),
+               'pass' => env('REBILL_MSKLATAM_PW_TEST'),
+               'orgAlias' => env('REBILL_MSKLATAM_ORG_TEST'),
+               'orgId' => env('REBILL_MSKLATAM_ORG_ID_TEST') //'c14f14fe-03f9-45e5-b83f-166107567e06'
+           ]);
+           Rebill::getInstance()->setCallBackDebugLog(function ($data) {
+               file_put_contents(storage_path('logs/rebill.log'), '---------- ' . date('c') . " -------------- \n$data\n\n", FILE_APPEND | LOCK_EX);
+           });
 
-        /* define('REBILL_GATEWAY_ID', 'cc9b8f6a-4077-475a-abba-38073db06c83');
-        define('REBILL_GATEWAY_CURRENCY', 'USD'); */
-    }
+       } */
 
     public function login()
     {
