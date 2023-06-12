@@ -380,6 +380,7 @@ class RebillController extends Controller
             if ($response['status'] === 'FAILED') {
                 DB::table('pending_payments_rebill')->where('payment_id', $response['id'])->update(['status' => $response['status']]);
                 $updatePayments[] = ['payment_id' => $response['id'], 'status' => $response['status']];
+                dump(json_decode($payment->paymentData));
             }
         }
 
