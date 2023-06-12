@@ -326,14 +326,28 @@ class RebillController extends Controller
         $pendingPayments = DB::table('pending_payments_rebill')->get();
         $token = env('REBILL_TOKEN_PRD');
 
+        $updatePayments = [];
+
         foreach ($pendingPayments as $payment) {
             $response = Http::withHeaders([
                 'accept' => 'application/json',
                 'authorization' => 'Bearer ' . $token,
             ])->get("https://api.rebill.to/v2/payments/" . $payment->payment_id)->json();
 
-            dump($response);
+            if ($response['status'] === 'SUCCEEDED') {
+                $subscriptionId = $response['billingSchedulesId'][0];
+                DB::table('pending_payments_rebill')->where('payment_id', $response['id'])->update(['status' => $response['status'], 'subscription_id' => $subscriptionId]);
+                $updatePayments[] = ['payment_id' => $response['id'], 'status' => $response['status'], 'subscription_id' => $subscriptionId];
+
+            }
+
+            if ($response['status'] === 'FAILED') {
+                DB::table('pending_payments_rebill')->where('payment_id', $response['id'])->update(['status' => $response['status']]);
+                $updatePayments[] = ['payment_id' => $response['id'], 'status' => $response['status']];
+            }
         }
+
+        return response()->json(["updatePayments" => $updatePayments]);
     }
 
     public function addPendingPayment(Request $request)
