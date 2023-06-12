@@ -339,6 +339,42 @@ class RebillController extends Controller
                 DB::table('pending_payments_rebill')->where('payment_id', $response['id'])->update(['status' => $response['status'], 'subscription_id' => $subscriptionId]);
                 $updatePayments[] = ['payment_id' => $response['id'], 'status' => $response['status'], 'subscription_id' => $subscriptionId];
 
+                if ($payment->type === 'Suscripción con anticipo') {
+                    // Actualizar la suscri en rebill
+                    // Actualizar el contrato de Zoho
+                    dump(json_decode($payment->paymentData));
+                }
+
+                if ($payment->type === 'Suscripción') {
+                    // Actualizar el contrato de Zoho
+                }
+                /* $zohoService = new ZohoController();
+
+                $dataUpdate = [
+                    'Email' => $request->email,
+                    'Anticipo' => $request->installment_amount,
+                    'Saldo' => $request->amount - $request->installment_amount,
+                    'Cantidad' => $request->installments,
+                    //Nro de cuotas
+                    'Monto_de_cuotas_restantes' => $request->installment_amount,
+                    //Costo de cada cuota
+                    'Cuotas_restantes_sin_anticipo' => $request->installments - 1,
+                    'DNI' => $request->dni,
+                    //RFC_Solo_MX
+                    'Fecha_de_Vto' => date('Y-m-d'),
+                    'Status' => 'Contrato Efectivo',
+                    'Modalidad_de_pago_del_Anticipo' => 'Mercado pago',
+                    'Medio_de_Pago' => 'Mercado pago',
+                    'Es_Suscri' => boolval($request->is_suscri),
+                    'Suscripcion_con_Parcialidad' => boolval($request->is_advanceSuscription),
+                    'mp_subscription_id' => $request->subscriptionId,
+                    'L_nea_nica_6' => $request->fullname,
+                    'Billing_Street' => $request->address,
+                    'L_nea_nica_3' => strval($request->dni),
+                    'Tel_fono_Facturacion' => $request->phone
+                ];
+
+                $zohoService->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true); */
             }
 
             if ($response['status'] === 'FAILED') {
@@ -359,7 +395,8 @@ class RebillController extends Controller
             'payment_id' => $payment['id'],
             'status' => $payment['status'],
             'type' => $type,
-            'contract_id' => $contractId
+            'contract_id' => $contractId,
+            "paymentData" => $request->paymentData
         ]);
 
         return response()->json($response);
