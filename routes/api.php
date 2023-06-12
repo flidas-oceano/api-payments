@@ -92,6 +92,7 @@ Route::prefix("/rebill")->group(function () {
     Route::get('/addStripeGateway', [RebillController::class, 'addStripeGateway']);
     Route::get('/generateCheckourRebill', [RebillController::class, 'generateCheckourRebill']);
     Route::post('/addPendingPayment', [RebillController::class, 'addPendingPayment']);
+    Route::get('/checkPendingPayments', [RebillController::class, 'checkPendingPayments']);
     Route::post('/generatePaymentLink', [PaymentLinkController::class, 'create']);
     Route::get('/getPaymentLink/{saleId}', [PaymentLinkController::class, 'show']);
 });

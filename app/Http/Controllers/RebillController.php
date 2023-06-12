@@ -331,6 +331,8 @@ class RebillController extends Controller
                 'accept' => 'application/json',
                 'authorization' => 'Bearer ' . $token,
             ])->get("https://api.rebill.to/v2/payments/" . $payment->payment_id)->json();
+
+            dump($response);
         }
     }
 
