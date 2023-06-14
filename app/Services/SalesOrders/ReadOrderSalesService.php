@@ -18,20 +18,17 @@ class ReadOrderSalesService
 
     /**
      * @throws ZohoOAuthException
+     * @return ZCRMRecord[]
      */
-    public function listOrderSalesCrm()
+    public function listOrderSalesCrm($page = 1, $perPage = 200): array
     {
         $table = 'Sales_Orders';
         $this->client->getClient();
-        $param_map = array("page" => "1", "per_page" => "200");
-        $header_map = array("if-modified-since" => "2019-10-10T15:26:49+05:30");
+        $param_map = array("page" => $page, "per_page" => $perPage);
+        $header_map = array("if-modified-since" => "2023-01-01T00:00:00+05:30");
         $moduleOrderSales =  ZCRMRestClient::getInstance()->getModuleInstance($table);
         $result = $moduleOrderSales->getRecords($param_map, $header_map);
-        /** @var ZCRMRecord $item */
-        foreach ($result->getData() as $item) {
-            $numberSoOM = ($item->getFieldValue('otro_so'));
-            dd($numberSoOM); //@todo ya trae el numero so
-        }
-        dd($result->getResponseJSON());
+
+        return $result->getData();
     }
 }

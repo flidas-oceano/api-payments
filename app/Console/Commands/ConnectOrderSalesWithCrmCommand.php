@@ -28,7 +28,8 @@ class ConnectOrderSalesWithCrmCommand extends Command
     {
         try {
             $output->writeln("Executing " . __CLASS__);
-            $this->service->listOrderSalesCrm();
+            $result = $this->service->listOrderSalesCrm(1, 200);
+            dd(sizeof($result));//@todo to be continued...
             //@todo ...
         } catch (\Exception $e) {
             $msg = "ERROR: ".$e->getMessage();

@@ -19,7 +19,6 @@ class PaymentLinkController extends Controller
         //
     }
 
-
     public function create(Request $request)
     {
         $rebillCustomerData = $request->only(['email', 'phone', 'personalId', 'address', 'fullName', 'zip']);
@@ -97,13 +96,6 @@ class PaymentLinkController extends Controller
     public function destroy(PaymentLink $paymentLink)
     {
         //
-    }
-
-    public function getPaymentsStatusDistintContratoEfectivo(Request $request, ){
-        $noEfectivos  = PaymentLink::where( "status", "!=" , "Contrato Efectivo"  )->get();
-        return response()->json([
-            "noEfectivos" => $noEfectivos,
-        ]);
     }
 
 }

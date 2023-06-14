@@ -25,6 +25,13 @@ class Kernel extends ConsoleKernel
             $response = Http::get('https://oceanomedicina.net/api-payments/public/api/processElements');
             return response()->json($response);
         })->everyFifteenMinutes(); //->everyMinute(); everyFifteenMinutes //
+
+
+        $schedule->call(function () {
+            $response = Http::get('https://oceanomedicina.net/api-payments/public/api/rebill/checkPendingPayments');
+            return response()->json($response);
+        })->everyFiveMinutes();
+
     }
 
     /**

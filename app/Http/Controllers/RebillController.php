@@ -2,32 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use Exception;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
-use Rebill\SDK\Models\Customer;
-use Rebill\SDK\Models\GatewayStripe;
-use Rebill\SDK\Rebill;
 use Storage;
+use Exception;
+use Rebill\SDK\Rebill;
+use Illuminate\Http\Request;
+use Rebill\SDK\Models\Customer;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Rebill\SDK\Models\GatewayStripe;
 
 class RebillController extends Controller
 {
-    public function __construct()
-    {
-        Rebill::getInstance()->isDebug = true;
-        Rebill::getInstance()->setProp([
-            'user' => env('REBILL_MSKLATAM_USER_TEST'),
-            'pass' => env('REBILL_MSKLATAM_PW_TEST'),
-            'orgAlias' => env('REBILL_MSKLATAM_ORG_TEST'),
-            'orgId' => env('REBILL_MSKLATAM_ORG_ID_TEST') //'c14f14fe-03f9-45e5-b83f-166107567e06'
-        ]);
-        Rebill::getInstance()->setCallBackDebugLog(function ($data) {
-            file_put_contents(storage_path('logs/rebill.log'), '---------- ' . date('c') . " -------------- \n$data\n\n", FILE_APPEND | LOCK_EX);
-        });
+    /*    public function __construct()
+       {
+           Rebill::getInstance()->isDebug = true;
+           Rebill::getInstance()->setProp([
+               'user' => env('REBILL_MSKLATAM_USER_TEST'),
+               'pass' => env('REBILL_MSKLATAM_PW_TEST'),
+               'orgAlias' => env('REBILL_MSKLATAM_ORG_TEST'),
+               'orgId' => env('REBILL_MSKLATAM_ORG_ID_TEST') //'c14f14fe-03f9-45e5-b83f-166107567e06'
+           ]);
+           Rebill::getInstance()->setCallBackDebugLog(function ($data) {
+               file_put_contents(storage_path('logs/rebill.log'), '---------- ' . date('c') . " -------------- \n$data\n\n", FILE_APPEND | LOCK_EX);
+           });
 
-        /* define('REBILL_GATEWAY_ID', 'cc9b8f6a-4077-475a-abba-38073db06c83');
-        define('REBILL_GATEWAY_CURRENCY', 'USD'); */
-    }
+       } */
 
     public function login()
     {
@@ -322,4 +321,135 @@ class RebillController extends Controller
         dump($result);
     }
 
+    public function makeDataUpdateZoho($paymentDataObject, $payment, $firstPayment, $totalAmount, $quotes, $newQuotesPayment)
+    {
+        $dataUpdate = [
+            'Email' => $paymentDataObject->customer->userEmail,
+            'Anticipo' => $firstPayment,
+            'Saldo' => $totalAmount - $firstPayment,
+            'Cantidad' => $quotes,
+            //Nro de cuotas
+            'Monto_de_cuotas_restantes' => $newQuotesPayment,
+            //Costo de cada cuota
+            'Cuotas_restantes_sin_anticipo' => $quotes - 1,
+            'DNI' => $paymentDataObject->dni,
+            //RFC_Solo_MX
+            'Fecha_de_Vto' => date('Y-m-d'),
+            'Status' => 'Contrato Efectivo',
+            'Es_Suscri' => strpos($payment->type, 'Suscripción'),
+            'Suscripcion_con_Parcialidad' => strpos($payment->type, 'Suscripción con anticipo'),
+            'L_nea_nica_6' => $paymentDataObject->formAttributes->fullname,
+            'Billing_Street' => $paymentDataObject->formAttributes->address,
+            'L_nea_nica_3' => strval($paymentDataObject->dni),
+            'Tel_fono_Facturacion' => $paymentDataObject->formAttributes->phone
+        ];
+
+        return $dataUpdate;
+    }
+
+    public function checkPendingPayments()
+    {
+        $pendingPayments = DB::table('pending_payments_rebill')->get();
+        $token = env('REBILL_TOKEN_PRD');
+
+        $updatePayments = [];
+        $dataUpdate = [];
+
+        foreach ($pendingPayments as $payment) {
+            $response = Http::withHeaders([
+                'accept' => 'application/json',
+                'authorization' => 'Bearer ' . $token,
+            ])->get("https://api.rebill.to/v2/payments/" . $payment->payment_id)->json();
+
+            if ($response['status'] === 'SUCCEEDED') {
+                $subscriptionId = $response['billingSchedulesId'][0];
+                DB::table('pending_payments_rebill')->where('payment_id', $response['id'])->update(['status' => $response['status'], 'subscription_id' => $subscriptionId]);
+
+                $paymentDataObject = json_decode($payment->paymentData);
+
+                if ($payment->type === 'Suscripción con anticipo') {
+
+                    $quotes = $paymentDataObject->formikValues->quotes;
+                    $totalAmount = intval(round($paymentDataObject->formikValues->amount));
+                    $firstPayment = intval(round($paymentDataObject->payment->amount));
+                    $newTotalAmount = $firstPayment - $totalAmount;
+                    $newQuotesPayment = intval(round($newTotalAmount / ($quotes - 1)));
+                    // Actualizar la suscri en rebill
+                    $updateSuscriptionRebill = Http::withHeaders([
+                        'accept' => 'application/json',
+                        'authorization' => 'Bearer ' . $token,
+                    ])->put("https://api.rebill.to/v2/payments/" . $payment->payment_id, ['quantity' => $newQuotesPayment]);
+
+                    // Actualizar el contrato de Zoho
+                    $dataUpdate = $this->makeDataUpdateZoho($paymentDataObject, $payment, $firstPayment, $totalAmount, $quotes, $newQuotesPayment);
+
+                    if (strpos($paymentDataObject->formAttributes->payment_method, 'Mercado Pago')) {
+                        $dataUpdate['Modalidad_de_pago_del_Anticipo'] = 'Mercado pago';
+                        $dataUpdate['Medio_de_Pago'] = 'Mercado pago';
+                        $dataUpdate['mp_subscription_id'] = $subscriptionId;
+                    } else {
+                        $dataUpdate['Modalidad_de_pago_del_Anticipo'] = 'Stripe';
+                        $dataUpdate['Medio_de_Pago'] = 'Stripe';
+                        $dataUpdate['stripe_subscription_id'] = $subscriptionId;
+                    }
+                }
+
+                if ($payment->type === 'Suscripción') {
+                    $firstPayment = intval(round($paymentDataObject->payment->amount));
+                    $totalAmount = intval(round($paymentDataObject->formikValues->amount));
+                    $quotes = $paymentDataObject->formikValues->quotes;
+                    $quotesPayment = $firstPayment;
+
+                    // Actualizar el contrato de Zoho
+                    $dataUpdate = $this->makeDataUpdateZoho($paymentDataObject, $payment, $firstPayment, $totalAmount, $quotes, $quotesPayment);
+
+                    if (strpos($paymentDataObject->formAttributes->payment_method, 'Mercado Pago')) {
+                        $dataUpdate['Modalidad_de_pago_del_Anticipo'] = 'Mercado pago';
+                        $dataUpdate['Medio_de_Pago'] = 'Mercado pago';
+                        $dataUpdate['mp_subscription_id'] = $subscriptionId;
+                    } else {
+                        $dataUpdate['Modalidad_de_pago_del_Anticipo'] = 'Stripe';
+                        $dataUpdate['Medio_de_Pago'] = 'Stripe';
+                        $dataUpdate['stripe_subscription_id'] = $subscriptionId;
+                    }
+                }
+
+                $zohoService = new ZohoController();
+                $updateZohoContract = $zohoService->updateRecord('Sales_Orders', $dataUpdate, $paymentDataObject->formAttributes->contractId, true);
+
+                $updatePayments[] = [
+                    'payment_id' => $response['id'],
+                    'status' => $response['status'],
+                    'subscription_id' => $subscriptionId,
+                    'updateZohoContract' => $updateZohoContract,
+                    'updateSuscriptionRebill' => isset($updateSuscriptionRebill) ? $updateSuscriptionRebill : "No es una suscri con anticipo"
+                ];
+
+            }
+
+            if ($response['status'] === 'FAILED') {
+                DB::table('pending_payments_rebill')->where('payment_id', $response['id'])->update(['status' => $response['status']]);
+                $updatePayments[] = ['payment_id' => $response['id'], 'status' => $response['status']];
+                //dump(json_decode($payment->paymentData));
+            }
+        }
+
+        return response()->json(["updatePayments" => $updatePayments]);
+    }
+
+    public function addPendingPayment(Request $request)
+    {
+        $payment = $request->only(['id', 'status']);
+        $type = $request->type;
+        $contractId = $request->contract_id;
+        $response = DB::table('pending_payments_rebill')->insert([
+            'payment_id' => $payment['id'],
+            'status' => $payment['status'],
+            'type' => $type,
+            'contract_id' => $contractId,
+            "paymentData" => $request->paymentData
+        ]);
+
+        return response()->json($response);
+    }
 }
