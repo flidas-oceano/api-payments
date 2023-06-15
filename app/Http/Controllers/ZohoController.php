@@ -266,7 +266,8 @@ class ZohoController extends Controller
             'L_nea_nica_6' => $request->fullname,
             'Billing_Street' => $request->address,
             'L_nea_nica_3' => strval($request->dni),
-            'Tel_fono_Facturacion' => $request->phone
+            'Tel_fono_Facturacion' => $request->phone,
+            'Adjustment' => $request->adjustment
         ];
 
         $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
@@ -300,7 +301,9 @@ class ZohoController extends Controller
             'L_nea_nica_6' => $request->fullname,
             'Billing_Street' => $request->address,
             'L_nea_nica_3' => strval($request->dni),
-            'Tel_fono_Facturacion' => $request->phone
+            'Tel_fono_Facturacion' => $request->phone,
+            'Adjustment' => $request->adjustment
+
         ];
 
         $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
