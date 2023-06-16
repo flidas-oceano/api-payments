@@ -286,7 +286,7 @@ class ZohoController extends Controller
             'Saldo' => $request->amount - $request->installment_amount,
             'Cantidad' => $request->installments,
             //Nro de cuotas
-            'Monto_de_cuotas_restantes' => $request->installment_amount,
+            'Monto_de_cuotas_restantes' => $request->is_advanceSuscription ? $request->payPerMonthAdvance : $request->installment_amount,
             //Costo de cada cuota
             'Cuotas_restantes_sin_anticipo' => $request->installments - 1,
             'DNI' => $request->dni,
