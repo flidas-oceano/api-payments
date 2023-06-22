@@ -266,7 +266,8 @@ class ZohoController extends Controller
             'L_nea_nica_6' => $request->fullname,
             'Billing_Street' => $request->address,
             'L_nea_nica_3' => strval($request->dni),
-            'Tel_fono_Facturacion' => $request->phone
+            'Tel_fono_Facturacion' => $request->phone,
+            'Adjustment' => $request->adjustment
         ];
 
         $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
@@ -285,7 +286,7 @@ class ZohoController extends Controller
             'Saldo' => $request->amount - $request->installment_amount,
             'Cantidad' => $request->installments,
             //Nro de cuotas
-            'Monto_de_cuotas_restantes' => $request->installment_amount,
+            'Monto_de_cuotas_restantes' => $request->is_advanceSuscription ? $request->payPerMonthAdvance : $request->installment_amount,
             //Costo de cada cuota
             'Cuotas_restantes_sin_anticipo' => $request->installments - 1,
             'DNI' => $request->dni,
@@ -300,7 +301,9 @@ class ZohoController extends Controller
             'L_nea_nica_6' => $request->fullname,
             'Billing_Street' => $request->address,
             'L_nea_nica_3' => strval($request->dni),
-            'Tel_fono_Facturacion' => $request->phone
+            'Tel_fono_Facturacion' => $request->phone,
+            'Adjustment' => $request->adjustment
+
         ];
 
         $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);

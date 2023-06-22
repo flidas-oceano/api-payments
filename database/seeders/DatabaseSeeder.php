@@ -19,7 +19,8 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             ProfessionSeeder::class,
             SpecialitySeeder::class,
-            MethodContactSeeder::class
+            MethodContactSeeder::class,
+            CronosElementsSeeder::class
         ]);
     }
 }
