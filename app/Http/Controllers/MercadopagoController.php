@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\MercadoPago\Credentials;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Models\{CronosElements};
@@ -17,14 +18,9 @@ use MercadoPago;
 
 class MercadopagoController extends Controller
 {
-
-    private function credentials($country)
+    private function credentials($country): ?string
     {
-        switch($country)
-        {
-            case 'mx_msk': return('APP_USR-6404915214202963-041914-6248701ac1af4c59715f9408b68db885-1350977988');
-            
-        }
+        return Credentials::getCredentials($country);
     }
 
     public function retrieveEvent($id, $country)
@@ -36,21 +32,21 @@ class MercadopagoController extends Controller
     public function createPlan($data,$country)
 	{
 		$plan = 'e';
-		
+
 		try
 		{
 
 			MercadoPago\SDK::setAccessToken($this->credentials($country));
-			
+
 			$plan = new MercadoPago\Preapproval();
 
 			$plan->auto_recurring = $data['auto_recurring'];
-			
+
 			$plan->back_url = 'https://oceanomedicina.com.ar/gracias';
 			$plan->reason = 'Cursos Medical Scientific Knowledge';
 			$plan->external_reference = $data['external_reference'];
 			$plan->payer_email = $data['payer_email'];
-			
+
 			$plan->save();
 		}
 		catch(\Exception $e)
@@ -61,7 +57,7 @@ class MercadopagoController extends Controller
 
 			Log::error($e);
 		}
-		
+
 		return($plan);
 	}
 
@@ -69,13 +65,13 @@ class MercadopagoController extends Controller
 	{
 
 		$checkout = 'e';
-		
+
 		$data['notification_url'] = 'https://www.oceanomedicina.net/api-payments2/public/api/hook_mx';
 
 		try
 		{
 			MercadoPago\SDK::setAccessToken($this->credentials($country));
-			
+
 			// Create a preference object
 			$preference = new MercadoPago\Preference();
 
@@ -98,9 +94,9 @@ class MercadopagoController extends Controller
 			$this->log($e);
 			$this->log($data);
 		}
-		
+
 		return($preference);
-		
+
 	}
 
 }
