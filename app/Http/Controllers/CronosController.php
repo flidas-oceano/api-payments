@@ -215,6 +215,7 @@ class CronosController extends Controller
         //verificamos que haya salido bien
 
         $encoded = json_decode($result);
+        Log::info(print_r($encoded,true));
 
         $answer['log'] = $result;
 
