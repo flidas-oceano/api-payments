@@ -4,16 +4,16 @@ namespace App\Dtos;
 
 class MpResultDto
 {
-    protected string $type;
-    protected string $subscriptionId;
-    protected string $invoiceId;
-    protected string $billingDate;
-    protected string $planId;
-    protected float $amountCharged;
-    protected string $payerId;
-    protected string $payerEmail;
-    protected string $reference;
-    protected string $status;
+    protected ?string $type;
+    protected ?string $subscriptionId;
+    protected ?string $invoiceId;
+    protected ?string $billingDate;
+    protected ?string $planId;
+    protected ?float $amountCharged;
+    protected ?string $payerId;
+    protected ?string $payerEmail;
+    protected ?string $reference;
+    protected ?string $status;
     protected string $statusDetails;
 
     public function __construct($data)
@@ -32,81 +32,81 @@ class MpResultDto
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getType(): string
+    public function getType(): ?string
     {
         return $this->type;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getSubscriptionId(): string
+    public function getSubscriptionId(): ?string
     {
         return $this->subscriptionId;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getInvoiceId(): string
+    public function getInvoiceId(): ?string
     {
         return $this->invoiceId;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getBillingDate(): string
+    public function getBillingDate(): ?string
     {
         return $this->billingDate;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getPlanId(): string
+    public function getPlanId(): ?string
     {
         return $this->planId;
     }
 
     /**
-     * @return float
+     * @return float|null
      */
-    public function getAmountCharged(): float
+    public function getAmountCharged(): ?float
     {
         return $this->amountCharged;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getPayerId(): string
+    public function getPayerId(): ?string
     {
         return $this->payerId;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getPayerEmail(): string
+    public function getPayerEmail(): ?string
     {
         return $this->payerEmail;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getReference(): string
+    public function getReference(): ?string
     {
-        return $this->reference;
+        return str_replace('x','', $this->reference);
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getStatus(): string
+    public function getStatus(): ?string
     {
         return $this->status;
     }

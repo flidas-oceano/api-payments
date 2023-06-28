@@ -4,16 +4,18 @@ namespace App\Dtos;
 
 class MpSearchDto
 {
-    protected array $results;
-    protected int $total;
-    protected int $limit;
-    protected int $offset;
+    protected ?array $results;
+    protected ?int $total;
+    protected ?int $limit;
+    protected ?int $offset;
 
     public function __construct(array $response)
     {
         $results = [];
         foreach ($response['results'] as $item) {
-            $results[] = new MpResultDto($item);
+            if ( $item['status'] === "approved") {
+                $results[] = new MpResultDto($item);
+            }
         }
 
         $this->results = $results;
@@ -23,33 +25,33 @@ class MpSearchDto
     }
 
     /**
-     * @return array
+     * @return array|null
      */
-    public function getResults(): array
+    public function getResults(): ?array
     {
         return $this->results;
     }
 
     /**
-     * @return int
+     * @return int|null
      */
-    public function getTotal(): int
+    public function getTotal(): ?int
     {
         return $this->total;
     }
 
     /**
-     * @return int
+     * @return int|null
      */
-    public function getLimit(): int
+    public function getLimit(): ?int
     {
         return $this->limit;
     }
 
     /**
-     * @return int
+     * @return int|null
      */
-    public function getOffset(): int
+    public function getOffset(): ?int
     {
         return $this->offset;
     }

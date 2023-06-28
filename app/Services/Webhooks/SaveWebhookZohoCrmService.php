@@ -45,11 +45,13 @@ class SaveWebhookZohoCrmService implements ISaveWebhookCrmService
         $step5Subform = $salesRecord->getFieldValue("Paso_5_Detalle_pagos");//dd($step5Subform);
         if (isset($step5Subform[0])) {
             foreach ($step5Subform as $item) {
-                $arrayStep5Subform[] = [
-                    'Cobro_ID' => $item['Cobro_ID'],
-                    'Fecha_Cobro' => $item['Fecha_Cobro'],
-                    'Numero_de_cobro' => $item['Numero_de_cobro']
-                ];
+                if ($data['payment_id'] != $item['Cobro_ID']) {
+                    $arrayStep5Subform[] = [
+                        'Cobro_ID' => $item['Cobro_ID'],
+                        'Fecha_Cobro' => $item['Fecha_Cobro'],
+                        'Numero_de_cobro' => $item['Numero_de_cobro']
+                    ];
+                }
             }
         }
         $arrayStep5Subform[] = [
