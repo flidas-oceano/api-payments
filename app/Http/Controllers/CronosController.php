@@ -873,6 +873,7 @@ class CronosController extends Controller
             $answer['cod medio de pago de cuotas restantes'] = $this->filter($this->pax($data, 'Medio_de_Pago'), "code_payment");
             $answer['medio de pago de cuotas restantes'] = $this->pax($data, 'Medio_de_Pago');
             $answer['cuotas restantes'] = $this->pax($data, 'Cuotas_restantes_sin_anticipo');
+            $answer['ajuste de cobro'] = $this->pax($data, 'Discount');
             $answer['monto cuotas restantes'] = $this->pax($data, 'Monto_de_cuotas_restantes');
             $answer['domicilio de facturacion'] = $this->pax($data, 'Billing_Street');
             $answer['fecha vto 1er cuota'] = $this->pax($data, 'Fecha_de_Vto');
@@ -1387,7 +1388,7 @@ class CronosController extends Controller
                 'Monto_de_cada_pago_restantes' => $element['contrato']['monto cuotas restantes'],
                 'M_todo_de_pago' => $element['contrato']["modalidad de pago del anticipo"],
                 'subscription_id' => $sub_id,
-
+                'Discount' => $element['contrato']['ajuste de cobro'],
 
                 "Seleccione_total_de_pagos_recurrentes" => $element['contrato']["cuotas totales"],
                 '[products]' => $productDetails,
