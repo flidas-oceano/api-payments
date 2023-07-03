@@ -17,8 +17,8 @@ class Cors
     public function handle(Request $request, Closure $next)
     {
         $allowedDomains = [
-            'https://www.pagos.msklatam.com',
-            'https://www.test.msklatam.com',
+            'https://pagos.msklatam.com',
+            'https://test.msklatam.com',
         ];
 
         if (in_array($request->header('Origin'), $allowedDomains)) {
