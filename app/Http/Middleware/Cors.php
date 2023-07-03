@@ -16,12 +16,18 @@ class Cors
      */
     public function handle(Request $request, Closure $next)
     {
-         $response = $next($request);
+        $allowedDomains = [
+            'https://www.pagos.msklatam.com',
+            'https://www.test.msklatam.com',
+        ];
 
-        $response->header('Access-Control-Allow-Origin', 'https://pagos.msklatam.com');
-        $response->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-        $response->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        if (in_array($request->header('Origin'), $allowedDomains)) {
+            return $next($request)
+                ->header('Access-Control-Allow-Origin', $request->header('Origin'))
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        }
 
-        return $response;
+        return $next($request);
     }
 }
