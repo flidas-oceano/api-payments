@@ -215,7 +215,7 @@ class CronosController extends Controller
         //verificamos que haya salido bien
 
         $encoded = json_decode($result);
-        Log::info(print_r($encoded,true));
+        Log::info(print_r($encoded, true));
 
         $answer['log'] = $result;
 
@@ -457,7 +457,7 @@ class CronosController extends Controller
                 $datos = json_decode($dataReady, true);
 
                 foreach ($datos['cursos'] as $c) {
-                    if ($c['codigo de curso'] == '9005800' || $c['codigo de curso'] == '9005801' ||  $c['codigo de curso'] == '9005802')
+                    if ($c['codigo de curso'] == '9005800' || $c['codigo de curso'] == '9005801' || $c['codigo de curso'] == '9005802')
                         $special = true;
                 }
             }
@@ -488,7 +488,7 @@ class CronosController extends Controller
                             $e->msk = 1;
                         } else
                             if ($what['answer'] == 'country') {
-                        }
+                            }
                     }
                 } else {
                     $e->msk = 1;
@@ -674,7 +674,7 @@ class CronosController extends Controller
         $pack['contrato']['rut'] = '';
 
         if ($pack['contrato']['pais'] == 'Chile') {
-            $pack['contrato']['rut'] =  $pack['contrato']['dni'];
+            $pack['contrato']['rut'] = $pack['contrato']['dni'];
         }
 
 
@@ -1355,11 +1355,11 @@ class CronosController extends Controller
 
             $owner = '5344455000001853001';
 
-            $mododepago = 'Cobro cuotificado';
+            $mododepago = '';
 
-            if($element['contrato']['es suscripcion con parcialidad'] == 1){
+            if ($element['contrato']['es suscripcion con parcialidad'] == 1) {
                 $mododepago = 'Cobro recurrente con parcialidad';
-            }else if ($element['contrato']['es suscripcion'] == 1) {
+            } else if ($element['contrato']['es suscripcion'] == 1) {
                 $mododepago = 'Cobro Recurrente';
             } else if ($element['contrato']['cuotas totales'] == 1) {
                 $mododepago = 'Cobro total en un pago';
