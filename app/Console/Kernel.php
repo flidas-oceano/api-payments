@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Console\Commands\GitPullAndCleanLaravelLogs;
 use App\Http\Controllers\CronosController;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Console\Scheduling\Schedule;
@@ -9,6 +10,11 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
 {
+
+    protected $commands = [
+        GitPullAndCleanLaravelLogs::class
+    ];
+
     /**
      * Define the application's command schedule.
      *
