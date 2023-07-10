@@ -265,7 +265,7 @@ class ZohoController extends Controller
             'stripe_subscription_id' => $request->subscriptionId,
             'L_nea_nica_6' => $request->fullname,
             'Billing_Street' => $request->address,
-            'L_nea_nica_3' => strval($request->dni),
+            'L_nea_nica_3' => $request->Pais == "Chile" ?  substr(strval($request->dni), 0, -1) . '-' . substr(strval($request->dni), -1): strval($request->dni),
             'Tel_fono_Facturacion' => $request->phone,
             'Discount' => abs($request->adjustment)
         ];
@@ -300,7 +300,7 @@ class ZohoController extends Controller
             'mp_subscription_id' => $request->subscriptionId,
             'L_nea_nica_6' => $request->fullname,
             'Billing_Street' => $request->address,
-            'L_nea_nica_3' => strval($request->dni),
+            'L_nea_nica_3' => $request->Pais == "Chile" ?  substr(strval($request->dni), 0, -1) . '-' . substr(strval($request->dni), -1) : strval($request->dni),
             'Tel_fono_Facturacion' => $request->phone,
             'Discount' => abs($request->adjustment)
 
