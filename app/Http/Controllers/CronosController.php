@@ -1307,7 +1307,7 @@ class CronosController extends Controller
             'Requiere_factura' => $element['contrato']["requiere factura"],
             'R_gimen_fiscal' => $element['contrato']["regimen fiscal"],
 
-            'RUT' => $element['contrato']["rut"],
+            'RUT' => substr_replace($element['contrato']["rut"], "-", -1, 0),
 
             "CUIT_CUIL_o_DNI" => $element['contrato']["cuit"],
             "RFC" => $element['contrato']["cuit"],
