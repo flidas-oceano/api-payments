@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Console\Commands\ConnectOrderSalesWithCrmCommand;
 use App\Console\Commands\GitPullAndCleanLaravelLogs;
 use App\Http\Controllers\CronosController;
 use Illuminate\Support\Facades\Http;
@@ -12,7 +13,8 @@ class Kernel extends ConsoleKernel
 {
 
     protected $commands = [
-        GitPullAndCleanLaravelLogs::class
+        GitPullAndCleanLaravelLogs::class,
+        ConnectOrderSalesWithCrmCommand::class,
     ];
 
     /**

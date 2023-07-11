@@ -476,7 +476,7 @@ class CronosController extends Controller
 
                     $what = $this->post_spain($dataReady);
 
-                    Log::info('españa responde ' . $what['log']);
+                    // Log::info('españa responde ' . $what['log']);
 
                     $e->log = $what['log'];
 

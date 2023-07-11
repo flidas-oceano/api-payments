@@ -13,7 +13,8 @@ class MpSearchDto
     {
         $results = [];
         foreach ($response['results'] as $item) {
-            if ( $item['status'] === "approved") {
+            dd($item);
+            if ($item['status'] === "approved") {
                 $results[] = new MpResultDto($item);
             }
         }

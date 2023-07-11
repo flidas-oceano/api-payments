@@ -3,14 +3,15 @@
 namespace App\Console\Commands;
 
 use App\Clients\ZohoMskClient;
-use App\Services\MercadoPago\ReadPayment;
-use App\Services\SalesOrders\ReadOrderSalesService;
-use App\Services\Webhooks\SaveWebhookZohoCrmService;
-use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
+use Illuminate\Support\Facades\Log;
 use zcrmsdk\crm\exception\ZCRMException;
+use App\Services\MercadoPago\ReadPayment;
+use Symfony\Component\Console\Command\Command;
 use zcrmsdk\oauth\exception\ZohoOAuthException;
+use App\Services\SalesOrders\ReadOrderSalesService;
+use Symfony\Component\Console\Input\InputInterface;
+use App\Services\Webhooks\SaveWebhookZohoCrmService;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class ConnectOrderSalesWithCrmCommand extends Command
 {
@@ -18,7 +19,7 @@ class ConnectOrderSalesWithCrmCommand extends Command
 
     protected string $signature = 'sales-order:crm {limit=10&page=1}';
 
-    protected string $description = 'Connect with zoho crm and mercado pago, to update recent payments' ;
+    protected string $description = 'Connect with zoho crm and mercado pago, to update recent payments';
 
     private ReadOrderSalesService $service;
     private ReadPayment $readPayment;
@@ -45,19 +46,19 @@ class ConnectOrderSalesWithCrmCommand extends Command
         try {
             $limit = $input->getArgument('limit');
             $page = $input->getArgument('page');
-            $output->writeln(" - Executing " . __CLASS__." ".$page." ".$limit);
+            $output->writeln(" - Executing " . __CLASS__ . " " . $page . " " . $limit);
             $result = $this->service->listOrderSalesCrm($page, $limit);
             if (!(sizeof($result) > 0)) {
                 $output->writeln(" - no entries result from CRM, aborting...");
                 return 0;
             }
-            $output->writeln(" - Listed result from CRM " . sizeof($result)." entries!");
+            $output->writeln(" - Listed result from CRM " . sizeof($result) . " entries!");
             $payments = $this->listGatewayPayments($result);
-            $output->writeln(" - Listed result from Gateway " . sizeof($payments)." entries!");
+            $output->writeln(" - Listed result from Gateway " . sizeof($payments) . " entries!");
             $this->addPayments2Crm($payments, $output);
             $output->writeln(" Fin....... ");
         } catch (\Exception $e) {
-            $msg = "ERROR: ".$e->getMessage();
+            $msg = "ERROR: " . $e->getMessage();
             $output->writeln($msg);
             \Log::error($msg);
         }
@@ -68,13 +69,14 @@ class ConnectOrderSalesWithCrmCommand extends Command
     private function listGatewayPayments($resultOrderSalesPayment): array
     {
         $payments = [];
+
         foreach ($resultOrderSalesPayment as $item) {
             $result = $this->readPayment->findById($item->getFieldValue('otro_so'), 'mx_msk');
             if ($result->getResults()) {
                 $payments[] = $result->getResults();
             }
         }
-
+        Log::info(print_r($payments, true));
         return $payments;
     }
 
@@ -86,13 +88,13 @@ class ConnectOrderSalesWithCrmCommand extends Command
     {
         foreach ($payments as $payment) {
             foreach ($payment as $pay) {
-                $output->writeln("- SO_OM " . $pay->getReference()." entry found!");
+                $output->writeln("- SO_OM " . $pay->getReference() . " entry found!");
                 $this->crm->saveWebhook2Crm([
                     'number_so_om' => $pay->getReference(),
                     'payment_id' => $pay->getInvoiceId(),
                     'pay_date' => $pay->getBillingDate(),
                 ]);
-                $output->writeln("- SO_OM " . $pay->getReference()." added to CRM!");
+                $output->writeln("- SO_OM " . $pay->getReference() . " added to CRM!");
             }
         }
     }
