@@ -533,7 +533,7 @@ class CronosController extends Controller
                 $e->save();
             } catch (\Throwable $t) {
 
-                Log::error($t);
+                Log::error(print_r($t, true));
             }
         }
 
