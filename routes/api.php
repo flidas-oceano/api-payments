@@ -104,6 +104,7 @@ Route::prefix("/webhook")->group(function () {
 
 Route::prefix("/payments_msk")->group(function () {
     Route::post('/create', [\App\Http\Controllers\PaymentsMsk\CreatePaymentMskController::class, 'create']);
+    Route::get('/list', [\App\Http\Controllers\PaymentsMsk\ReadPaymentMskController::class, 'list']);
 });
 
 Route::get("/mp/searchPaymentApprove/{so}", [MercadoPagoPaymentController::class, 'searchPaymentApprove']);
