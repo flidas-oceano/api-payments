@@ -51,7 +51,7 @@ class PaymentsMskFactory
             $model->number_so_om = ($data['number_so_om']);
         }
         if (isset($data['payment_date'])) {
-            $payDate = \DateTime::createFromFormat('Y-m-d H:i:s', $data['payment_date']);
+            $payDate = \DateTime::createFromFormat('Y-m-d', $data['payment_date']);
             $model->payment_date = ($payDate);
         }
 

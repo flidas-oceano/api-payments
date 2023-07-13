@@ -106,6 +106,10 @@ class MpResultDto
         return str_replace('x','', $this->reference);
     }
 
+    public function getXReference(): ?string
+    {
+        return $this->reference;
+    }
     /**
      * @return string|null
      */
