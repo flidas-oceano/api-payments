@@ -4,6 +4,8 @@ namespace App\Dtos;
 
 class MpResultDto
 {
+    protected ?string $id;
+
     protected ?string $type;
     protected ?string $subscriptionId;
     protected ?string $invoiceId;
@@ -14,11 +16,12 @@ class MpResultDto
     protected ?string $payerEmail;
     protected ?string $reference;
     protected ?string $status;
-    protected string $statusDetails;
+    protected ?string $statusDetails;
 
     public function __construct($data)
     {
-        $this->type = $data['operation_type'];
+        $this->id = $data['id'] ?? null;
+        $this->type = $data['operation_type'] ?? null;
         $this->subscriptionId = $data['point_of_interaction']['transaction_data']['subscription_id'] ?? null;
         $this->invoiceId = $data['point_of_interaction']['transaction_data']['invoice_id'] ?? null;
         $this->billingDate = $data['point_of_interaction']['transaction_data']['billing_date'] ?? null;
