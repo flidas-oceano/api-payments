@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Clients\ZohoMskClient;
+use App\Dtos\MpResultDto;
 use Illuminate\Support\Facades\Log;
 use zcrmsdk\crm\exception\ZCRMException;
 use App\Services\MercadoPago\ReadPayment;
@@ -87,12 +88,15 @@ class ConnectOrderSalesWithCrmCommand extends Command
     private function addPayments2Crm(array $payments, OutputInterface $output)
     {
         foreach ($payments as $payment) {
+            /** @var MpResultDto $pay */
             foreach ($payment as $pay) {
                 $output->writeln("- SO_OM " . $pay->getReference() . " entry found!");
                 $this->crm->saveWebhook2Crm([
                     'number_so_om' => $pay->getReference(),
                     'payment_id' => $pay->getInvoiceId(),
                     'pay_date' => $pay->getBillingDate(),
+                    'id' => $pay->getId(),
+                    'amount_charged' => $pay->getAmountCharged(),
                 ]);
                 $output->writeln("- SO_OM " . $pay->getReference() . " added to CRM!");
             }

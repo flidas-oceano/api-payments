@@ -121,4 +121,12 @@ class MpResultDto
     {
         return $this->statusDetails;
     }
+
+    /**
+     * @return string|null
+     */
+    public function getId(): ?string
+    {
+        return $this->id;
+    }
 }
