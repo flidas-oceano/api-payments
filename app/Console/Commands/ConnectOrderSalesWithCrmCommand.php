@@ -3,6 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Clients\ZohoMskClient;
+use App\Dtos\MpResultDto;
+use App\Enums\GatewayEnum;
+use App\Services\PaymentsMsk\CreatePaymentsMskService;
 use Illuminate\Support\Facades\Log;
 use zcrmsdk\crm\exception\ZCRMException;
 use App\Services\MercadoPago\ReadPayment;
@@ -25,14 +28,19 @@ class ConnectOrderSalesWithCrmCommand extends Command
     private ReadPayment $readPayment;
 
     private SaveWebhookZohoCrmService $crm;
+    private CreatePaymentsMskService $paymentService;
 
-    public function __construct(ReadOrderSalesService $service, ReadPayment $readMercadoPago)
-    {
+    public function __construct(
+        ReadOrderSalesService $service,
+        ReadPayment $readMercadoPago,
+        CreatePaymentsMskService $mskService
+    ) {
         $this->setName($this->name);
         parent::__construct();
         $this->service = $service;
         $this->readPayment = $readMercadoPago;
         $this->crm = new SaveWebhookZohoCrmService(new ZohoMskClient());
+        $this->paymentService = $mskService;
     }
 
     protected function configure()
@@ -87,13 +95,31 @@ class ConnectOrderSalesWithCrmCommand extends Command
     private function addPayments2Crm(array $payments, OutputInterface $output)
     {
         foreach ($payments as $payment) {
+            $i=1;
+            /** @var MpResultDto $pay */
             foreach ($payment as $pay) {
                 $output->writeln("- SO_OM " . $pay->getReference() . " entry found!");
                 $this->crm->saveWebhook2Crm([
                     'number_so_om' => $pay->getReference(),
                     'payment_id' => $pay->getInvoiceId(),
                     'pay_date' => $pay->getBillingDate(),
+                    'id' => $pay->getId(),
+                    'amount_charged' => $pay->getAmountCharged(),
                 ]);
+                $this->paymentService->create([
+                    'sub_id' => $pay->getSubscriptionId(),
+                    'charge_id' => $pay->getInvoiceId(),
+                    'contact_id' => $pay->getPayerId(),
+                    'contract_id' => '',
+                    'number_installment' => $i,
+                    'fee' => $pay->getAmountCharged(),
+                    'payment_origin' => GatewayEnum::MP,
+                    'external_number' => $pay->getXReference(),
+                    'number_so' => null,
+                    'number_so_om' => $pay->getReference(),
+                    'payment_date' => $pay->getBillingDate(),
+                ]);
+                $i++;
                 $output->writeln("- SO_OM " . $pay->getReference() . " added to CRM!");
             }
         }

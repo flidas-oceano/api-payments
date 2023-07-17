@@ -14,9 +14,10 @@ class ReadPayment
     }
     public function findById($id, $country): MpSearchDto
     {
-        $data = $this->api->searchByReference('x' . $id, $country)->json();
-        //if ($data['paging']['total'] > 0)
-        //dd(json_encode($data));
+        $data = $this->api
+            ->searchByReference('x' . $id, $country)
+            ->json();
+
         return new MpSearchDto($data);
     }
 }
