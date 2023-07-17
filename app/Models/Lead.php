@@ -24,7 +24,8 @@ class Lead extends Model
         'contact_id',
         'method_contact_id',
         'profession',
-        'speciality'
+        'speciality',
+        'source_lead'
     ];
     public $timestamps = true;
     public $hidden = ['created_at','updated_at','source_lead','lead_status','lead_source','id'];
@@ -37,7 +38,8 @@ class Lead extends Model
         'contact_id',
         'method_contact_id',
         'profession',
-        'speciality'
+        'speciality',
+        
     ];
 
     public static function getFormAttributes()
@@ -60,5 +62,9 @@ class Lead extends Model
          $contact = $this->belongsTo(Contact::class,'contact_id_fk');
          return $contact;
         // return $contact;
+    }
+    public function source_lead(){
+        $source_lead = SourcesLead::where('id',$this->source_lead)->first()->name;
+        return $source_lead;
     }
 }

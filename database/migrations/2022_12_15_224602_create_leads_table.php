@@ -25,6 +25,8 @@ class CreateLeadsTable extends Migration
             $table->string('email')->nullable()->default(null);
             $table->string('telephone')->nullable()->default(null);
 
+            $table->string('source_lead')->nullable()->default(null);
+
             $table->foreignId('profession')->nullable()->default(null)
                 ->references('id')
                 ->on('professions');
@@ -40,6 +42,10 @@ class CreateLeadsTable extends Migration
             $table->foreignId('contact_id')->nullable()->default(null)
                 ->references('id')
                 ->on('contacts');
+
+            $table->foreignId('source_lead_id')->nullable()->default(null)
+                ->references('id')
+                ->on('sources_lead');
 
             $table->timestamps();
         });

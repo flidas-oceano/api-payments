@@ -371,6 +371,7 @@ class ZohoController extends Controller
     {
         $data = $request->all();
 
+        $data['source_lead'] = SourceLead::where('id', $data['source_lead'])->first()->name;
         $data['profession'] = Profession::where('id', $data['profession'])->first()->name;
         $data['speciality'] = Speciality::where('id', $data['speciality'])->first()->name;
         $data['method_contact'] = MethodContact::where('id', $data['method_contact'])->first()->name;
@@ -766,8 +767,8 @@ class ZohoController extends Controller
         $leadData['Last_Name'] = $data["username"];
         $leadData['Phone'] = $data["telephone"];
         $leadData['Email'] = $data["email"];
-        $leadData['Fuente_de_Lead'] = array(0 => 'Venta Presencial'); //hay que definir donde buscamos el dato
-        $leadData['FUENTE'] = 'Venta Presencial'; //hay que definir donde buscamos el dato
+        $leadData['Fuente_de_Lead'] = [$data["source_lead"]]; //hay que definir donde buscamos el dato
+        $leadData['FUENTE'] = $data["source_lead"]; //hay que definir donde buscamos el dato
         $leadData['Plataforma'] = 'Venta Presencial';
         $leadData['Lead_Status'] = 'Contacto urgente';
         $leadData['Pais'] = $data["country"];
