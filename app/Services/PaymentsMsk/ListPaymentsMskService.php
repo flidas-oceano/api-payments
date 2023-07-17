@@ -18,4 +18,9 @@ class ListPaymentsMskService
     {
         return $this->repository->findBy($data);
     }
+
+    public function findOneBy($data = [])
+    {
+        return $this->repository->findOneBy($data);
+    }
 }
