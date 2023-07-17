@@ -2,6 +2,7 @@
 
 namespace App\Services\Webhooks;
 
+use App\Enums\GatewayEnum;
 use App\Interfaces\ICrmClient;
 use App\Interfaces\ISaveWebhookCrmService;
 use zcrmsdk\crm\crud\ZCRMRecord;
@@ -35,33 +36,41 @@ class SaveWebhookZohoCrmService implements ISaveWebhookCrmService
         $so = $data['number_so_om'];
         $response = $moduleIns->searchRecordsByCriteria('(' . $field . ':equals:' . $so . ')');
         $records = $response->getData();
-        /** @var ZCRMRecord $answer */
-        $answer = $records[0];
-        $entityId = $answer->getEntityId();
+        /** @var ZCRMRecord $zRecord */
+        $zRecord = $records[0];
+        $entityId = $zRecord->getEntityId();
         $salesResponse = $moduleIns->getRecord($entityId);
         $salesRecord = $salesResponse->getData();
 
         $arrayStep5Subform = [];
         $step5Subform = $salesRecord->getFieldValue("Paso_5_Detalle_pagos");//dd($step5Subform);
+        $numberCharge = 1;
         if (isset($step5Subform[0])) {
             foreach ($step5Subform as $item) {
                 if ($data['payment_id'] != $item['Cobro_ID']) {
                     $arrayStep5Subform[] = [
                         'Cobro_ID' => $item['Cobro_ID'],
                         'Fecha_Cobro' => $item['Fecha_Cobro'],
-                        'Numero_de_cobro' => $item['Numero_de_cobro']
+                        'Numero_de_cobro' => $numberCharge,
+                        'Origen_Pago' => GatewayEnum::MP,
+                        'Num_de_orden_o_referencia_ext' => $item['Num_de_orden_o_referencia_ext'],
+                        'Monto' => $item['Monto'],
                     ];
+                    $numberCharge++;
                 }
             }
         }
         $arrayStep5Subform[] = [
             'Cobro_ID' => $data['payment_id'],
             'Fecha_Cobro' => $data['pay_date'],
-            'Numero_de_cobro' => sizeof($arrayStep5Subform) + 1
+            'Numero_de_cobro' => $numberCharge,//sizeof($arrayStep5Subform) + 1,
+            'Origen_Pago' => GatewayEnum::MP,
+            'Num_de_orden_o_referencia_ext' => $data['id'],
+            'Monto' => $data['amount_charged'],
         ];
 
-        $answer->setFieldValue("Paso_5_Detalle_pagos", $arrayStep5Subform);
-        $response = $answer->update();
+        $zRecord->setFieldValue("Paso_5_Detalle_pagos", $arrayStep5Subform);
+        $response = $zRecord->update();
 
         return $response->getResponseJSON()['data'];
     }

@@ -27,8 +27,6 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/createContactZohoCRM', [ZohoController::class, 'createContact']);
     Route::post('/createAddressZohoCRM', [ZohoController::class, 'createAddressRequest']);
     Route::post('/createSaleZohoCRM', [ZohoController::class, 'createSale']);
-    Route::get('/products/{iso}', [ZohoController::class, 'getProducts']);
-    Route::get('/products', [ZohoController::class, 'getProductsWithoutIso']);
 
     Route::post('/leadSaveProgress/{idPurchaseProgress}', [LeadController::class, 'storeProgress']);
 
@@ -37,6 +35,8 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/contractSaveProgress/{idPurchaseProgress}', [ContractController::class, 'storeProgress']);
 });
 
+Route::get('/products/{iso}', [ZohoController::class, 'getProducts']);
+Route::get('/products', [ZohoController::class, 'getProductsWithoutIso']);
 
 Route::post('/register', [PassportAuthController::class, 'register']);
 Route::post('/login', [PassportAuthController::class, 'login']);
@@ -100,6 +100,11 @@ Route::prefix("/rebill")->group(function () {
 Route::prefix("/webhook")->group(function () {
     Route::post('/mp', [MercadoPagoController::class, '']);
     Route::post('/stripe', [StripePaymentController::class, 'handleWebhook']);
+});
+
+Route::prefix("/payments_msk")->group(function () {
+    Route::post('/create', [\App\Http\Controllers\PaymentsMsk\CreatePaymentMskController::class, 'create']);
+    Route::get('/list', [\App\Http\Controllers\PaymentsMsk\ReadPaymentMskController::class, 'list']);
 });
 
 Route::get("/mp/searchPaymentApprove/{so}", [MercadoPagoPaymentController::class, 'searchPaymentApprove']);
