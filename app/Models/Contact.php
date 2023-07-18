@@ -14,7 +14,7 @@ class Contact extends Model
         'id',
         'entity_id_crm',
         'dni',
-        'sex',  
+        'sex',
         'date_of_birth',
         'registration_number',
         'area_of_work',
@@ -30,10 +30,12 @@ class Contact extends Model
 
     private static $formAttributes = [
         'dni',
+        'rfc',
+        'rut',
         'sex',
-        'date_of_birth', 
-        'registration_number', 
-        'area_of_work', 
+        'date_of_birth',
+        'registration_number',
+        'area_of_work',
         'training_interest',
         'type_of_address',
         'country',
@@ -41,12 +43,13 @@ class Contact extends Model
         'street',
         'locality',
         'province_state',
-        'entity_id_crm'
+        'entity_id_crm',
+
     ];
 
     public function lead()
     {
-        $lead = $this->hasOne(Lead::class, 'contact_id','id');
+        $lead = $this->hasOne(Lead::class, 'contact_id', 'id');
         return $lead;
     }
 

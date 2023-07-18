@@ -17,6 +17,8 @@ class CreateContactsTable extends Migration
             $table->id();
             $table->string('entity_id_crm')->nullable()->default(null);
             $table->string('dni')->nullable()->default(null);
+            $table->string('rut')->nullable()->default(null);
+            $table->string('rfc')->nullable()->default(null);
             $table->string('sex')->nullable()->default(null);
             $table->string('date_of_birth')->nullable()->default(null);
             $table->string('registration_number')->nullable()->default(null);
