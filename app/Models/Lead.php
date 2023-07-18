@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\{PurchasingProcess, SourceLead};
 
 class Lead extends Model
 {
@@ -68,7 +67,7 @@ class Lead extends Model
     }
     public function source_lead()
     {
-        $source_lead = SourcesLead::where('id', $this->source_lead)->first()->name;
+        $source_lead = SourceLead::where('id', $this->source_lead)->first()->name;
         return $source_lead;
     }
 }
