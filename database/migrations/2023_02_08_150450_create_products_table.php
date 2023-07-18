@@ -21,6 +21,7 @@ class CreateProductsTable extends Migration
             $table->string('price');
             $table->string('discount');
             $table->string('title');
+            $table->boolean('gift');
 
             $table->foreignId('contract_id')
                 ->references('id')
