@@ -42,15 +42,15 @@ class StoreContactRequest extends FormRequest
     public function messages()
     {
         return [
-            "dni.required"=> "El campo dni es obligatorio",
-            "sex.required"=> "El campo sexo es obligatorio",
-            "date_of_birth.required"=> "El campo fecha de nacimiento es obligatorio",
-            "province_state.required"=> "El campo provincia/estado es obligatorio",
-            "postal_code.required"=> "El campo codigo postal es obligatorio",
-            "street.required"=> "El campo direccion es obligatorio",
-            "locality.required"=> "El campo localidad es obligatorio",
-            "idPurchaseProgress.required"=> "El id del progreso es obligatorio",
-            "step_number.required"=> "El numero del paso es obligatorio",
+            "dni.required" => "El campo dni es obligatorio",
+            "sex.required" => "El campo sexo es obligatorio",
+            "date_of_birth.required" => "El campo fecha de nacimiento es obligatorio",
+            "province_state.required" => "El campo provincia/estado es obligatorio",
+            "postal_code.required" => "El campo codigo postal es obligatorio",
+            "street.required" => "El campo direccion es obligatorio",
+            "locality.required" => "El campo localidad es obligatorio",
+            "idPurchaseProgress.required" => "El id del progreso es obligatorio",
+            "step_number.required" => "El numero del paso es obligatorio",
         ];
     }
     /**
@@ -61,15 +61,17 @@ class StoreContactRequest extends FormRequest
     public function rules()
     {
         return [
-            "dni"=> "required",
-            "sex"=> "required",
-            "date_of_birth"=> "required",
-            "province_state"=> "required",
+            "dni" => "required_if:country,Argentina",
+            "rut" => "required_if:country,Chile",
+            "rfc" => "required_if:country,México",
+            "sex" => "required",
+            "date_of_birth" => "required",
+            "province_state" => "required",
             'postal_code' => 'required_unless:country,Chile',
-            "street"=> "required",
-            "locality"=> "required",
-            "idPurchaseProgress"=> "required",
-            "step_number"=> "required",
+            "street" => "required",
+            "locality" => "required",
+            "idPurchaseProgress" => "required",
+            "step_number" => "required",
             // "country"=> "Chile",
             // "name"=> "RobertoCL1",
             // "username"=> "PruebaFlores",
