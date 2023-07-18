@@ -13,11 +13,10 @@ use Illuminate\Support\Facades\Storage;
 use zcrmsdk\crm\exception\ZCRMException;
 use zcrmsdk\crm\setup\org\ZCRMOrganization;
 use zcrmsdk\crm\crud\ZCRMInventoryLineItem;
-use zcrmsdk\crm\crud\ZCRMTax;
 use App\Http\Requests\UpdateContractZohoRequest;
 use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
 
-use App\Models\{Contact, Lead, Profession, PurchaseProgress, Speciality, MethodContact};
+use App\Models\{SourceLead, Profession, PurchaseProgress, Speciality, MethodContact};
 
 class ZohoController extends Controller
 {

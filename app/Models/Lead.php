@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\{PurchasingProcess};
+use App\Models\{PurchasingProcess, SourceLead};
 
 class Lead extends Model
 {
@@ -28,7 +28,7 @@ class Lead extends Model
         'source_lead'
     ];
     public $timestamps = true;
-    public $hidden = ['created_at','updated_at','source_lead','lead_status','lead_source','id'];
+    public $hidden = ['created_at', 'updated_at', 'lead_status', 'id'];
     private static $formAttributes = [
         'name',
         'username',
@@ -39,7 +39,7 @@ class Lead extends Model
         'method_contact_id',
         'profession',
         'speciality',
-        
+        'source_lead'
     ];
 
     public static function getFormAttributes()
@@ -47,24 +47,28 @@ class Lead extends Model
         return self::$formAttributes;
     }
 
-    public function purchasingProcesses(){
-        $purchasingProcesses = $this->hasMany(PurchasingProcess::class,'lead_id','id');
+    public function purchasingProcesses()
+    {
+        $purchasingProcesses = $this->hasMany(PurchasingProcess::class, 'lead_id', 'id');
         return $purchasingProcesses;
     }
 
-    public function profession(){
-        $profession = Profession::where('id',$this->profession)->first()->name;
+    public function profession()
+    {
+        $profession = Profession::where('id', $this->profession)->first()->name;
         return $profession;
     }
 
-    public function contact(){
+    public function contact()
+    {
         // $contact = Contact::where('id', $this->contact_id_fk)->first();
-         $contact = $this->belongsTo(Contact::class,'contact_id_fk');
-         return $contact;
+        $contact = $this->belongsTo(Contact::class, 'contact_id_fk');
+        return $contact;
         // return $contact;
     }
-    public function source_lead(){
-        $source_lead = SourcesLead::where('id',$this->source_lead)->first()->name;
+    public function source_lead()
+    {
+        $source_lead = SourcesLead::where('id', $this->source_lead)->first()->name;
         return $source_lead;
     }
 }

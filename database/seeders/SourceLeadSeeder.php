@@ -2,13 +2,15 @@
 
 namespace Database\Seeders;
 
+use App\Models\SourceLead;
 use Illuminate\Database\Seeder;
 
-class SourceLead extends Seeder
+class SourceLeadSeeder extends Seeder
 {
     public $data;
 
-    public function __construct(){
+    public function __construct()
+    {
         $this->data = [
             ["name" => "Congresos"],
             ["name" => "Hospitales / Clínicas"],
@@ -28,6 +30,3 @@ class SourceLead extends Seeder
         }
     }
 }
-
-
-

@@ -15,7 +15,8 @@ class CreateSourcesLeadTable extends Migration
     {
         Schema::create('sources_lead', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->nullable()->default(null);
+            $table->string('name');
+            $table->timestamps();
         });
     }
 
