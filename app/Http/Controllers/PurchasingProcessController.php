@@ -12,6 +12,7 @@ use App\Http\Requests\{UpdateLeadRequest, StoreContactRequest};
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\Console\Helper\ProgressBar;
+use Illuminate\Support\Facades\Log;
 
 class PurchasingProcessController extends Controller
 {
@@ -142,6 +143,8 @@ class PurchasingProcessController extends Controller
 
         $purchaseProcess = PurchaseProgress::where('id', $params['idPurchaseProgress'])->first();
         $purchaseProcess->update(['lead_id' => $newOrUpdatedLead->id, 'step_number' => $params['step_number']]);
+
+        Log::info("PurchasingProcessController-stepCreateLead-newOrUpdatedLead: " . print_r($newOrUpdatedLead, true));
 
         return response()->json([
             'newOrUpdatedLead' => $newOrUpdatedLead,

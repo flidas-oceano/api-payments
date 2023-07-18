@@ -16,7 +16,7 @@ use zcrmsdk\crm\crud\ZCRMInventoryLineItem;
 use App\Http\Requests\UpdateContractZohoRequest;
 use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
 
-use App\Models\{SourceLead, Profession, PurchaseProgress, Speciality, MethodContact};
+use App\Models\{Contact, Lead, Profession, PurchaseProgress, Speciality, MethodContact, SourceLead};
 
 class ZohoController extends Controller
 {
@@ -372,7 +372,7 @@ class ZohoController extends Controller
     {
         $data = $request->all();
 
-        $data['source_lead'] = SourceLead::where('id', $data['source_lead'])->first()->name;
+        $data['source_lead'] = isset($data['source_lead']) ? SourceLead::where('id', $data['source_lead'])->first()->name : null;
         $data['profession'] = Profession::where('id', $data['profession'])->first()->name;
         $data['speciality'] = Speciality::where('id', $data['speciality'])->first()->name;
         $data['method_contact'] = MethodContact::where('id', $data['method_contact'])->first()->name;

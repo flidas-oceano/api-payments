@@ -13,35 +13,37 @@ class Contact extends Model
     protected $fillable = [
         'id',
         'entity_id_crm',
-        'dni',
         'sex',  
         'date_of_birth',
         'registration_number',
         'area_of_work',
         'training_interest',
         'type_of_address',
-        'country',
         'postal_code',
         'street',
         'locality',
         'province_state',
-        'lead_id'
+        'lead_id',
+        'country',
+        'dni',
+        'rut',
     ];
 
     private static $formAttributes = [
-        'dni',
         'sex',
         'date_of_birth', 
         'registration_number', 
         'area_of_work', 
         'training_interest',
         'type_of_address',
-        'country',
         'postal_code',
         'street',
         'locality',
         'province_state',
-        'entity_id_crm'
+        'entity_id_crm',
+        'country',
+        'dni',
+        'rut',
     ];
 
     public function lead()
