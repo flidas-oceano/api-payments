@@ -27,13 +27,15 @@ class Contact extends Model
         'country',
         'dni',
         'rut',
+        'rfc',
+        'mui',
     ];
 
     private static $formAttributes = [
         'sex',
-        'date_of_birth', 
-        'registration_number', 
-        'area_of_work', 
+        'date_of_birth',
+        'registration_number',
+        'area_of_work',
         'training_interest',
         'type_of_address',
         'postal_code',
@@ -44,11 +46,13 @@ class Contact extends Model
         'country',
         'dni',
         'rut',
+        'rfc',
+        'dni',
     ];
 
     public function lead()
     {
-        $lead = $this->hasOne(Lead::class, 'contact_id','id');
+        $lead = $this->hasOne(Lead::class, 'contact_id', 'id');
         return $lead;
     }
 

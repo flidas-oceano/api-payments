@@ -78,18 +78,7 @@ class StoreContactRequest extends FormRequest
             'rfc' => 'required_if:country,México',
             'mui' => 'required_if:country,Ecuador',
             'dni' => 'required_if:country,Argentina',
-            // "country"=> "Chile",
-            // "name"=> "RobertoCL1",
-            // "username"=> "PruebaFlores",
-            // "profession"=> "1",
-            // "telephone"=> "5642424234234",
-            // "speciality"=> "2",
-            // "method_contact"=> "1",
-            // "dni"=> "998989595998",
-            // "registration_number"=> "15454545",
-            // "area_of_work"=> "Licenciado",
-            // "training_interest"=> "test",
-            // "email"=> "robertopruebaCL@oceano.com.ar",
+
         ];
     }
 }

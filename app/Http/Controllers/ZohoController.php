@@ -649,6 +649,19 @@ class ZohoController extends Controller
         return ($answer);
     }
 
+    private function getIdentificationOfContact($country, $contact)
+    {
+        switch ($country) {
+            case 'Chile':
+                return $contact['rut'];
+            case 'México':
+                return $contact['rfc'];
+            default:
+                return $contact['dni'];
+
+        }
+    }
+
     public function convertLead(Request $request)
     {
 
@@ -666,8 +679,10 @@ class ZohoController extends Controller
 
         $gender = collect($genderOptions)->firstWhere('id', $data['contact']['sex'])->name;
 
+        $identification = $this->getIdentificationOfContact($progress->country, $data['contact']);
+
         $additionalData = [
-            'DNI' => $data['contact']['dni'],
+            'DNI' => $identification,
             'Sexo' => $gender,
             'Date_of_Birth' => $data['contact']['date_of_birth'],
             'Nro_Matr_cula' => $data['contact']['registration_number'],
