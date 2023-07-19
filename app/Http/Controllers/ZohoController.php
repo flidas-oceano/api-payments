@@ -13,11 +13,10 @@ use Illuminate\Support\Facades\Storage;
 use zcrmsdk\crm\exception\ZCRMException;
 use zcrmsdk\crm\setup\org\ZCRMOrganization;
 use zcrmsdk\crm\crud\ZCRMInventoryLineItem;
-use zcrmsdk\crm\crud\ZCRMTax;
 use App\Http\Requests\UpdateContractZohoRequest;
 use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
 
-use App\Models\{Contact, Lead, Profession, PurchaseProgress, Speciality, MethodContact};
+use App\Models\{Contact, Lead, Profession, PurchaseProgress, Speciality, MethodContact, SourceLead};
 
 class ZohoController extends Controller
 {
@@ -373,6 +372,7 @@ class ZohoController extends Controller
     {
         $data = $request->all();
 
+        $data['source_lead'] = isset($data['source_lead']) ? SourceLead::where('id', $data['source_lead'])->first()->name : null;
         $data['profession'] = Profession::where('id', $data['profession'])->first()->name;
         $data['speciality'] = Speciality::where('id', $data['speciality'])->first()->name;
         $data['method_contact'] = MethodContact::where('id', $data['method_contact'])->first()->name;
@@ -649,6 +649,19 @@ class ZohoController extends Controller
         return ($answer);
     }
 
+    private function getIdentificationOfContact($country, $contact)
+    {
+        switch ($country) {
+            case 'Chile':
+                return $contact['rut'];
+            case 'México':
+                return $contact['rfc'];
+            default:
+                return $contact['dni'];
+
+        }
+    }
+
     public function convertLead(Request $request)
     {
 
@@ -666,8 +679,10 @@ class ZohoController extends Controller
 
         $gender = collect($genderOptions)->firstWhere('id', $data['contact']['sex'])->name;
 
+        $identification = $this->getIdentificationOfContact($progress->country, $data['contact']);
+
         $additionalData = [
-            'DNI' => $data['contact']['dni'],
+            'DNI' => $identification,
             'Sexo' => $gender,
             'Date_of_Birth' => $data['contact']['date_of_birth'],
             'Nro_Matr_cula' => $data['contact']['registration_number'],
@@ -768,8 +783,8 @@ class ZohoController extends Controller
         $leadData['Last_Name'] = $data["username"];
         $leadData['Phone'] = $data["telephone"];
         $leadData['Email'] = $data["email"];
-        $leadData['Fuente_de_Lead'] = array(0 => 'Venta Presencial'); //hay que definir donde buscamos el dato
-        $leadData['FUENTE'] = 'Venta Presencial'; //hay que definir donde buscamos el dato
+        $leadData['Fuente_de_Lead'] = [$data["source_lead"]]; //hay que definir donde buscamos el dato
+        $leadData['FUENTE'] = $data["source_lead"]; //hay que definir donde buscamos el dato
         $leadData['Plataforma'] = 'Venta Presencial';
         $leadData['Lead_Status'] = 'Contacto urgente';
         $leadData['Pais'] = $data["country"];

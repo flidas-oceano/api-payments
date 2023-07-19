@@ -42,7 +42,6 @@ class StoreContactRequest extends FormRequest
     public function messages()
     {
         return [
-            "dni.required"=> "El campo dni es obligatorio",
             "sex.required"=> "El campo sexo es obligatorio",
             "date_of_birth.required"=> "El campo fecha de nacimiento es obligatorio",
             "province_state.required"=> "El campo provincia/estado es obligatorio",
@@ -51,6 +50,10 @@ class StoreContactRequest extends FormRequest
             "locality.required"=> "El campo localidad es obligatorio",
             "idPurchaseProgress.required"=> "El id del progreso es obligatorio",
             "step_number.required"=> "El numero del paso es obligatorio",
+            
+            "dni.required_if"=> "El campo dni es obligatorio",
+            "rut.required_if" => "El campo rut es obligatorio",
+            "rut.regex" => "El campo rut debe tener un formato válido (ejemplo: 12345678-K)",
         ];
     }
     /**
@@ -61,7 +64,6 @@ class StoreContactRequest extends FormRequest
     public function rules()
     {
         return [
-            "dni"=> "required",
             "sex"=> "required",
             "date_of_birth"=> "required",
             "province_state"=> "required",
@@ -70,18 +72,13 @@ class StoreContactRequest extends FormRequest
             "locality"=> "required",
             "idPurchaseProgress"=> "required",
             "step_number"=> "required",
-            // "country"=> "Chile",
-            // "name"=> "RobertoCL1",
-            // "username"=> "PruebaFlores",
-            // "profession"=> "1",
-            // "telephone"=> "5642424234234",
-            // "speciality"=> "2",
-            // "method_contact"=> "1",
-            // "dni"=> "998989595998",
-            // "registration_number"=> "15454545",
-            // "area_of_work"=> "Licenciado",
-            // "training_interest"=> "test",
-            // "email"=> "robertopruebaCL@oceano.com.ar",
+
+            //identificacion
+            'rut' => 'required_if:country,Chile|regex:/^\d{7,8}-[0-9A-Za-z]$/i',
+            'rfc' => 'required_if:country,México',
+            'mui' => 'required_if:country,Ecuador',
+            'dni' => 'required_if:country,Argentina',
+
         ];
     }
 }
