@@ -217,7 +217,9 @@ class PurchasingProcessController extends Controller
             $contractId = $progress->contract->id;
         }
 
+
         $products = collect($request->products)->map(function ($item) use ($contractId) {
+            $is_gift = is_null($item->gift)? false: $item->gift;
             return [
                 "quantity" => $item['quantity'],
                 "product_code" => $item['product_code'],
@@ -225,6 +227,7 @@ class PurchasingProcessController extends Controller
                 "discount" => $item['discount'],
                 "title" => $item['title'],
                 "contract_id" => $contractId,
+                "gift" => $is_gift,
             ];
         })->all();
 
