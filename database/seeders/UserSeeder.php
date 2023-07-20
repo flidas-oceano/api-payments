@@ -17,6 +17,7 @@ class UserSeeder extends Seeder
             ["name" => "Luis Piña", "email" => "luis.pina.carvajal@gmail.com", "password" => Hash::make("password")],
             ["name" => "Admin", "email" => "tomasgomez@oceano.com.ar", "password" => Hash::make("password")],
             ["name" => "Admin", "email" => "fbrizuela@oceano.com.ar", "password" => Hash::make("password")],
+            ["name" => "Rober", "email" => "admin@oceano.com.ar", "password" => Hash::make("password")],
 
         ];
     }
