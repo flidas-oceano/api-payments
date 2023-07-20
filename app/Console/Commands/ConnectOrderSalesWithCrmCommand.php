@@ -105,6 +105,7 @@ class ConnectOrderSalesWithCrmCommand extends Command
                     'pay_date' => $pay->getBillingDate(),
                     'id' => $pay->getId(),
                     'amount_charged' => $pay->getAmountCharged(),
+                    'origin' => GatewayEnum::MP,
                 ]);
                 $this->paymentService->create([
                     'sub_id' => $pay->getSubscriptionId(),

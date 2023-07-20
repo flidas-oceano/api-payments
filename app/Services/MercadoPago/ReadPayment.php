@@ -3,8 +3,10 @@
 namespace App\Services\MercadoPago;
 
 use App\Dtos\MpSearchDto;
+use App\Interfaces\IReadPayment;
+use App\Interfaces\ISearchDto;
 
-class ReadPayment
+class ReadPayment implements IReadPayment
 {
     private RestApi $api;
 
@@ -12,7 +14,7 @@ class ReadPayment
     {
         $this->api = $api;
     }
-    public function findById($id, $country): MpSearchDto
+    public function findById($id, $country): ISearchDto
     {
         $data = $this->api
             ->searchByReference('x' . $id, $country)

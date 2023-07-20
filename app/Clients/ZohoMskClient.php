@@ -2,13 +2,13 @@
 
 namespace App\Clients;
 
-use App\Interfaces\ICrmClient;
+use App\Interfaces\IClient;
 use Illuminate\Support\Facades\Storage;
 use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
 use zcrmsdk\oauth\exception\ZohoOAuthException;
 use zcrmsdk\oauth\ZohoOAuth;
 
-class ZohoMskClient implements ICrmClient
+class ZohoMskClient implements IClient
 {
     /**
      * @throws ZohoOAuthException
