@@ -112,25 +112,25 @@ class PurchasingProcessController extends Controller
     {
         /* Datos de prueba al postman
         {
-        area_of_work: "",
-        country: "",
-        date_of_birth: "",
-        dni: "",
-        idPurchaseProgress: "39",
-        locality: "",
-        method_contact: "",
-        name: "",
-        postal_code: "",
-        profession: "",
-        province_state: "",
-        registration_number: "",
-        sex: "",
-        speciality: "",
-        step_number: 3,
-        street: "",
-        telephone: "",
-        training_interest: "",
-        username: ""
+            area_of_work: "",
+            country: "",
+            date_of_birth: "",
+            dni: "",
+            idPurchaseProgress: "39",
+            locality: "",
+            method_contact: "",
+            name: "",
+            postal_code: "",
+            profession: "",
+            province_state: "",
+            registration_number: "",
+            sex: "",
+            speciality: "",
+            step_number: 3,
+            street: "",
+            telephone: "",
+            training_interest: "",
+            username: ""
         }
         */
 
