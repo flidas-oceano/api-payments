@@ -1270,6 +1270,7 @@ class CronosController extends Controller
 
         $surname = '-';
         $name = '-';
+        $rut = $element['contrato']["rut"];
 
         if (isset($explodedName[0]))
             $surname = $explodedName[0];
@@ -1281,6 +1282,11 @@ class CronosController extends Controller
 
         if ($razonsocial == '')
             $razonsocial = $element['contrato']["nombre y apellido"];
+
+        if (isset($rut) && strpos($rut, '-') == false) {
+
+            $rut = substr_replace($element['contrato']["rut"], "-", -1, 0);
+        }
 
         $contactData = array(
             "ID_Personal" => $element['contacto']['dni'],
@@ -1307,7 +1313,7 @@ class CronosController extends Controller
             'Requiere_factura' => $element['contrato']["requiere factura"],
             'R_gimen_fiscal' => $element['contrato']["regimen fiscal"],
 
-            'RUT' => substr_replace($element['contrato']["rut"], "-", -1, 0),
+            'RUT' => $rut,
 
             "CUIT_CUIL_o_DNI" => $element['contrato']["cuit"],
             "RFC" => $element['contrato']["cuit"],
