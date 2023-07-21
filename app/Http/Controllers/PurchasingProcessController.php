@@ -180,14 +180,16 @@ class PurchasingProcessController extends Controller
 
     private function getCurrencyByCountry($country)
     {
-        $client = new Client();
-        $response = $client->request('GET', 'https://restcountries.com/v2/name/' . $country . '?fullText=true');
-
-        $body = json_decode($response->getBody());
-
-        $currency = $body[0]->currencies[0]->code;
-
-        return $currency;
+        switch ($country) {
+            case 'Chile':
+                return 'CLP';
+            case 'México':
+                return 'MXN';
+            case 'Argentina':
+                return 'ARG';
+            default:
+                return 'USD';
+        }
     }
 
     public function stepConversionContract(Request $request)
@@ -219,7 +221,7 @@ class PurchasingProcessController extends Controller
 
 
         $products = collect($request->products)->map(function ($item) use ($contractId) {
-            $is_gift = is_null($item->gift)? false: $item->gift;
+            $is_gift = isset($item['gift']) ? $item['gift']:false;
             return [
                 "quantity" => $item['quantity'],
                 "product_code" => $item['product_code'],
