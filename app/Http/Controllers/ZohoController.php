@@ -702,7 +702,7 @@ class ZohoController extends Controller
             $additionalData['Home_Phone'] = $leadInProgress["telephone"];
             $additionalData['Phone'] = $leadInProgress["telephone"];
             $additionalData['Email'] = $leadInProgress["email"];
-            $additionalData['Fuente_del_Lead'] = [$leadInProgress["Fuente_del_Lead"]];
+            $additionalData['Fuente_del_Lead'] = [$leadInProgress["source_lead"]];
             $additionalData['FUENTE'] = $leadInProgress["source_lead"]; //hay que definir donde buscamos el dato
             $additionalData['Plataforma'] = 'Venta Presencial';
             $additionalData['Lead_Status'] = 'Contacto urgente';
@@ -783,7 +783,7 @@ class ZohoController extends Controller
         $leadData['Last_Name'] = $data["username"];
         $leadData['Phone'] = $data["telephone"];
         $leadData['Email'] = $data["email"];
-        $leadData['Fuente_del_Lead'] = [$data["Fuente_del_Lead"]]; 
+        $leadData['Fuente_del_Lead'] = [$data["source_lead"]]; 
         $leadData['FUENTE'] = $data["source_lead"]; 
         $leadData['Plataforma'] = 'Venta Presencial';
         $leadData['Lead_Status'] = 'Contacto urgente';

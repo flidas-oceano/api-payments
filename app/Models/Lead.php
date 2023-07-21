@@ -25,7 +25,6 @@ class Lead extends Model
         'profession',
         'speciality',
         'source_lead',
-        'Fuente_del_Lead',
     ];
     public $timestamps = true;
     public $hidden = ['created_at', 'updated_at', 'lead_status', 'id'];
@@ -40,7 +39,6 @@ class Lead extends Model
         'profession',
         'speciality',
         'source_lead',
-        'Fuente_del_Lead',
     ];
 
     public static function getFormAttributes()
