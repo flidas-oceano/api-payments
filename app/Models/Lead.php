@@ -24,7 +24,8 @@ class Lead extends Model
         'method_contact_id',
         'profession',
         'speciality',
-        'source_lead'
+        'source_lead',
+        'Fuente_del_Lead',
     ];
     public $timestamps = true;
     public $hidden = ['created_at', 'updated_at', 'lead_status', 'id'];
@@ -38,7 +39,8 @@ class Lead extends Model
         'method_contact_id',
         'profession',
         'speciality',
-        'source_lead'
+        'source_lead',
+        'Fuente_del_Lead',
     ];
 
     public static function getFormAttributes()

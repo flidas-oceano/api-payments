@@ -511,7 +511,6 @@ class ZohoController extends Controller
             return response()->json(['detail' => 'SKU incorrect'], 500);
         }
 
-
     }
 
     public function createRecordSale($data)
@@ -702,8 +701,8 @@ class ZohoController extends Controller
             $additionalData['Home_Phone'] = $leadInProgress["telephone"];
             $additionalData['Phone'] = $leadInProgress["telephone"];
             $additionalData['Email'] = $leadInProgress["email"];
-            $additionalData['Fuente_de_Lead'] = array(0 => 'Venta Presencial'); //hay que definir donde buscamos el dato
-            $additionalData['FUENTE'] = 'Venta Presencial'; //hay que definir donde buscamos el dato
+            $additionalData['Fuente_del_Lead'] = [$leadInProgress["Fuente_del_Lead"]];
+            $additionalData['FUENTE'] = $leadInProgress["source_lead"]; //hay que definir donde buscamos el dato
             $additionalData['Plataforma'] = 'Venta Presencial';
             $additionalData['Lead_Status'] = 'Contacto urgente';
             $additionalData['Pais'] = $progress->country;
@@ -783,8 +782,8 @@ class ZohoController extends Controller
         $leadData['Last_Name'] = $data["username"];
         $leadData['Phone'] = $data["telephone"];
         $leadData['Email'] = $data["email"];
-        $leadData['Fuente_de_Lead'] = [$data["source_lead"]]; //hay que definir donde buscamos el dato
-        $leadData['FUENTE'] = $data["source_lead"]; //hay que definir donde buscamos el dato
+        $leadData['Fuente_del_Lead'] = [$data["Fuente_del_Lead"]]; 
+        $leadData['FUENTE'] = $data["source_lead"]; 
         $leadData['Plataforma'] = 'Venta Presencial';
         $leadData['Lead_Status'] = 'Contacto urgente';
         $leadData['Pais'] = $data["country"];

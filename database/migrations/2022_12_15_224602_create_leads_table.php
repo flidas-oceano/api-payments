@@ -21,6 +21,7 @@ class CreateLeadsTable extends Migration
             $table->string('username')->nullable()->default(null);
             $table->string('email')->nullable()->default(null);
             $table->string('telephone')->nullable()->default(null);
+            $table->string('Fuente_del_Lead')->nullable()->default(null);
 
             $table->foreignId('profession')->nullable()->default(null)
                 ->references('id')
