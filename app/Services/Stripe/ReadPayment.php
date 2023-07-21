@@ -16,16 +16,26 @@ use Stripe\Exception\ApiErrorException;
 class ReadPayment implements IReadPayment
 {
     private \Stripe\StripeClient $api;
+    private array $paymentIntents;
 
     public function __construct(StripeClient $client)
     {
         $this->api = $client->getClient();
     }
-    public function findBySucceeded(): StripePaymentSearchDto
+    public function findBySucceeded($page = null): StripePaymentSearchDto
     {
-        $data = $this->api->paymentIntents->search(['query' => 'status:"succeeded"'])->toArray();
+        \Log::debug("findBySucceeded-->", [$page]);
+        $query = ['query' => 'status:"succeeded"', 'limit' => 1];
+        if ($page) {
+            $query = array_merge($query, ['page' => $page]);
+        }
+        $tempPaymentIntents = $this->api->paymentIntents->search($query)->toArray();
+        $this->paymentIntents[] = $tempPaymentIntents['data'][0];
+        if ($tempPaymentIntents['has_more']) {
+           $this->findBySucceeded($tempPaymentIntents['next_page']);
+        }
 
-        return new StripePaymentSearchDto($data);
+        return new StripePaymentSearchDto($this->paymentIntents);
     }
 
     /**

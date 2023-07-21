@@ -10,7 +10,7 @@ class StripePaymentSearchDto implements ISearchDto
     public function __construct($data)
     {
         $results = [];
-        foreach ($data['data'] as $item) {
+        foreach ($data as $item) {
             $results[] = new StripePaymentDto($item);
         }
         $this->results = $results;
