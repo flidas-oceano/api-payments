@@ -493,6 +493,7 @@ class ZohoController extends Controller
                 'Currency' => $progress->contract->currency,
                 //'Modalidad_de_pago_del_Anticipo' => $data['left_payment_type'],
                 //'Tipo_IVA' => 'Consumidor Final - ICF',
+                'Discount' => isset($request->discount) ? $request->discount : 0
             );
 
             $newSale = $this->createRecordSale($saleData);
