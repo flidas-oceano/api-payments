@@ -857,7 +857,7 @@ class CronosController extends Controller
             //$answer['nro de cuotas'] = $this->pax($data,'Cantidad');
             $answer['nro de cuotas'] = $this->pax($data, 'Cuotas_totales');
             $answer['total general'] = $this->pax($data, 'Grand_Total');
-            $answer['dni'] = str_replace(".", "", $this->filter($this->pax($data, 'L_nea_nica_3'), 'onlynumbers'));
+            $answer['dni'] = str_replace(".", "", $this->filter($this->pax($data, 'L_nea_nica_3')));
             $answer['cuit'] = $this->pax($data, 'CUIT_CUIL');
             $answer['nombre y apellido'] = $this->pax($data, 'L_nea_nica_6');
             $answer['razon social'] = $this->pax($data, 'Razon_Social');
