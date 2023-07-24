@@ -19,14 +19,12 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/progress/{id}', [PurchasingProcessController::class, 'show']);
     Route::post('/db/stepCreateLead', [PurchasingProcessController::class, 'stepCreateLead']);
     Route::post('/db/stepConversionContact', [PurchasingProcessController::class, 'stepConversionContact']);
-    Route::post('/db/stepConversionContract', [PurchasingProcessController::class, 'stepConversionContract']);
     Route::post('/updateEntityIdLeadVentas', [PurchasingProcessController::class, 'updateEntityIdLeadVentas']);
 
     Route::post('/createLeadZohoCRM', [ZohoController::class, 'createLead']);
     Route::post('/convertLeadZohoCRM', [ZohoController::class, 'convertLead']); //en la seccion de cursos se puede ver que convertLeadZohoCRM tira error
     Route::post('/createContactZohoCRM', [ZohoController::class, 'createContact']);
     Route::post('/createAddressZohoCRM', [ZohoController::class, 'createAddressRequest']);
-    Route::post('/createSaleZohoCRM', [ZohoController::class, 'createSale']);
 
     Route::post('/leadSaveProgress/{idPurchaseProgress}', [LeadController::class, 'storeProgress']);
 
@@ -37,6 +35,10 @@ Route::middleware('auth:api')->group(function () {
 
 Route::get('/products/{iso}', [ZohoController::class, 'getProducts']);
 Route::get('/products', [ZohoController::class, 'getProductsWithoutIso']);
+Route::post('/db/stepConversionContract', [PurchasingProcessController::class, 'stepConversionContract']);
+
+Route::post('/createSaleZohoCRM', [ZohoController::class, 'createSale']);
+
 
 Route::post('/register', [PassportAuthController::class, 'register']);
 Route::post('/login', [PassportAuthController::class, 'login']);
