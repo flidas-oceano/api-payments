@@ -811,7 +811,7 @@ class CronosController extends Controller
     }
 
     //le pasas un dato y un tipo de filtro, y aplica la acción
-    private function filter($data, $type)
+    private function filter($data, $type = null)
     {
         $answer = $data;
 
@@ -915,7 +915,7 @@ class CronosController extends Controller
                 //$answer['ecom_certificaciones'] = $this->pax($data,'Certificaciones');
             }
         } else if ($who == 'contacto') {
-            $answer['dni'] = str_replace(".", "", $this->filter($this->pax3($data, 'DNI'), 'onlynumbers'));
+            $answer['dni'] = str_replace(".", "", $this->filter($this->pax3($data, 'DNI')));
             $answer['nombre de contacto'] = $this->pax3($data, 'Last_Name') . ', ' . $this->pax3($data, 'First_Name');
             $answer['correo electronico'] = $this->pax3($data, 'Email');
             $answer['telefono particular'] = $this->filter($this->pax3($data, 'Home_Phone'), 'onlynumbers');
@@ -1284,7 +1284,6 @@ class CronosController extends Controller
             $razonsocial = $element['contrato']["nombre y apellido"];
 
         if (isset($rut) && strpos($rut, '-') == false) {
-
             $rut = substr_replace($element['contrato']["rut"], "-", -1, 0);
         }
 
