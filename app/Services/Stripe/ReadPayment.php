@@ -4,13 +4,9 @@ namespace App\Services\Stripe;
 
 
 use App\Clients\StripeClient;
-use App\Dtos\MpSearchDto;
 use App\Dtos\StripeInvoiceDto;
-use App\Dtos\StripeInvoiceSearchDto;
 use App\Dtos\StripePaymentSearchDto;
 use App\Interfaces\IReadPayment;
-use App\Interfaces\ISearchDto;
-use App\Services\MercadoPago\RestApi;
 use Stripe\Exception\ApiErrorException;
 
 class ReadPayment implements IReadPayment

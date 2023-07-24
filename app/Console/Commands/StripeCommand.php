@@ -18,7 +18,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use zcrmsdk\crm\exception\ZCRMException;
 use zcrmsdk\oauth\exception\ZohoOAuthException;
 
-class StripeRebillCommand extends Command
+class StripeCommand extends Command
 {
     protected string $name = 'stripe';
 
@@ -123,7 +123,7 @@ class StripeRebillCommand extends Command
         /** @var StripePaymentDto[] $paymentIntents */
         $paymentIntents = $this->stripe->findBySucceeded()->getResults();
 
-        return $paymentIntents;
+        return array_reverse($paymentIntents);
     }
 
     /**
