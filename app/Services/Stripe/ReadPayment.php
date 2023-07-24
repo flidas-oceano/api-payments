@@ -44,7 +44,7 @@ class ReadPayment implements IReadPayment
         return new StripeInvoiceDto($response);
     }
 
-    public function findById($id, $country)
+    public function findById($id, $country = "")
     {
         // TODO: Implement findById() method.
     }

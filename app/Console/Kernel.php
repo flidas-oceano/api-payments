@@ -4,6 +4,7 @@ namespace App\Console;
 
 use App\Console\Commands\ConnectOrderSalesWithCrmCommand;
 use App\Console\Commands\GitPullAndCleanLaravelLogs;
+use App\Console\Commands\RebillCommand;
 use App\Console\Commands\StripeCommand;
 use App\Http\Controllers\CronosController;
 use Illuminate\Support\Facades\Http;
@@ -17,6 +18,7 @@ class Kernel extends ConsoleKernel
         GitPullAndCleanLaravelLogs::class,
         ConnectOrderSalesWithCrmCommand::class,
         StripeCommand::class,
+        RebillCommand::class,
     ];
 
     /**

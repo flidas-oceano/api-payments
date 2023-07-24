@@ -14,7 +14,7 @@ class ReadPayment implements IReadPayment
     {
         $this->api = $api;
     }
-    public function findById($id, $country): ISearchDto
+    public function findById($id, $country = ""): ISearchDto
     {
         $data = $this->api
             ->searchByReference('x' . $id, $country)
