@@ -14,7 +14,7 @@ class RebillClient implements IClient
         $this->rebill = new \GuzzleHttp\Client(['base_uri' => 'https://api.rebill.to',
             'headers' => [
                 'accept' => 'application/json',
-                'authorization' => 'Bearer API_KEY_8875b726-fb7e-4040-9f31-298bde841d11',
+                'authorization' => 'Bearer '.env('REBILL_APIK'),
             ],
         ]);
     }
