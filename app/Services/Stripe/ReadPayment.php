@@ -6,10 +6,10 @@ namespace App\Services\Stripe;
 use App\Clients\StripeClient;
 use App\Dtos\StripeInvoiceDto;
 use App\Dtos\StripePaymentSearchDto;
-use App\Interfaces\IReadPayment;
+use App\Interfaces\IRead;
 use Stripe\Exception\ApiErrorException;
 
-class ReadPayment implements IReadPayment
+class ReadPayment implements IRead
 {
     private \Stripe\StripeClient $api;
     private array $paymentIntents;
@@ -47,5 +47,10 @@ class ReadPayment implements IReadPayment
     public function findById($id, $country = "")
     {
         // TODO: Implement findById() method.
+    }
+
+    public function findBy($data)
+    {
+        // TODO: Implement findBy() method.
     }
 }

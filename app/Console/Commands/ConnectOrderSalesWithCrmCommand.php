@@ -31,8 +31,8 @@ class ConnectOrderSalesWithCrmCommand extends Command
     private CreatePaymentsMskService $paymentService;
 
     public function __construct(
-        ReadOrderSalesService $service,
-        ReadPayment $readMercadoPago,
+        ReadOrderSalesService    $service,
+        ReadPayment              $readMercadoPago,
         CreatePaymentsMskService $mskService
     ) {
         $this->setName($this->name);

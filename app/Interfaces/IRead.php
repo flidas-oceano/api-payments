@@ -2,7 +2,9 @@
 
 namespace App\Interfaces;
 
-interface IReadPayment
+interface IRead
 {
     public function findById($id, $country = "");
+
+    public function findBy($data);
 }

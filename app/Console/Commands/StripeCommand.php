@@ -37,10 +37,10 @@ class StripeCommand extends Command
     private OutputInterface $output;
 
     public function __construct(
-        ReadOrderSalesService $service,
-        ReadPayment $readMercadoPago,
+        ReadOrderSalesService    $service,
+        ReadPayment              $readMercadoPago,
         CreatePaymentsMskService $mskService,
-        StripeClient $client
+        StripeClient             $client
     ) {
         $this->setName($this->name);
         parent::__construct();

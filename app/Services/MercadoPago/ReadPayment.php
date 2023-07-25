@@ -3,10 +3,10 @@
 namespace App\Services\MercadoPago;
 
 use App\Dtos\MpSearchDto;
-use App\Interfaces\IReadPayment;
+use App\Interfaces\IRead;
 use App\Interfaces\ISearchDto;
 
-class ReadPayment implements IReadPayment
+class ReadPayment implements IRead
 {
     private RestApi $api;
 
@@ -21,5 +21,10 @@ class ReadPayment implements IReadPayment
             ->json();
 
         return new MpSearchDto($data);
+    }
+
+    public function findBy($data)
+    {
+        // TODO: Implement findBy() method.
     }
 }
