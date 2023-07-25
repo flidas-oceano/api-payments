@@ -318,7 +318,10 @@ class ZohoController extends Controller
 
     private function getIdentification($identification, $country)
     {
-        if ($country == "Chile" && strpos($identification, '-') == false) {
+
+        if ($country == "Chile" && strpos(strval($identification), '-') == false) {
+
+
             return substr(strval($identification), 0, -1) . '-' . substr(strval($identification), -1);
         }
 
