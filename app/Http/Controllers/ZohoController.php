@@ -245,7 +245,8 @@ class ZohoController extends Controller
 
     public function updateZohoStripe(UpdateContractZohoRequest $request)
     {
-        $identification = $request->country == "Chile" ? substr(strval($request->dni), 0, -1) . '-' . substr(strval($request->dni), -1) : strval($request->dni);
+        $identification = $this->getIdentification($request->dni, $request->country);
+
         $dataUpdate = [
             'Email' => $request->email,
             'Anticipo' => $request->installment_amount,
@@ -279,7 +280,7 @@ class ZohoController extends Controller
 
     public function updateZohoMP(UpdateContractZohoRequest $request)
     {
-        $identification = $request->country == "Chile" ? substr(strval($request->dni), 0, -1) . '-' . substr(strval($request->dni), -1) : strval($request->dni);
+        $identification = $this->getIdentification($request->dni, $request->country);
 
         $dataUpdate = [
             'Email' => $request->email,
@@ -313,6 +314,15 @@ class ZohoController extends Controller
             return response()->json($updateContract, 500);
         else
             return response()->json($updateContract);
+    }
+
+    private function getIdentification($identification, $country)
+    {
+        if ($country == "Chile" && strpos($identification, '-') == false) {
+            return substr(strval($identification), 0, -1) . '-' . substr(strval($identification), -1);
+        }
+
+        return strval($identification);
     }
 
     public function obtainData(Request $request)
@@ -783,8 +793,8 @@ class ZohoController extends Controller
         $leadData['Last_Name'] = $data["username"];
         $leadData['Phone'] = $data["telephone"];
         $leadData['Email'] = $data["email"];
-        $leadData['Fuente_del_Lead'] = [$data["source_lead"]]; 
-        $leadData['FUENTE'] = $data["source_lead"]; 
+        $leadData['Fuente_del_Lead'] = [$data["source_lead"]];
+        $leadData['FUENTE'] = $data["source_lead"];
         $leadData['Plataforma'] = 'Venta Presencial';
         $leadData['Lead_Status'] = 'Contacto urgente';
         $leadData['Pais'] = $data["country"];
