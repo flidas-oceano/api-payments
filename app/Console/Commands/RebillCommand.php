@@ -95,7 +95,7 @@ class RebillCommand extends Command
                     'payment_id' => $pay->getPaymentId(),
                     'pay_date' => $pay->getPayDate(),
                     'id' => $pay->getId(),
-                    'amount_charged' => (string)$pay->getAmountCharged(),
+                    'amount_charged' => (string) $pay->getAmountCharged(),
                     'origin' => $pay->getPaymentOrigin(),
                 ]);
                 $this->output->writeln("$i - saved in CRM");
@@ -138,30 +138,47 @@ class RebillCommand extends Command
      */
     public function getRebillPaymentsFromZohoOrders($listOrderSalesCrm): array
     {
+        $arrayReturn = [];
         /** @var ZCRMRecord $order */
         foreach ($listOrderSalesCrm as $order) {
             $subId = $this->getSubscriptionIdByZohoOrder($order);
             if ($subId) {
                 $subscriptionArray = $this->rebill->findById($subId);
-                $this->getRebillPaymentsFromSubArray($subscriptionArray);
-                dd($subscriptionArray);
+                if ($subscriptionArray) {
+                    $response = $this->getRebillPaymentsFromSubArray($subscriptionArray);
+                    $arrayReturn[] = [
+                        'order' => $order,
+                        'data' => $response,
+                    ];
+                }
             }
         }
+
+        return $arrayReturn;
     }
 
     public function getRebillPaymentsFromSubArray($subArray): array
     {
+        $response = [];
         foreach ($subArray['invoices'] as $invoice) {
-            dd($invoice['paidBags']);
+            foreach ($invoice['paidBags'] as $paidBag) {
+                $payment = $paidBag['payment'];
+                if ($payment['status'] == 'SUCCEEDED') {
+                    $payment['extra']['invoice_id'] = $invoice['id'];
+                    $payment['extra']['customer_id'] = $invoice['buyer']['customer']['id'];
+                    $payment['extra']['customer_email'] = $invoice['buyer']['customer']['userEmail'];
+                    $response[] = $payment;
+                }
+            }
         }
+
+        return $response;
     }
     private function getSubscriptionIdByZohoOrder(ZCRMRecord $order)
     {
         $subscription = $order->getFieldValue('mp_subscription_id');
         if (!$subscription) {
             $subscription = $order->getFieldValue('stripe_subscription_id');
-        } else {
-            dd("FAILED TO GET SUB_ID", $order);
         }
 
         return $subscription ?? false;
@@ -172,31 +189,31 @@ class RebillCommand extends Command
     public function payments2Dto($rebillPayments): array
     {
         $i=0;
-        $payments = [];dd('kkkkk',$rebillPayments);
-        foreach ($rebillPayments['data'] as $pay) {
-
+        $payments = [];
+        foreach ($rebillPayments as $pay) {
             $i++;
-            $invoiceNumber = $pay->getInvoiceNumber();
-            if (!$invoiceNumber) continue;
-            $invoice = $this->stripe->findInvoiceByInvoiceId($invoiceNumber);
-            $this->output->writeln("$i - PAID: " . $invoice->getNumberSoOm() . " " . $pay->getId(). ' - AMOUNT: '.$pay->getAmount());
-            $payments[] = new PaymentDto([
-                'number_so_om' => $invoice->getNumberSoOm(),
-                'payment_id' => $pay->getId(),
-                'pay_date' => $pay->getPayDate(),
-                'id' => $invoice->getInvoiceReference(),
-                'amount_charged' => $pay->getAmount(),
-                'sub_id' => $invoice->getSubscription(),
-                'charge_id' => $pay->getId(),
-                'contact_id' => $invoice->getCustomerId(),
-                'contract_id' => null,
-                'number_installment' => null,
-                'fee' => $pay->getAmount() ,
-                'payment_origin' => GatewayEnum::STRIPE,
-                'external_number' => $invoice->getNumberSoOm(),
-                'number_so' => null,
-                'payment_date' => $pay->getPayDate(),
-            ]);
+            /** @var ZCRMRecord $order */
+            $order = $pay['order'];
+            foreach ($pay['data'] as $payment) {
+                $payDate = substr($payment['createdAt'], 0, 10);
+                $payments[] = new PaymentDto([
+                    'id' => $payment['extra']['invoice_id'],
+                    'number_so_om' => $order->getFieldValue('otro_so'),
+                    'payment_id' => $payment['id'],
+                    'pay_date' => $payDate,
+                    'amount_charged' => $payment['amount'],
+                    'sub_id' => $this->getSubscriptionIdByZohoOrder($order),
+                    'charge_id' => $payment['id'],
+                    'contact_id' => $payment['extra']['customer_id'],
+                    'contract_id' => null,
+                    'number_installment' => null,
+                    'fee' => $payment['amount'],
+                    'payment_origin' => GatewayEnum::REBILL,
+                    'external_number' => $payment['extra']['invoice_id'],
+                    'number_so' => $order->getFieldValue('SO_Number'),
+                    'payment_date' => $payDate,
+                ]);
+            }
         }
 
         return $payments;

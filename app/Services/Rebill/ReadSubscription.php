@@ -20,9 +20,15 @@ class ReadSubscription implements IRead
      */
     public function findById($id, $country = "")
     {
-        $response = ($this->request->get('/v2/subscriptions/'.$id))->getBody()->getContents();
+        try {
+            $response = ($this->request->get('/v2/subscriptions/' . $id))->getBody()->getContents();
+            \Log::info("$id belongs to rebill!", []);
 
-        return json_decode($response, true);
+            return json_decode($response, true);
+        } catch (\Exception $e) {
+            \Log::debug("$id does not belong to rebill!", []);
+            return false;
+        }
     }
 
     public function findBy($data)

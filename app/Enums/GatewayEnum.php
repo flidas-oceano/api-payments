@@ -6,4 +6,6 @@ class GatewayEnum
 {
     const MP = 'Mercado Pago';
     const STRIPE = 'Stripe';
+
+    const REBILL = 'Rebill';
 }
