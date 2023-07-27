@@ -1444,7 +1444,7 @@ class CronosController extends Controller
                 }
 
                 //tax
-                $tax = intval($p['precio de lista'] - $p['descuento']) * 0.16;
+                $tax = (intval($p['precio de lista']) - intval($p['descuento'])) * 0.16;
 
                 $answer[] = array(
                     'Product Id' => $rec->getEntityId(),
