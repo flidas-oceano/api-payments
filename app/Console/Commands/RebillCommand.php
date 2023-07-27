@@ -139,19 +139,25 @@ class RebillCommand extends Command
     public function getRebillPaymentsFromZohoOrders($listOrderSalesCrm): array
     {
         $arrayReturn = [];
+        $i=1;
         /** @var ZCRMRecord $order */
         foreach ($listOrderSalesCrm as $order) {
+            $numSoOm = $order->getFieldValue('otro_so');
             $subId = $this->getSubscriptionIdByZohoOrder($order);
             if ($subId) {
                 $subscriptionArray = $this->rebill->findById($subId);
                 if ($subscriptionArray) {
+                    $this->output->writeln("$i - $numSoOm: Belongs to Rebill");
                     $response = $this->getRebillPaymentsFromSubArray($subscriptionArray);
                     $arrayReturn[] = [
                         'order' => $order,
                         'data' => $response,
                     ];
+                } else {
+                    $this->output->writeln("$i - $numSoOm: Does not belong to Rebill");
                 }
             }
+            $i++;
         }
 
         return $arrayReturn;

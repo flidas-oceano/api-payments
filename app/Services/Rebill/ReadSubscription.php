@@ -22,11 +22,9 @@ class ReadSubscription implements IRead
     {
         try {
             $response = ($this->request->get('/v2/subscriptions/' . $id))->getBody()->getContents();
-            \Log::info("$id belongs to rebill!", []);
 
             return json_decode($response, true);
         } catch (\Exception $e) {
-            \Log::debug("$id does not belong to rebill!", []);
             return false;
         }
     }
