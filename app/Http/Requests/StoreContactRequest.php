@@ -42,18 +42,18 @@ class StoreContactRequest extends FormRequest
     public function messages()
     {
         return [
-            "sex.required"=> "El campo sexo es obligatorio",
-            "date_of_birth.required"=> "El campo fecha de nacimiento es obligatorio",
-            "province_state.required"=> "El campo provincia/estado es obligatorio",
-            "postal_code.required"=> "El campo codigo postal es obligatorio",
-            "street.required"=> "El campo direccion es obligatorio",
-            "locality.required"=> "El campo localidad es obligatorio",
-            "idPurchaseProgress.required"=> "El id del progreso es obligatorio",
-            "step_number.required"=> "El numero del paso es obligatorio",
-            
-            "dni.required_if"=> "El campo dni es obligatorio",
+            "sex.required" => "El campo sexo es obligatorio",
+            "date_of_birth.required" => "El campo fecha de nacimiento es obligatorio",
+            "province_state.required" => "El campo provincia/estado es obligatorio",
+            "postal_code.required" => "El campo codigo postal es obligatorio",
+            "street.required" => "El campo direccion es obligatorio",
+            "locality.required" => "El campo localidad es obligatorio",
+            "idPurchaseProgress.required" => "El id del progreso es obligatorio",
+            "step_number.required" => "El numero del paso es obligatorio",
+
+            "dni.required_if" => "El campo dni es obligatorio",
             "rut.required_if" => "El campo rut es obligatorio",
-            "rut.regex" => "El campo rut debe tener un formato válido (ejemplo: 12345678-K)",
+
         ];
     }
     /**
@@ -64,20 +64,22 @@ class StoreContactRequest extends FormRequest
     public function rules()
     {
         return [
-            "sex"=> "required",
-            "date_of_birth"=> "required",
-            "province_state"=> "required",
+            "sex" => "required",
+            "date_of_birth" => "required",
+            "province_state" => "required",
             'postal_code' => 'required_unless:country,Chile',
-            "street"=> "required",
-            "locality"=> "required",
-            "idPurchaseProgress"=> "required",
-            "step_number"=> "required",
+            "street" => "required",
+            "country" => "required",
+            "locality" => "required",
+            "idPurchaseProgress" => "required",
+            "step_number" => "required",
 
             //identificacion
-            'rut' => 'required_if:country,Chile|regex:/^\d{7,8}-[0-9A-Za-z]$/i',
+            'rut' => 'required_if:country,Chile',
             'rfc' => 'required_if:country,México',
             'mui' => 'required_if:country,Ecuador',
             'dni' => 'required_if:country,Argentina',
+
 
         ];
     }
