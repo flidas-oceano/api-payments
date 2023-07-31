@@ -1,0 +1,110 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+
+class ExcelController extends Controller
+{
+    public function exportExcel(Request $request)
+    {
+        try{
+            // Crear un nuevo objeto de hoja de cálculo
+            $spreadsheet = new Spreadsheet();
+            
+            // Obtener la hoja activa
+            $sheet = $spreadsheet->getActiveSheet();
+            
+            // Datos que deseas exportar, por ejemplo, de una base de datos
+            $data = [
+                ['CMD_TRANSMONTO','MONTO'           ,'COMENTARIOS','LOTE'       ,'NUMERO_CONTROL','NUMERO_CONTRATO'     ,'NUMERO_TARJETA'           ,'FECHA_EXP'],
+                ['AUTH'          ,$request->amount  ,'CARGO UNICO','Tomas Gomez',1               ,$request->so_contract ,$request->n_ro_de_tarjeta  ,date('m/y')],
+            ];
+
+            // Escribir los datos en la hoja de cálculo
+            foreach ($data as $rowIndex => $rowData) {
+                foreach ($rowData as $columnIndex => $value) {
+                    $columnLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($columnIndex + 1);
+                    $sheet->getCell($columnLetter . ($rowIndex + 1))->setValueExplicit($value, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                }
+            }
+
+            // Ajustar el ancho de las columnas para que se ajusten automáticamente al contenido
+            foreach (range('A', $sheet->getHighestColumn()) as $columnLetter) {
+                $sheet->getColumnDimension($columnLetter)->setAutoSize(true);
+            }
+
+            // Especificar la ubicación donde se guardará el archivo Excel en el directorio "storage"
+            $filePath = storage_path('app/public/' . $request->so_contract . '.xlsx');
+
+            // Guardar el archivo Excel
+            $writer = new Xlsx($spreadsheet);
+            $writer->save($filePath);
+      
+            // Devolver el enlace para descargar el archivo
+            return response()->json([
+                'message' => 'Archivo Excel creado exitosamente',
+                'download_link' => url('api/download-excel/' . $request->so_contract),
+            ]);
+
+        }catch (\Exception $e) {
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'trace' => $e->getTraceAsString(),
+            ];
+
+            Log::error("Error en ExcelController-exportExcel: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+
+            // Devolver una respuesta de error apropiada en caso de excepción
+            return response()->json(['error' => 'Error al generar el archivo Excel'], 500);
+        }
+    }
+    
+    public function downloadExcel($filename)
+    {
+        try {
+             // Verificar que el archivo exista en el directorio "storage"
+        if (Storage::exists('public/' . $filename . '.xlsx')) {
+            // Obtener la ruta completa del archivo
+            $filePath = storage_path('app/public/' . $filename . '.xlsx');
+
+            // Devolver el archivo como una descarga en la respuesta HTTP
+            $headers = [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '.xlsx"',
+            ];
+            $response = new BinaryFileResponse($filePath, 200, $headers, true, ResponseHeaderBag::DISPOSITION_ATTACHMENT);
+
+            // Eliminar el archivo después de que se haya descargado
+            $response->deleteFileAfterSend(true);
+
+            return $response;
+        } else {
+            abort(404); // El archivo no existe, devuelve un error 404
+        }
+        } catch (\Exception $e) {
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'trace' => $e->getTraceAsString(),
+            ];
+
+            Log::error("Error en ExcelController-downloadExcel: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+
+            // Devolver una respuesta de error apropiada en caso de excepción
+            return response()->json(['error' => 'Error al descargar el excel'], 500);
+        }
+    }
+
+}

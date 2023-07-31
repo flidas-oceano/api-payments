@@ -1,11 +1,12 @@
 <?php
 
-use App\Http\Controllers\{PassportAuthController, RebillController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController};
+use App\Http\Controllers\{ExcelController, PassportAuthController, RebillController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController};
 use App\Http\Controllers\MercadoPagoController;
 use App\Http\Controllers\PaymentLinkController;
 use App\Http\Controllers\Webhooks\WebhookGatewayController;
 use App\Http\Controllers\Webhooks\CrmOrderSalesStep5ChargeDetailsController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 
 // Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //     return $request->user();
@@ -112,3 +113,7 @@ Route::prefix("/payments_msk")->group(function () {
 Route::get("/mp/searchPaymentApprove/{so}", [MercadoPagoPaymentController::class, 'searchPaymentApprove']);
 
 Route::get('/getPaymentsStatusDistintContratoEfectivo', [PaymentLinkController::class, 'getPaymentsStatusDistintContratoEfectivo']);
+
+
+Route::post('/ctc/exportExcel', [ExcelController::class, 'exportExcel']);
+Route::get('/download-excel/{filename}', [ExcelController::class, 'downloadExcel']);
