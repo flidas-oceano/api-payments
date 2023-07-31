@@ -21,7 +21,8 @@
         "rebillto/sdk-php": "^2.0",
         "stripe/stripe-php": "^10.0",
         "webpatser/laravel-countries": "^1.5",
-        "zohocrm/php-sdk-archive": "^2.1"
+        "zohocrm/php-sdk-archive": "^2.1",
+        "ext-json": "*"
     },
     "require-dev": {
         "facade/ignition": "^2.5",

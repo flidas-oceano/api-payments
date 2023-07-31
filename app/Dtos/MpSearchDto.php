@@ -2,7 +2,9 @@
 
 namespace App\Dtos;
 
-class MpSearchDto
+use App\Interfaces\ISearchDto;
+
+class MpSearchDto implements ISearchDto
 {
     protected ?array $results;
     protected ?int $total;
