@@ -4,6 +4,8 @@ namespace App\Console;
 
 use App\Console\Commands\ConnectOrderSalesWithCrmCommand;
 use App\Console\Commands\GitPullAndCleanLaravelLogs;
+use App\Console\Commands\RebillCommand;
+use App\Console\Commands\StripeCommand;
 use App\Http\Controllers\CronosController;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Console\Scheduling\Schedule;
@@ -15,6 +17,8 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         GitPullAndCleanLaravelLogs::class,
         ConnectOrderSalesWithCrmCommand::class,
+        StripeCommand::class,
+        RebillCommand::class,
     ];
 
     /**

@@ -2,7 +2,7 @@
 
 namespace App\Interfaces;
 
-interface ICrmClient
+interface IClient
 {
     public function getClient();
 }
