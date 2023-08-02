@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -15,6 +16,19 @@ class ExcelController extends Controller
     public function exportExcel(Request $request)
     {
         try{
+            // Validar los campos del request
+            $validator = Validator::make($request->all(), [
+                'amount' => 'required',
+                'contact_name' => 'required',
+                'so_contract' => 'required',
+                'n_ro_de_tarjeta' => 'required',
+            ]);
+
+            // Comprobar si la validación falla
+            if ($validator->fails()) {
+                return response()->json(['error' => 'Los campos requeridos no están presentes'], 400);
+            }
+
             // Crear un nuevo objeto de hoja de cálculo
             $spreadsheet = new Spreadsheet();
             
@@ -23,8 +37,8 @@ class ExcelController extends Controller
             
             // Datos que deseas exportar, por ejemplo, de una base de datos
             $data = [
-                ['CMD_TRANSMONTO','MONTO'           ,'COMENTARIOS','LOTE'       ,'NUMERO_CONTROL','NUMERO_CONTRATO'     ,'NUMERO_TARJETA'           ,'FECHA_EXP'],
-                ['AUTH'          ,$request->amount  ,'CARGO UNICO','Tomas Gomez',1               ,$request->so_contract ,$request->n_ro_de_tarjeta  ,date('m/y')],
+                ['CMD_TRANSMONTO','MONTO'           ,'COMENTARIOS','LOTE'                   ,'NUMERO_CONTROL','NUMERO_CONTRATO'     ,'NUMERO_TARJETA'           ,'FECHA_EXP'],
+                ['AUTH'          ,$request->amount  ,'CARGO UNICO',$request->contact_name   ,1               ,$request->so_contract ,$request->n_ro_de_tarjeta  ,date('m/y')],
             ];
 
             // Escribir los datos en la hoja de cálculo
@@ -73,24 +87,24 @@ class ExcelController extends Controller
     {
         try {
              // Verificar que el archivo exista en el directorio "storage"
-        if (Storage::exists('public/' . $filename . '.xlsx')) {
-            // Obtener la ruta completa del archivo
-            $filePath = storage_path('app/public/' . $filename . '.xlsx');
+            if (Storage::exists('public/' . $filename . '.xlsx')) {
+                // Obtener la ruta completa del archivo
+                $filePath = storage_path('app/public/' . $filename . '.xlsx');
 
-            // Devolver el archivo como una descarga en la respuesta HTTP
-            $headers = [
-                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '.xlsx"',
-            ];
-            $response = new BinaryFileResponse($filePath, 200, $headers, true, ResponseHeaderBag::DISPOSITION_ATTACHMENT);
+                // Devolver el archivo como una descarga en la respuesta HTTP
+                $headers = [
+                    'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'Content-Disposition' => 'attachment; filename="' . $filename . '.xlsx"',
+                ];
+                $response = new BinaryFileResponse($filePath, 200, $headers, true, ResponseHeaderBag::DISPOSITION_ATTACHMENT);
 
-            // Eliminar el archivo después de que se haya descargado
-            $response->deleteFileAfterSend(true);
+                // Eliminar el archivo después de que se haya descargado
+                $response->deleteFileAfterSend(true);
 
-            return $response;
-        } else {
-            abort(404); // El archivo no existe, devuelve un error 404
-        }
+                return $response;
+            } else {
+                abort(404); // El archivo no existe, devuelve un error 404
+            }
         } catch (\Exception $e) {
             $err = [
                 'message' => $e->getMessage(),
@@ -103,7 +117,7 @@ class ExcelController extends Controller
             Log::error("Error en ExcelController-downloadExcel: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
 
             // Devolver una respuesta de error apropiada en caso de excepción
-            return response()->json(['error' => 'Error al descargar el excel'], 500);
+            return response()->json(['error' => 'Error al descargar el excel, intente generarlo otra vez. '], 500);
         }
     }
 
