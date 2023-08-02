@@ -26,7 +26,11 @@ class ExcelController extends Controller
 
             // Comprobar si la validación falla
             if ($validator->fails()) {
-                return response()->json(['error' => 'Los campos requeridos no están presentes'], 400);
+             $errors = $validator->errors();
+                return response()->json([
+                    'error' => 'Los campos requeridos no están presentes',
+                    'error' => $errors
+                ], 400);
             }
 
             // Crear un nuevo objeto de hoja de cálculo
@@ -80,6 +84,84 @@ class ExcelController extends Controller
 
             // Devolver una respuesta de error apropiada en caso de excepción
             return response()->json(['error' => 'Error al generar el archivo Excel'], 500);
+        }
+    }
+
+    public function exportExcelSuscription(Request $request)
+    {
+        try{
+            // Validar los campos del request
+            $validator = Validator::make($request->all(), [
+                'so_contract' => 'required',
+                'contact_name' => 'required',
+                'card_number' => 'required',
+                'amounts' => 'required',
+                'quotes' => 'required'
+            ]);
+
+            // Comprobar si la validación falla
+            if ($validator->fails()) {
+                $errors = $validator->errors();
+                return response()->json([
+                    'error' => 'Los campos requeridos no están presentes',
+                    'error' => $errors
+                ], 400);
+            }
+
+            // Crear un nuevo objeto de hoja de cálculo
+            $spreadsheet = new Spreadsheet();
+            
+            // Obtener la hoja activa
+            $sheet = $spreadsheet->getActiveSheet();
+            
+            // Datos que deseas exportar, por ejemplo, de una base de datos
+            $data = [
+                ['CMD_TRANSMONTO','MONTO'           ,'COMENTARIOS'      ,'LOTE'                 ,'NUMERO_CONTROL'   ,'NUMERO_CONTRATO'     ,'NUMERO_TARJETA'       ,'NUM_PAGOS'     ,'FECHA_INICIO'    ,'FRECUENCIA'  ,'HORA'],
+                ['AUTH'          ,$request->amounts ,'CARGO PROGRAMADO' ,$request->contact_name ,1                  ,$request->so_contract ,$request->card_number  ,$request->quotes,'28/'.date('n/Y') ,'M'           ,'10:00'],
+            ];
+
+            // Escribir los datos en la hoja de cálculo
+            foreach ($data as $rowIndex => $rowData) {
+                foreach ($rowData as $columnIndex => $value) {
+                    $columnLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($columnIndex + 1);
+                    $sheet->getCell($columnLetter . ($rowIndex + 1))->setValueExplicit($value, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                }
+            }
+
+            // Ajustar el ancho de las columnas para que se ajusten automáticamente al contenido
+            foreach (range('A', $sheet->getHighestColumn()) as $columnLetter) {
+                $sheet->getColumnDimension($columnLetter)->setAutoSize(true);
+            }
+
+            // Especificar la ubicación donde se guardará el archivo Excel en el directorio "storage"
+            $filePath = storage_path('app/public/' . $request->so_contract . '.xlsx');
+
+            // Guardar el archivo Excel
+            $writer = new Xlsx($spreadsheet);
+            $writer->save($filePath);
+      
+            // Devolver el enlace para descargar el archivo
+            return response()->json([
+                'message' => 'Archivo Excel creado exitosamente',
+                'download_link' => url('api/download-excel/' . $request->so_contract),
+            ]);
+
+        }catch (\Exception $e) {
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'trace' => $e->getTraceAsString(),
+            ];
+
+            Log::error("Error en ExcelController-exportExcel: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+
+            // Devolver una respuesta de error apropiada en caso de excepción
+            return response()->json([
+                'error' => 'Error al generar el archivo Excel',
+                'message' => $e->getMessage()
+            ], 500);
         }
     }
     
