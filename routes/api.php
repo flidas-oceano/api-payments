@@ -119,3 +119,5 @@ Route::get('/getPaymentsStatusDistintContratoEfectivo', [PaymentLinkController::
 
 Route::post('/ctc/exportExcel', [ExcelController::class, 'exportExcel']);
 Route::get('/download-excel/{filename}', [ExcelController::class, 'downloadExcel']);
+Route::post('/ctc/exportExcelSuscription', [ExcelController::class, 'exportExcelSuscription']);
+
