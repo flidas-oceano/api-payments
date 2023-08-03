@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -22,6 +23,7 @@ class ExcelController extends Controller
                 'contact_name' => 'required',
                 'so_contract' => 'required',
                 'n_ro_de_tarjeta' => 'required',
+                'card_v' => 'required'
             ]);
 
             // Comprobar si la validación falla
@@ -39,10 +41,15 @@ class ExcelController extends Controller
             // Obtener la hoja activa
             $sheet = $spreadsheet->getActiveSheet();
             
+            // Convertimos el string en una fecha objeto usando DateTime::createFromFormat
+            $fecha_datetime = DateTime::createFromFormat('m/y', $request->card_v);
+            // Formateamos la fecha en el formato deseado 'm/y'
+            $fecha_formateada = $fecha_datetime->format('m/y');
+
             // Datos que deseas exportar, por ejemplo, de una base de datos
             $data = [
                 ['CMD_TRANSMONTO','MONTO'           ,'COMENTARIOS','LOTE'                   ,'NUMERO_CONTROL','NUMERO_CONTRATO'     ,'NUMERO_TARJETA'           ,'FECHA_EXP'],
-                ['AUTH'          ,$request->amount  ,'CARGO UNICO',$request->contact_name   ,1               ,$request->so_contract ,$request->n_ro_de_tarjeta  ,date('m/y')],
+                ['AUTH'          ,$request->amount  ,'CARGO UNICO',$request->contact_name   ,1               ,$request->so_contract ,$request->n_ro_de_tarjeta  ,$fecha_formateada],
             ];
 
             // Escribir los datos en la hoja de cálculo
