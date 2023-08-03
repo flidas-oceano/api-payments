@@ -315,6 +315,45 @@ class ZohoController extends Controller
         else
             return response()->json($updateContract);
     }
+     
+    public function updateZohoCTC(UpdateContractZohoRequest $request)
+    {
+        $identification = $this->getIdentification($request->dni, $request->country);
+
+        $dataUpdate = [
+            'Email' => $request->email,
+            'Anticipo' => $request->installment_amount,
+            'Saldo' => $request->amount - $request->installment_amount,
+            'Cantidad' => $request->installments,
+            //Nro de cuotas
+            'Monto_de_cuotas_restantes' => $request->is_advanceSuscription ? $request->payPerMonthAdvance : $request->installment_amount,
+            //Costo de cada cuota
+            'Cuotas_restantes_sin_anticipo' => $request->installments - 1,
+            // 'DNI' => $request->dni, //este no estaba definido
+            //RFC_Solo_MX
+            'Fecha_de_Vto' => date('Y-m-d'),
+            'Status' => 'Contrato Efectivo',
+            'Modalidad_de_pago_del_Anticipo' => 'CTC',
+            'Medio_de_Pago' => 'CTC',
+            'Es_Suscri' => boolval($request->is_suscri),
+            'Suscripcion_con_Parcialidad' => boolval($request->is_advanceSuscription),
+            'L_nea_nica_6' => $request->fullname,
+            'Billing_Street' => $request->address,
+            'L_nea_nica_3' => $identification,
+            'Tel_fono_Facturacion' => $request->phone,
+            'Discount' => abs($request->adjustment),
+            //datos de folio
+            'folio_suscripcion' => $request->folio_suscripcion,
+            'folio_pago' => $request->folio_pago
+        ];
+
+        $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
+
+        if ($updateContract['result'] == 'error')
+            return response()->json($updateContract, 500);
+        else
+            return response()->json($updateContract);
+    }
 
     private function getIdentification($identification, $country)
     {
