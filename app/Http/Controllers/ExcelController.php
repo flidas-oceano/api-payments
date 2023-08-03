@@ -103,7 +103,8 @@ class ExcelController extends Controller
                 'contact_name' => 'required',
                 'card_number' => 'required',
                 'amounts' => 'required',
-                'quotes' => 'required'
+                'quotes' => 'required',
+                'card_v' => 'required'
             ]);
 
             // Comprobar si la validación falla
@@ -121,10 +122,16 @@ class ExcelController extends Controller
             // Obtener la hoja activa
             $sheet = $spreadsheet->getActiveSheet();
             
+            // Convertimos el string en una fecha objeto usando DateTime::createFromFormat
+            // $fecha_datetime = DateTime::createFromFormat('d/m/y', '08/05/25');
+            $fecha_datetime = DateTime::createFromFormat('d/m/y', $request->card_v);
+            // Formateamos la fecha en el formato deseado 'm/y'
+            $fecha_formateada = $fecha_datetime->format('d/m/y');
+
             // Datos que deseas exportar, por ejemplo, de una base de datos
             $data = [
                 ['CMD_TRANSMONTO','MONTO'           ,'COMENTARIOS'      ,'LOTE'                 ,'NUMERO_CONTROL'   ,'NUMERO_CONTRATO'     ,'NUMERO_TARJETA'       ,'NUM_PAGOS'     ,'FECHA_INICIO'    ,'FRECUENCIA'  ,'HORA'],
-                ['AUTH'          ,$request->amounts ,'CARGO PROGRAMADO' ,$request->contact_name ,1                  ,$request->so_contract ,$request->card_number  ,$request->quotes,'28/'.date('n/Y') ,'M'           ,'10:00'],
+                ['AUTH'          ,$request->amounts ,'CARGO PROGRAMADO' ,$request->contact_name ,1                  ,$request->so_contract ,$request->card_number  ,$request->quotes,$fecha_formateada ,'M'           ,'10:00'],
             ];
 
             // Escribir los datos en la hoja de cálculo
