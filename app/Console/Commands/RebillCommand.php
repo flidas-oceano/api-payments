@@ -24,9 +24,9 @@ use zcrmsdk\oauth\exception\ZohoOAuthException;
 
 class RebillCommand extends Command
 {
-    protected string $name = 'rebill';
+    protected string $name = 'sales-order:rebill';
 
-    protected string $signature = 'rebill';
+    protected string $signature = 'sales-order:rebill';
 
     protected string $description = 'Connect with zoho crm and rebill, to update recent payments';
 
@@ -129,6 +129,7 @@ class RebillCommand extends Command
     {
         $limit = $input->getArgument('limit');
         $page = $input->getArgument('page');
+        \Log::info("RebillCommand", [$limit, $page]);
 
         return $this->service->listOrderSalesCrm($page, $limit);
     }

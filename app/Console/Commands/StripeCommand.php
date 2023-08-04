@@ -20,9 +20,9 @@ use zcrmsdk\oauth\exception\ZohoOAuthException;
 
 class StripeCommand extends Command
 {
-    protected string $name = 'stripe';
+    protected string $name = 'sales-order:stripe';
 
-    protected string $signature = 'stripe';
+    protected string $signature = 'sales-order:stripe';
 
     protected string $description = 'Connect with zoho crm and stripe, to update recent payments';
 
@@ -58,6 +58,7 @@ class StripeCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {
+            \Log::info("StripeCommand", []);
             $this->output = $output;
             $this->output->writeln(" Starting Stripe gateway retrieve data, please wait...");
             $paymentIntents = $this->retrievePaymentsFromGateway();
