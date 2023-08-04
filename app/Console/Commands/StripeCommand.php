@@ -58,6 +58,7 @@ class StripeCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {
+            \Log::info("StripeCommand", []);
             $this->output = $output;
             $this->output->writeln(" Starting Stripe gateway retrieve data, please wait...");
             $paymentIntents = $this->retrievePaymentsFromGateway();

@@ -54,6 +54,7 @@ class MpCommand extends Command
         try {
             $limit = $input->getArgument('limit');
             $page = $input->getArgument('page');
+            \Log::info("MpCommand", [$limit, $page]);
             $output->writeln(" - Executing " . __CLASS__ . " " . $page . " " . $limit);
             $result = $this->service->listOrderSalesCrm($page, $limit);
             if (!(sizeof($result) > 0)) {

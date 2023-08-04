@@ -129,6 +129,7 @@ class RebillCommand extends Command
     {
         $limit = $input->getArgument('limit');
         $page = $input->getArgument('page');
+        \Log::info("RebillCommand", [$limit, $page]);
 
         return $this->service->listOrderSalesCrm($page, $limit);
     }
