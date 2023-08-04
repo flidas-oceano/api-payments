@@ -20,9 +20,9 @@ use zcrmsdk\oauth\exception\ZohoOAuthException;
 
 class StripeCommand extends Command
 {
-    protected string $name = 'stripe';
+    protected string $name = 'sales-order:stripe';
 
-    protected string $signature = 'stripe';
+    protected string $signature = 'sales-order:stripe';
 
     protected string $description = 'Connect with zoho crm and stripe, to update recent payments';
 

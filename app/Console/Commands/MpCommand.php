@@ -16,11 +16,11 @@ use Symfony\Component\Console\Input\InputInterface;
 use App\Services\Webhooks\SaveWebhookZohoCrmService;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class ConnectOrderSalesWithCrmCommand extends Command
+class MpCommand extends Command
 {
-    protected string $name = 'sales-order:crm {limit=10&page=1}';
+    protected string $name = 'sales-order:mp {limit=10&page=1}';
 
-    protected string $signature = 'sales-order:crm {limit=10&page=1}';
+    protected string $signature = 'sales-order:mp {limit=10&page=1}';
 
     protected string $description = 'Connect with zoho crm and mercado pago, to update recent payments';
 
