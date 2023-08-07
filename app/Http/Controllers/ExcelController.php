@@ -16,7 +16,7 @@ class ExcelController extends Controller
 {
     public function exportExcel(Request $request)
     {
-        try{
+        try {
             // Validar los campos del request
             $validator = Validator::make($request->all(), [
                 'amount' => 'required',
@@ -28,7 +28,7 @@ class ExcelController extends Controller
 
             // Comprobar si la validación falla
             if ($validator->fails()) {
-             $errors = $validator->errors();
+                $errors = $validator->errors();
                 return response()->json([
                     'error' => 'Los campos requeridos no están presentes',
                     'error' => $errors
@@ -37,10 +37,10 @@ class ExcelController extends Controller
 
             // Crear un nuevo objeto de hoja de cálculo
             $spreadsheet = new Spreadsheet();
-            
+
             // Obtener la hoja activa
             $sheet = $spreadsheet->getActiveSheet();
-            
+
             // Convertimos el string en una fecha objeto usando DateTime::createFromFormat
             $fecha_datetime = DateTime::createFromFormat('m/y', $request->card_v);
             // Formateamos la fecha en el formato deseado 'm/y'
@@ -48,8 +48,8 @@ class ExcelController extends Controller
 
             // Datos que deseas exportar, por ejemplo, de una base de datos
             $data = [
-                ['CMD_TRANSMONTO','MONTO'           ,'COMENTARIOS','LOTE'                   ,'NUMERO_CONTROL','NUMERO_CONTRATO'     ,'NUMERO_TARJETA'           ,'FECHA_EXP'],
-                ['AUTH'          ,$request->amount  ,'CARGO UNICO',$request->contact_name   ,1               ,$request->so_contract ,$request->n_ro_de_tarjeta  ,$fecha_formateada],
+                ['CMD_TRANSMONTO', 'MONTO', 'COMENTARIOS', 'LOTE', 'NUMERO_CONTROL', 'NUMERO_CONTRATO', 'NUMERO_TARJETA', 'FECHA_EXP'],
+                ['AUTH', $request->amount, 'CARGO UNICO', $request->contact_name, 1, $request->so_contract, $request->n_ro_de_tarjeta, $fecha_formateada],
             ];
 
             // Escribir los datos en la hoja de cálculo
@@ -71,14 +71,14 @@ class ExcelController extends Controller
             // Guardar el archivo Excel
             $writer = new Xlsx($spreadsheet);
             $writer->save($filePath);
-      
+
             // Devolver el enlace para descargar el archivo
             return response()->json([
                 'message' => 'Archivo Excel creado exitosamente',
                 'download_link' => url('api/download-excel/' . $request->so_contract),
             ]);
 
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             $err = [
                 'message' => $e->getMessage(),
                 'exception' => get_class($e),
@@ -96,7 +96,7 @@ class ExcelController extends Controller
 
     public function exportExcelSuscription(Request $request)
     {
-        try{
+        try {
             // Validar los campos del request
             $validator = Validator::make($request->all(), [
                 'so_contract' => 'required',
@@ -112,26 +112,21 @@ class ExcelController extends Controller
                 $errors = $validator->errors();
                 return response()->json([
                     'error' => 'Los campos requeridos no están presentes',
-                    'error' => $errors
+                    'errors' => $errors
                 ], 400);
             }
 
             // Crear un nuevo objeto de hoja de cálculo
             $spreadsheet = new Spreadsheet();
-            
+
             // Obtener la hoja activa
             $sheet = $spreadsheet->getActiveSheet();
-            
-            // Convertimos el string en una fecha objeto usando DateTime::createFromFormat
-            // $fecha_datetime = DateTime::createFromFormat('d/m/y', '08/05/25');
-            $fecha_datetime = DateTime::createFromFormat('d/m/y', $request->card_v);
-            // Formateamos la fecha en el formato deseado 'm/y'
-            $fecha_formateada = $fecha_datetime->format('d/m/y');
+
 
             // Datos que deseas exportar, por ejemplo, de una base de datos
             $data = [
-                ['CMD_TRANSMONTO','MONTO'           ,'COMENTARIOS'      ,'LOTE'                 ,'NUMERO_CONTROL'   ,'NUMERO_CONTRATO'     ,'NUMERO_TARJETA'       ,'NUM_PAGOS'     ,'FECHA_INICIO'    ,'FRECUENCIA'  ,'HORA'],
-                ['AUTH'          ,$request->amounts ,'CARGO PROGRAMADO' ,$request->contact_name ,1                  ,$request->so_contract ,$request->card_number  ,$request->quotes,$fecha_formateada ,'M'           ,'10:00'],
+                ['CMD_TRANSMONTO', 'MONTO', 'COMENTARIOS', 'LOTE', 'NUMERO_CONTROL', 'NUMERO_CONTRATO', 'NUMERO_TARJETA', 'NUM_PAGOS', 'FECHA_INICIO', 'FRECUENCIA', 'HORA'],
+                ['AUTH', $request->amounts, 'CARGO PROGRAMADO', $request->contact_name, 1, $request->so_contract, $request->card_number, $request->quotes, $request->card_v, 'M', '10:00'],
             ];
 
             // Escribir los datos en la hoja de cálculo
@@ -153,14 +148,14 @@ class ExcelController extends Controller
             // Guardar el archivo Excel
             $writer = new Xlsx($spreadsheet);
             $writer->save($filePath);
-      
+
             // Devolver el enlace para descargar el archivo
             return response()->json([
                 'message' => 'Archivo Excel creado exitosamente',
                 'download_link' => url('api/download-excel/' . $request->so_contract),
             ]);
 
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             $err = [
                 'message' => $e->getMessage(),
                 'exception' => get_class($e),
@@ -178,11 +173,11 @@ class ExcelController extends Controller
             ], 500);
         }
     }
-    
+
     public function downloadExcel($filename)
     {
         try {
-             // Verificar que el archivo exista en el directorio "storage"
+            // Verificar que el archivo exista en el directorio "storage"
             if (Storage::exists('public/' . $filename . '.xlsx')) {
                 // Obtener la ruta completa del archivo
                 $filePath = storage_path('app/public/' . $filename . '.xlsx');
