@@ -86,6 +86,7 @@ class RebillCommand extends Command
     private function addPayments2Crm(array $payments)
     {
         $i=1;
+        $payments = array_reverse($payments);
         /** @var PaymentDto $pay */
         foreach ($payments as $pay) {
             try {
