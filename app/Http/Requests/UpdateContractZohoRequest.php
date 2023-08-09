@@ -38,9 +38,6 @@ class UpdateContractZohoRequest extends FormRequest
             'fullname' => 'required',
             'is_suscri' => 'required',
             'country' => 'required',
-            'folio_suscripcion' => 'required',
-            'folio_pago' => 'required',
-            
         ];
     }
 
