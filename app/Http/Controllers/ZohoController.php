@@ -315,9 +315,15 @@ class ZohoController extends Controller
         else
             return response()->json($updateContract);
     }
-     
+
     public function updateZohoCTC(UpdateContractZohoRequest $request)
     {
+
+        $request->validate([
+            'folio_pago' => 'required',
+            'folio_suscripcion' => 'required',
+        ]);
+
         $identification = $this->getIdentification($request->dni, $request->country);
 
         $dataUpdate = [
