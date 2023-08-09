@@ -75,7 +75,7 @@ class ExcelController extends Controller
             // Devolver el enlace para descargar el archivo
             return response()->json([
                 'message' => 'Archivo Excel creado exitosamente',
-                'download_link' => url('api/download-excel/' . $request->so_contract),
+                'download_link' => '/api/download-excel/' . $request->so_contract,
             ]);
 
         } catch (\Exception $e) {
@@ -152,7 +152,7 @@ class ExcelController extends Controller
             // Devolver el enlace para descargar el archivo
             return response()->json([
                 'message' => 'Archivo Excel creado exitosamente',
-                'download_link' => url('api/download-excel/' . $request->so_contract),
+                'download_link' => '/api/download-excel/' . $request->so_contract,
             ]);
 
         } catch (\Exception $e) {
