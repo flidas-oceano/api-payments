@@ -320,11 +320,10 @@ class ZohoController extends Controller
     {
 
         $request->validate([
-            'folio_pago' => 'required',
-            'folio_suscripcion' => 'required',
+            'folio_pago' => 'required'
         ]);
 
-        $identification = $this->getIdentification($request->dni, $request->country);
+        $identification = $request->dni;
 
         $dataUpdate = [
             'Email' => $request->email,
@@ -349,7 +348,7 @@ class ZohoController extends Controller
             'Tel_fono_Facturacion' => $request->phone,
             'Discount' => abs($request->adjustment),
             //datos de folio
-            'folio_suscripcion' => $request->folio_suscripcion,
+            'folio_suscripcion' => $request->subscriptionId,
             'folio_pago' => $request->folio_pago
         ];
 
