@@ -767,22 +767,10 @@ class CronosController extends Controller
                 $pack['contrato']['base'] = $pack['contrato']['pais'];
         }
 
-        if ($pack['contrato']['pais'] == 'Chile' && $pack['contrato']['stripe_subscription_id'] != '' && $pack['contrato']['medio de pago de cuotas restantes'] == 'Stripe') {
-            $pack['contrato']['base'] = 'LATAM';
-        }
-
-
         if ($pack['contrato']['pais'] == 'Costa Rica') {
             if ($pack['contrato']['propietario de contrato'] == '270006 - Kelyn Lorena Isaza') {
                 $pack['contrato']['propietario de contrato'] = '270007 - Kelyn Lorena Isaza';
             }
-        }
-
-
-        if ($pack['contrato']['pais'] == 'Ecuador' && !$pack['contrato']['es ecommerce']) {
-            $pack['contacto']['cod profesion o estudio'] = $this->tableCodContact($pack['contacto']['profesion o estudio'], 'prof');
-            $pack['contacto']['cod relacion laboral'] = $this->tableCodContact($pack['contacto']['relacion laboral'], 'rel');
-            $pack['contacto']['cod especialidad'] = $this->tableCodContact($pack['contacto']['especialidad'], 'espec');
         }
 
 
