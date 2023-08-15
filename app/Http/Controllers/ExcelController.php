@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -122,11 +123,17 @@ class ExcelController extends Controller
             // Obtener la hoja activa
             $sheet = $spreadsheet->getActiveSheet();
 
+            // $fechaActual = Carbon::now()->copy()->addDays(16); // 31-08-2023
+            $fechaActual = Carbon::now();
+            $fechaInicioCobro = $fechaActual->addMonth()->format('d-m-Y');
+            //si tengo una fecha en 31 pasa a
+            // fecha siguiente: 01/10/2023
+            // se salta un mes
 
             // Datos que deseas exportar, por ejemplo, de una base de datos
             $data = [
-                ['CMD_TRANSMONTO', 'MONTO', 'COMENTARIOS', 'LOTE', 'NUMERO_CONTROL', 'NUMERO_CONTRATO', 'NUMERO_TARJETA', 'NUM_PAGOS', 'FECHA_INICIO', 'FRECUENCIA', 'HORA'],
-                ['AUTH', $request->amounts, 'CARGO PROGRAMADO', $request->contact_name, 1, $request->so_contract, $request->card_number, $request->quotes, $request->card_v, 'M', '10:00'],
+                ['CMD_TRANSMONTO','MONTO'           ,'COMENTARIOS'      ,'LOTE'                 ,'NUMERO_CONTROL'   ,'NUMERO_CONTRATO'     ,'NUMERO_TARJETA'       ,'NUM_PAGOS'     ,'FECHA_INICIO'    ,'FRECUENCIA'  ,'HORA'],
+                ['AUTH'          ,$request->amounts ,'CARGO PROGRAMADO' ,$request->contact_name ,1                  ,$request->so_contract ,$request->card_number  ,$request->quotes,$fechaInicioCobro ,'M'           ,'10:00'],
             ];
 
             // Escribir los datos en la hoja de cálculo
