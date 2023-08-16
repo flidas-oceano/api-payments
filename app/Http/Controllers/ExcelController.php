@@ -43,7 +43,7 @@ class ExcelController extends Controller
             $sheet = $spreadsheet->getActiveSheet();
 
             // Convertimos el string en una fecha objeto usando DateTime::createFromFormat
-            $fecha_datetime = DateTime::createFromFormat('m/y', $request->card_v);
+            $fecha_datetime = DateTime::createFromFormat('m/y', $request->card_v)->modify('+1 month');
             // Formateamos la fecha en el formato deseado 'm/y'
             $fecha_formateada = $fecha_datetime->format('m/y');
 
@@ -132,8 +132,8 @@ class ExcelController extends Controller
 
             // Datos que deseas exportar, por ejemplo, de una base de datos
             $data = [
-                ['CMD_TRANSMONTO','MONTO'           ,'COMENTARIOS'      ,'LOTE'                 ,'NUMERO_CONTROL'   ,'NUMERO_CONTRATO'     ,'NUMERO_TARJETA'       ,'NUM_PAGOS'     ,'FECHA_INICIO'    ,'FRECUENCIA'  ,'HORA'],
-                ['AUTH'          ,$request->amounts ,'CARGO PROGRAMADO' ,$request->contact_name ,1                  ,$request->so_contract ,$request->card_number  ,$request->quotes,$fechaInicioCobro ,'M'           ,'10:00'],
+                ['CMD_TRANSMONTO', 'MONTO', 'COMENTARIOS', 'LOTE', 'NUMERO_CONTROL', 'NUMERO_CONTRATO', 'NUMERO_TARJETA', 'NUM_PAGOS', 'FECHA_INICIO', 'FRECUENCIA', 'HORA'],
+                ['AUTH', $request->amounts, 'CARGO PROGRAMADO', $request->contact_name, 1, $request->so_contract, $request->card_number, $request->quotes, $fechaInicioCobro, 'M', '10:00'],
             ];
 
             // Escribir los datos en la hoja de cálculo
