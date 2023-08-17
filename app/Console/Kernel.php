@@ -50,11 +50,13 @@ class Kernel extends ConsoleKernel
         $schedule->command('sales-order:mp 100 3')->dailyAt('05:50:06')->timezone('America/Argentina/Buenos_Aires');
         $schedule->command('sales-order:mp 100 4')->dailyAt('05:55:06')->timezone('America/Argentina/Buenos_Aires');
         $schedule->command('sales-order:mp 100 5')->dailyAt('05:58:06')->timezone('America/Argentina/Buenos_Aires');
+        $schedule->command('sales-order:mp 100 6')->dailyAt('06:30:06')->timezone('America/Argentina/Buenos_Aires');
         $schedule->command('sales-order:rebill 100 1')->dailyAt('06:00:06')->timezone('America/Argentina/Buenos_Aires');
         $schedule->command('sales-order:rebill 100 2')->dailyAt('06:05:06')->timezone('America/Argentina/Buenos_Aires');
         $schedule->command('sales-order:rebill 100 3')->dailyAt('06:10:06')->timezone('America/Argentina/Buenos_Aires');
         $schedule->command('sales-order:rebill 100 4')->dailyAt('06:15:06')->timezone('America/Argentina/Buenos_Aires');
         $schedule->command('sales-order:rebill 100 5')->dailyAt('06:20:06')->timezone('America/Argentina/Buenos_Aires');
+        $schedule->command('sales-order:rebill 100 6')->dailyAt('06:35:06')->timezone('America/Argentina/Buenos_Aires');
         $schedule->command('sales-order:stripe')->dailyAt('06:25:06')->timezone('America/Argentina/Buenos_Aires');
     }
 
