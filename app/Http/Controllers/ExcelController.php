@@ -67,7 +67,7 @@ class ExcelController extends Controller
             }
 
             // Especificar la ubicación donde se guardará el archivo Excel en el directorio "storage"
-            $filePath = storage_path('app/public/' . $request->so_contract . '.xlsx');
+            $filePath = storage_path('app/public/Cargo-unico-' . $request->so_contract . '.xlsx');
 
             // Guardar el archivo Excel
             $writer = new Xlsx($spreadsheet);
@@ -76,7 +76,7 @@ class ExcelController extends Controller
             // Devolver el enlace para descargar el archivo
             return response()->json([
                 'message' => 'Archivo Excel creado exitosamente',
-                'download_link' => '/api/download-excel/' . $request->so_contract,
+                'download_link' => '/api/download-excel/Cargo-unico-' . $request->so_contract,
             ]);
 
         } catch (\Exception $e) {
@@ -125,7 +125,7 @@ class ExcelController extends Controller
 
             // $fechaActual = Carbon::now()->copy()->addDays(16); // 31-08-2023
             $fechaActual = Carbon::now();
-            $fechaInicioCobro = $fechaActual->addMonth()->format('d-m-Y');
+            $fechaInicioCobro = $fechaActual->addMonth()->format('d/m/Y');
             //si tengo una fecha en 31 pasa a
             // fecha siguiente: 01/10/2023
             // se salta un mes
@@ -150,7 +150,7 @@ class ExcelController extends Controller
             }
 
             // Especificar la ubicación donde se guardará el archivo Excel en el directorio "storage"
-            $filePath = storage_path('app/public/' . $request->so_contract . '.xlsx');
+            $filePath = storage_path('app/public/Cargo-periodico-' . $request->so_contract . '.xlsx');
 
             // Guardar el archivo Excel
             $writer = new Xlsx($spreadsheet);
@@ -159,7 +159,7 @@ class ExcelController extends Controller
             // Devolver el enlace para descargar el archivo
             return response()->json([
                 'message' => 'Archivo Excel creado exitosamente',
-                'download_link' => '/api/download-excel/' . $request->so_contract,
+                'download_link' => '/api/download-excel/Cargo-periodico-' . $request->so_contract,
             ]);
 
         } catch (\Exception $e) {
