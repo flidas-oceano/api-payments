@@ -43,7 +43,7 @@ class ExcelController extends Controller
             $sheet = $spreadsheet->getActiveSheet();
 
             // Convertimos el string en una fecha objeto usando DateTime::createFromFormat
-            $fecha_datetime = DateTime::createFromFormat('m/y', $request->card_v)->modify('+1 month');
+            $fecha_datetime = DateTime::createFromFormat('m/y', $request->card_v);
             // Formateamos la fecha en el formato deseado 'm/y'
             $fecha_formateada = $fecha_datetime->format('m/y');
 
