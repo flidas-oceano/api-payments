@@ -49,7 +49,7 @@ class ExcelController extends Controller
 
             // Datos que deseas exportar, por ejemplo, de una base de datos
             $data = [
-                ['CMD_TRANSMONTO', 'MONTO', 'COMENTARIOS', 'LOTE', 'NUMERO_CONTROL', 'NUMERO_CONTRATO', 'NUMERO_TARJETA', 'FECHA_EXP'],
+                ['CMF_TRANS', 'MONTO', 'COMENTARIOS', 'LOTE', 'NUMERO_CONTROL', 'NUMERO_CONTRATO', 'NUMERO_TARJETA', 'FECHA_EXP'],
                 ['AUTH', $request->amount, 'CARGO UNICO', $request->contact_name, 1, $request->so_contract, $request->n_ro_de_tarjeta, $fecha_formateada],
             ];
 
@@ -130,10 +130,15 @@ class ExcelController extends Controller
             // fecha siguiente: 01/10/2023
             // se salta un mes
 
+            // Convertimos el string en una fecha objeto usando DateTime::createFromFormat
+            $fecha_datetime = DateTime::createFromFormat('m/y', $request->card_v);
+            // Formateamos la fecha en el formato deseado 'm/y'
+            $fecha_formateada = $fecha_datetime->format('m/y');
+
             // Datos que deseas exportar, por ejemplo, de una base de datos
             $data = [
-                ['CMD_TRANSMONTO', 'MONTO', 'COMENTARIOS', 'LOTE', 'NUMERO_CONTROL', 'NUMERO_CONTRATO', 'NUMERO_TARJETA', 'NUM_PAGOS', 'FECHA_INICIO', 'FRECUENCIA', 'HORA'],
-                ['AUTH', $request->amounts, 'CARGO PROGRAMADO', $request->contact_name, 1, $request->so_contract, $request->card_number, $request->quotes, $fechaInicioCobro, 'M', '10:00'],
+                ['CMF_TRANS', 'MONTO', 'COMENTARIOS', 'LOTE', 'NUMERO_CONTROL', 'NUMERO_CONTRATO', 'NUMERO_TARJETA', 'FECHA_EXP', 'NUM_PAGOS', 'FECHA_INICIO', 'FRECUENCIA', 'HORA'],
+                ['AUTH', $request->amounts, 'CARGO PROGRAMADO', $request->contact_name, 1, $request->so_contract, $request->card_number, $fecha_formateada, ($request->quotes - 1), $fechaInicioCobro, 'M', '10:00'],
             ];
 
             // Escribir los datos en la hoja de cálculo
