@@ -105,7 +105,7 @@ class ExcelController extends Controller
                 'card_number' => 'required',
                 'amounts' => 'required',
                 'quotes' => 'required',
-                'card_v' => 'required'
+                'card_v' => 'required',
             ]);
 
             // Comprobar si la validación falla
