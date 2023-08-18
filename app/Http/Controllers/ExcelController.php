@@ -49,7 +49,7 @@ class ExcelController extends Controller
 
             // Datos que deseas exportar, por ejemplo, de una base de datos
             $data = [
-                ['CMF_TRANS', 'MONTO', 'COMENTARIOS', 'LOTE', 'NUMERO_CONTROL', 'NUMERO_CONTRATO', 'NUMERO_TARJETA', 'FECHA_EXP'],
+                ['CMD_TRANS', 'MONTO', 'COMENTARIOS', 'LOTE', 'NUMERO_CONTROL', 'NUMERO_CONTRATO', 'NUMERO_TARJETA', 'FECHA_EXP'],
                 ['AUTH', $request->amount, 'CARGO UNICO', $request->contact_name, 1, $request->so_contract, $request->n_ro_de_tarjeta, $fecha_formateada],
             ];
 
@@ -137,7 +137,7 @@ class ExcelController extends Controller
 
             // Datos que deseas exportar, por ejemplo, de una base de datos
             $data = [
-                ['CMF_TRANS', 'MONTO', 'COMENTARIOS', 'LOTE', 'NUMERO_CONTROL', 'NUMERO_CONTRATO', 'NUMERO_TARJETA', 'FECHA_EXP', 'NUM_PAGOS', 'FECHA_INICIO', 'FRECUENCIA', 'HORA'],
+                ['CMD_TRANS', 'MONTO', 'COMENTARIOS', 'LOTE', 'NUMERO_CONTROL', 'NUMERO_CONTRATO', 'NUMERO_TARJETA', 'FECHA_EXP', 'NUM_PAGOS', 'FECHA_INICIO', 'FRECUENCIA', 'HORA'],
                 ['AUTH', $request->amounts, 'CARGO PROGRAMADO', $request->contact_name, 1, $request->so_contract, $request->card_number, $fecha_formateada, ($request->quotes - 1), $fechaInicioCobro, 'M', '10:00'],
             ];
 
