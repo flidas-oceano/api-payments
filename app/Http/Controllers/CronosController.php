@@ -888,6 +888,8 @@ class CronosController extends Controller
             $answer['regimen fiscal'] = $this->pax($data, 'Regimen_fiscal');
             //$answer['notas'] = $this->fetchNotes($this->pax($data,'id'));
             $answer['notas'] = '';
+            $answer['folio pago'] = $this->pax($data, 'foliio_pago');
+            $answer['folio suscription'] = $this->pax($data, 'foliio_suscripcion');
 
             $bonificar = intval($this->pax($data, 'Bonificar'));
 
@@ -1374,6 +1376,8 @@ class CronosController extends Controller
                 'Quote_Stage' => $element['contrato']["estado de contrato"],
                 'Pais_de_facturaci_n' => $element['contrato']["pais"],
 
+                'folio_pago' => isset($element['contrato']['folio pago']) ? $element['contrato']['folio pago'] : null,
+                'folio_suscripcion' => isset($element['contrato']['folio suscripcion']) ? $element['contrato']['folio suscripcion'] : null,
 
                 'Modo_de_pago' => $mododepago,
                 'Monto_de_parcialidad' => $element['contrato']['anticipo 1er cuota'],
