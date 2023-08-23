@@ -190,26 +190,26 @@ class ExcelController extends Controller
     {
         try {
             // Validar los campos del request
-            // $validator = Validator::make($request->all(), [
-            //     // 'localidad' => 'required|string|size:1',
-            //     // 'transaccion' => 'required|string|size:3|in:OCP',
-            //     // 'codigo_servicio' => 'required|string|size:2',
-            //     'tipo_cuenta' => 'required|integer|in:0,10',
-            //     'numero_cuenta' => 'required|integer|min:1|max:8',
-            //     // 'valor' => 'required|numeric|min:100|max:100',
-            //     'identificacion_servicio' => 'required|string|size:15',
-            //     // 'referencia' => 'required|string|max:20|in:AUTORIZACION',
-            //     // 'forma_pago' => 'required|string|size:2|in:CU',
-            //     // 'moneda' => 'required|string|size:3|in:USD',
-            // ]);
-            // // Comprobar si la validación falla
-            // if ($validator->fails()) {
-            //     $errors = $validator->errors();
-            //     return response()->json([
-            //         'error' => 'Los campos requeridos no están presentes',
-            //         'error' => $errors
-            //     ], 400);
-            // }
+            $validator = Validator::make($request->all(), [
+                // 'localidad' => 'required|string|size:1',
+                // 'transaccion' => 'required|string|size:3|in:OCP',
+                // 'codigo_servicio' => 'required|string|size:2',
+                'tipo_cuenta' => 'required|integer|in:0,10',
+                'numero_cuenta' => 'required|integer|min:1|max:8',
+                // 'valor' => 'required|numeric|min:100|max:100',
+                'identificacion_servicio' => 'required|string|size:15',
+                // 'referencia' => 'required|string|max:20|in:AUTORIZACION',
+                // 'forma_pago' => 'required|string|size:2|in:CU',
+                // 'moneda' => 'required|string|size:3|in:USD',
+            ]);
+            // Comprobar si la validación falla
+            if ($validator->fails()) {
+                $errors = $validator->errors();
+                return response()->json([
+                    'error' => 'Los campos requeridos no están presentes',
+                    'error' => $errors
+                ], 400);
+            }
 
             // Crear un nuevo objeto de hoja de cálculo
             $spreadsheet = new Spreadsheet();
@@ -222,32 +222,6 @@ class ExcelController extends Controller
             $fecha_formateada = $fecha_datetime->format('m/y');
 
             // Datos que deseas exportar, por ejemplo, de una base de datos
-            // $data = [
-            //     [
-            //         'Localidad.',//Siempre irá 1
-            //         'Transacción',//Siempre irá OCP
-            //         'Código de Servicio',//OC= Orden de Cobro
-            //         'Tipo de Cuenta del Banco del Pacifico.',//00: Cuenta Corriente//10: Cuenta de Ahorros
-            //         'Número de cuenta Banco del Pacifíco.',//Número de cuenta (Si es de ahorro solo los 8 últimos dígitos)
-            //         'Valor',//Siempre:000000000000100
-            //         'Identificación del Servicio',//Identificación del Servicio: Ej: Código de contrato
-            //         'Referencia',////Poner: AUTORIZACION
-            //         'Forma de pago',//CU : Debito a Cuenta
-            //         'Moneda'//USD : Dolares
-            //     ],
-            //     [
-            //         '1',//Siempre irá 1
-            //         'OCP',//Siempre irá OCP
-            //         'OC',//OC= Orden de Cobro
-            //         $request->tipo_cuenta,//00: Cuenta Corriente//10: Cuenta de Ahorros
-            //         $request->numero_cuenta,//Número de cuenta (Si es de ahorro solo los 8 últimos dígitos)
-            //         '000000000000100',//Siempre:000000000000100
-            //         $request->identificacion_servicio,//Identificación del Servicio: Ej: Código de contrato
-            //         'AUTORIZACION',////Poner: AUTORIZACION
-            //         'CU',//CU : Debito a Cuenta
-            //         'USD'//USD : Dolares
-            //     ],
-            // ];
             $data = [
                 [
                     'Localidad.',//Siempre irá 1
@@ -265,10 +239,10 @@ class ExcelController extends Controller
                     '1',//Siempre irá 1
                     'OCP',//Siempre irá OCP
                     'OC',//OC= Orden de Cobro
-                    '10',//00: Cuenta Corriente//10: Cuenta de Ahorros
-                    '',//Número de cuenta (Si es de ahorro solo los 8 últimos dígitos)
+                    $request->tipo_cuenta,//00: Cuenta Corriente//10: Cuenta de Ahorros
+                    $request->numero_cuenta,//Número de cuenta (Si es de ahorro solo los 8 últimos dígitos)
                     '000000000000100',//Siempre:000000000000100
-                    'P00095780',//Identificación del Servicio: Ej: Código de contrato
+                    $request->identificacion_servicio,//Identificación del Servicio: Ej: Código de contrato
                     'AUTORIZACION',////Poner: AUTORIZACION
                     'CU',//CU : Debito a Cuenta
                     'USD'//USD : Dolares
