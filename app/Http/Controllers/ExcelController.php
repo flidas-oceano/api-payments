@@ -94,7 +94,6 @@ class ExcelController extends Controller
             return response()->json(['error' => 'Error al generar el archivo Excel'], 500);
         }
     }
-
     public function exportExcelSuscription(Request $request)
     {
         try {
@@ -186,18 +185,23 @@ class ExcelController extends Controller
         }
     }
 
+    // Banco pacifico
     public function exportExcel1BPOCP(Request $request)
     {
         try {
             // Validar los campos del request
             // $validator = Validator::make($request->all(), [
-            //     'amount' => 'required',
-            //     'contact_name' => 'required',
-            //     'so_contract' => 'required',
-            //     'n_ro_de_tarjeta' => 'required',
-            //     'card_v' => 'required'
+            //     // 'localidad' => 'required|string|size:1',
+            //     // 'transaccion' => 'required|string|size:3|in:OCP',
+            //     // 'codigo_servicio' => 'required|string|size:2',
+            //     'tipo_cuenta' => 'required|integer|in:0,10',
+            //     'numero_cuenta' => 'required|integer|min:1|max:8',
+            //     // 'valor' => 'required|numeric|min:100|max:100',
+            //     'identificacion_servicio' => 'required|string|size:15',
+            //     // 'referencia' => 'required|string|max:20|in:AUTORIZACION',
+            //     // 'forma_pago' => 'required|string|size:2|in:CU',
+            //     // 'moneda' => 'required|string|size:3|in:USD',
             // ]);
-
             // // Comprobar si la validación falla
             // if ($validator->fails()) {
             //     $errors = $validator->errors();
@@ -209,7 +213,6 @@ class ExcelController extends Controller
 
             // Crear un nuevo objeto de hoja de cálculo
             $spreadsheet = new Spreadsheet();
-
             // Obtener la hoja activa
             $sheet = $spreadsheet->getActiveSheet();
 
@@ -219,6 +222,32 @@ class ExcelController extends Controller
             $fecha_formateada = $fecha_datetime->format('m/y');
 
             // Datos que deseas exportar, por ejemplo, de una base de datos
+            // $data = [
+            //     [
+            //         'Localidad.',//Siempre irá 1
+            //         'Transacción',//Siempre irá OCP
+            //         'Código de Servicio',//OC= Orden de Cobro
+            //         'Tipo de Cuenta del Banco del Pacifico.',//00: Cuenta Corriente//10: Cuenta de Ahorros
+            //         'Número de cuenta Banco del Pacifíco.',//Número de cuenta (Si es de ahorro solo los 8 últimos dígitos)
+            //         'Valor',//Siempre:000000000000100
+            //         'Identificación del Servicio',//Identificación del Servicio: Ej: Código de contrato
+            //         'Referencia',////Poner: AUTORIZACION
+            //         'Forma de pago',//CU : Debito a Cuenta
+            //         'Moneda'//USD : Dolares
+            //     ],
+            //     [
+            //         '1',//Siempre irá 1
+            //         'OCP',//Siempre irá OCP
+            //         'OC',//OC= Orden de Cobro
+            //         $request->tipo_cuenta,//00: Cuenta Corriente//10: Cuenta de Ahorros
+            //         $request->numero_cuenta,//Número de cuenta (Si es de ahorro solo los 8 últimos dígitos)
+            //         '000000000000100',//Siempre:000000000000100
+            //         $request->identificacion_servicio,//Identificación del Servicio: Ej: Código de contrato
+            //         'AUTORIZACION',////Poner: AUTORIZACION
+            //         'CU',//CU : Debito a Cuenta
+            //         'USD'//USD : Dolares
+            //     ],
+            // ];
             $data = [
                 [
                     'Localidad.',//Siempre irá 1
@@ -237,7 +266,7 @@ class ExcelController extends Controller
                     'OCP',//Siempre irá OCP
                     'OC',//OC= Orden de Cobro
                     '10',//00: Cuenta Corriente//10: Cuenta de Ahorros
-                    '59561289',//Número de cuenta (Si es de ahorro solo los 8 últimos dígitos)
+                    '',//Número de cuenta (Si es de ahorro solo los 8 últimos dígitos)
                     '000000000000100',//Siempre:000000000000100
                     'P00095780',//Identificación del Servicio: Ej: Código de contrato
                     'AUTORIZACION',////Poner: AUTORIZACION
@@ -441,9 +470,216 @@ class ExcelController extends Controller
             return response()->json(['error' => 'Error al generar el archivo Excel'], 500);
         }
     }
-    /**
-     *Banco Patagonia
-     */
+
+    //otros bancos
+    public function exportExcel3OBPOCP(Request $request)
+    {
+        try {
+
+
+            // Crear un nuevo objeto de hoja de cálculo
+            $spreadsheet = new Spreadsheet();
+            // Obtener la hoja activa
+            $sheet = $spreadsheet->getActiveSheet();
+
+            // Convertimos el string en una fecha objeto usando DateTime::createFromFormat
+            $fecha_datetime = DateTime::createFromFormat('m/y', $request->card_v)->modify('+1 month');
+            // Formateamos la fecha en el formato deseado 'm/y'
+            $fecha_formateada = $fecha_datetime->format('m/y');
+
+            // Datos que deseas exportar, por ejemplo, de una base de datos
+            $data = [
+                [
+                    'Tipo Archivo',                         //Siempre poner 1
+                    'Transacción',                          //Siempre poner OCP
+                    'Código de Servicio',                   //Colocar :  CI: Cobros Interbancarios Emisor
+                    'Tipo de Cuenta',                       //00: Cuenta Corriente, 10: Cuenta de Ahorros
+                    '',                                     //Poner siempre ceros
+                    'Valor',                                //Valor total movimiento:
+                                                                // 13 enteros, 2 decimales (Sin separación de
+                                                                // punto o coma)
+                    'Identificación del Servicio',          //Código del cliente, número de contrato,telfono, medidor, etc.
+                    'Referencia para el estado de cuenta',  //Referencia Corta para el estado de Cuenta del tercero (Cliente al que se le realiza el débito)
+                    'Forma de pago',                        //Siempre poner CU : Debito Cuentas
+                    'Moneda del movimiento',                //USD : Dolares
+                    'Nombre del Tercero',                   //Nombre del tercero (cliente a quien se le debita)
+                    '',                                     //Enviar espacios en blanco
+                    '',                                     //Enviar espacios en blanco
+                    'Tipo NUC del Tercero',                 //Tipo de NUC del Tercero (Cliente).
+                                                                // C: Cédula
+                                                                // R: RUC
+                                                                // P: Pasaporte
+                    'Número único del Tercero',             //Enviar espacios en blanco
+                    '',                                     //Identificación del Tercero (NUC del Cliente). Dueño de la cuenta a debitar
+                    '',                                     //Código del Banco en donde está la Cuenta del
+                    'Código de Banco',                      //Código del Banco en donde está la Cuenta del
+                                                                // Cliente a Debitar.
+                                                                // Obtener la lista actualizada, en el sitio:
+                                                                // https://www.bp.fin.ec
+                    'Número de Cuenta',                     //Número de Cuenta del Cliente a Debitar en el otro Banco.
+                    'Valor IVA Servicios',                  //Valor IVA Servicios: 7 enteros, 2 decimales (Sin separación de punto o coma).
+                    'Tipo Prestación',                      //Siempre enviar A (Antigumente B o S aun)
+                    'Valor IVA Bienes',                     // Valor IVA Bienes: 7 enteros, 2 decimales (Sin separación de punto o coma).
+                ],
+                [
+                    '1',
+                    'OCP',
+                    'OC',
+                    '0',
+                    '00000000',
+                    '0000000015000',
+                    'COD010112980',
+                    'REFERENCIA',
+                    'CU',
+                    'USD',
+                    'MANUEL FAUSTO REMACHE',
+                    '',
+                    '',
+                    'C',
+                    '101107076',
+                    '',
+                    '1M',
+                    '00000000652586584532',
+                    '000000000',
+                    'A',
+                    '000000000'
+                ],
+            ];
+
+            // Escribir los datos en la hoja de cálculo
+            foreach ($data as $rowIndex => $rowData) {
+                foreach ($rowData as $columnIndex => $value) {
+                    $columnLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($columnIndex + 1);
+                    $sheet->getCell($columnLetter . ($rowIndex + 1))->setValueExplicit($value, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                }
+            }
+
+            // Ajustar el ancho de las columnas para que se ajusten automáticamente al contenido
+            foreach (range('A', $sheet->getHighestColumn()) as $columnLetter) {
+                $sheet->getColumnDimension($columnLetter)->setAutoSize(true);
+            }
+
+            // Especificar la ubicación donde se guardará el archivo Excel en el directorio "storage"
+            $filePath = storage_path('app/public/' . $request->so_contract . '.xlsx');
+
+            // Guardar el archivo Excel
+            $writer = new Xlsx($spreadsheet);
+            $writer->save($filePath);
+
+            // Devolver el enlace para descargar el archivo
+            return response()->json([
+                'message' => 'Archivo Excel creado exitosamente',
+                'download_link' => '/api/download-excel/' . $request->so_contract,
+            ]);
+
+        } catch (\Exception $e) {
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'trace' => $e->getTraceAsString(),
+            ];
+
+            Log::error("Error en ExcelController-exportExcel: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+
+            // Devolver una respuesta de error apropiada en caso de excepción
+            return response()->json(['error' => 'Error al generar el archivo Excel'], 500);
+        }
+    }
+    public function exportExcel4PBOCP(Request $request)
+    {
+        try {
+
+            // Crear un nuevo objeto de hoja de cálculo
+            $spreadsheet = new Spreadsheet();
+
+            // Obtener la hoja activa
+            $sheet = $spreadsheet->getActiveSheet();
+
+            // Convertimos el string en una fecha objeto usando DateTime::createFromFormat
+            $fecha_datetime = DateTime::createFromFormat('m/y', $request->card_v)->modify('+1 month');
+            // Formateamos la fecha en el formato deseado 'm/y'
+            $fecha_formateada = $fecha_datetime->format('m/y');
+
+            // Datos que deseas exportar, por ejemplo, de una base de datos
+            $data = [
+                [
+
+                    'Tipo Archivo',                 // Siempre 1
+                    'Transacción',                  // Siempre irá AUT
+                    'Código de Servicio',           // Se colocará el código de servicio correspondiente: C
+                    'Tipo de Cuenta',               // 00: Cuenta Corriente, 10: Cuenta de Ahorros
+                    'Número de cuenta',             // Número de cuenta. Rellenar con blancos a la derecha.
+                    'Código del Banco',             // Código del Banco (según Anexo 1), rellenar de blancos a la derecha,hasta completar la longitud.
+                    'Identificación del Servicio',  // Código de contrato. Rellenar con blancos a la derecha
+                    'Teléfono',                     // Número celular. Poner “0”, si no tiene número
+                    'Forma de pago',                // Ejemplo : CU : Débitos a Cuentas
+                    'Moneda del movimiento',        // USD : Dólares
+                    'Dirección de correo',          // Direccion de correo (opcional) Rellenar con espacios a la derecha
+                    'Monto Máximo',                 // Monto máximo de débito, mayor a 0. 13 enteros y 2 decimales ,sin separadores Ejem: 000000000001234 (es 12.34)
+                    'Fecha Inicio',                 // Fecha inicio del autorizado. Formato : YYYYMMDD
+                    'Fecha Final',                  // Fecha final del autorizado Formato : YYYYMMDD
+                ],
+                [
+                    '1',
+                    'AUT',
+                    'CI',
+                    '10',
+                    '1614699987',
+                    '17',
+                    '7465215454',
+                    '0',
+                    'CU',
+                    'USD',
+                    '0',
+                    '000000999999999',
+                    '20210101',
+                    '20990101',
+                ],
+            ];
+
+            // Escribir los datos en la hoja de cálculo
+            foreach ($data as $rowIndex => $rowData) {
+                foreach ($rowData as $columnIndex => $value) {
+                    $columnLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($columnIndex + 1);
+                    $sheet->getCell($columnLetter . ($rowIndex + 1))->setValueExplicit($value, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                }
+            }
+
+            // Ajustar el ancho de las columnas para que se ajusten automáticamente al contenido
+            foreach (range('A', $sheet->getHighestColumn()) as $columnLetter) {
+                $sheet->getColumnDimension($columnLetter)->setAutoSize(true);
+            }
+
+            // Especificar la ubicación donde se guardará el archivo Excel en el directorio "storage"
+            $filePath = storage_path('app/public/' . $request->so_contract . '.xlsx');
+
+            // Guardar el archivo Excel
+            $writer = new Xlsx($spreadsheet);
+            $writer->save($filePath);
+
+            // Devolver el enlace para descargar el archivo
+            return response()->json([
+                'message' => 'Archivo Excel creado exitosamente',
+                'download_link' => '/api/download-excel/' . $request->so_contract,
+            ]);
+
+        } catch (\Exception $e) {
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'trace' => $e->getTraceAsString(),
+            ];
+
+            Log::error("Error en ExcelController-exportExcel: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+
+            // Devolver una respuesta de error apropiada en caso de excepción
+            return response()->json(['error' => 'Error al generar el archivo Excel'], 500);
+        }
+    }
 
     public function downloadExcel($filename)
     {

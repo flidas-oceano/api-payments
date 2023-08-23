@@ -121,3 +121,7 @@ Route::post('/ctc/exportExcel', [ExcelController::class, 'exportExcel']);
 Route::get('/download-excel/{filename}', [ExcelController::class, 'downloadExcel']);
 Route::post('/ctc/exportExcelSuscription', [ExcelController::class, 'exportExcelSuscription']);
 
+Route::post('/ctc/exportExcel1BPOCP', [ExcelController::class, 'exportExcel1BPOCP']);
+Route::post('/ctc/exportExcel2BPOCP', [ExcelController::class, 'exportExcel2BPOCP']);
+Route::post('/ctc/exportExcel3OBPOCP', [ExcelController::class, 'exportExcel3OBPOCP']);
+Route::post('/ctc/exportExcel4PBOCP', [ExcelController::class, 'exportExcel4PBOCP']);
