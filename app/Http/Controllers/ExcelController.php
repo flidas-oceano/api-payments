@@ -293,21 +293,32 @@ class ExcelController extends Controller
     public function exportExcel2BPOCP(Request $request)
     {
         try {
-            // Validar los campos del request
             // $validator = Validator::make($request->all(), [
-            //     'amount' => 'required',
-            //     'contact_name' => 'required',
-            //     'so_contract' => 'required',
-            //     'n_ro_de_tarjeta' => 'required',
-            //     'card_v' => 'required'
+            //     'tipo_archivo' => 'required|string|size:1',
+            //     'transaccion' => 'required|string|size:3|in:OCP',
+            //     'codigo_servicio' => 'required|string|size:2|in:OC,ZG,SC',
+            //     'tipo_cuenta' => 'required|integer|in:0,10',
+            //     'numero_cuenta' => 'required|integer|min:1|max:8',
+            //     'valor' => 'required|numeric|regex:/^\d{13}\.\d{2}$/',
+            //     'identificacion_servicio' => 'required|string|size:15',
+            //     'referencia' => 'required|string|max:20',
+            //     'forma_pago' => 'required|string|size:2|in:CU,RE',
+            //     'moneda_movimiento' => 'required|string|size:3|in:USD',
+            //     'nombre_tercero' => 'required|string|max:30',
+            //     'no_utilizado_1' => 'required|string|size:2',
+            //     'no_utilizado_2' => 'required|string|size:2',
+            //     'tipo_nuc_tercero' => 'required|string|size:1|in:C,R,P',
+            //     'numero_nuc_tercero' => 'required|integer|min:1|max:14',
+            //     'no_utilizado_3' => 'required|string|max:83',
+            //     'valor_iva_servicios' => 'required|numeric|regex:/^\d{7}\.\d{2}$/',
+            //     'tipo_prestacion' => 'required|string|size:1|in:A',
+            //     'valor_iva_bienes' => 'required|numeric|regex:/^\d{7}\.\d{2}$/',
             // ]);
-
-            // // Comprobar si la validación falla
             // if ($validator->fails()) {
             //     $errors = $validator->errors();
             //     return response()->json([
             //         'error' => 'Los campos requeridos no están presentes',
-            //         'error' => $errors
+            //         'errors' => $errors
             //     ], 400);
             // }
 
@@ -449,7 +460,38 @@ class ExcelController extends Controller
     public function exportExcel3OBPOCP(Request $request)
     {
         try {
+            // $validator = Validator::make($request->all(), [
+            //     'tipo_archivo' => 'required|string|size:1|in:1',
+            //     'transaccion' => 'required|string|size:3|in:OCP',
+            //     'codigo_servicio' => 'required|string|size:2|in:CI',
+            //     'tipo_cuenta' => 'required|integer|in:0,10',
+            //     'numero_cuenta' => 'required|integer|min:1|max:8',
+            //     'no_utilizado' => 'required|integer|min:0|max:99999999',
+            //     'valor' => ['required', 'regex:/^\d{1,13}\.\d{2}$/'],
+            //     'identificacion_servicio' => 'required|string|size:15',
+            //     'referencia' => 'required|string|max:20',
+            //     'forma_pago' => 'required|string|size:2|in:CU',
+            //     'moneda_movimiento' => 'required|string|size:3|in:USD',
+            //     'nombre_tercero' => 'required|string|max:30',
+            //     'no_utilizado_1' => 'required|string|size:2',
+            //     'no_utilizado_2' => 'required|string|size:2',
+            //     'tipo_nuc_tercero' => 'required|string|size:1|in:C,R,P',
+            //     'numero_nuc_tercero' => 'required|string|size:14',
+            //     'no_utilizado_3' => 'required|string|max:61',
+            //     'codigo_banco' => 'required|string|size:2',
+            //     'numero_cuenta' => 'required|string|max:20',
+            //     'valor_iva_servicios' => ['required', 'regex:/^\d{1,7}\.\d{2}$/'],
+            //     'tipo_prestacion' => 'required|string|size:1|in:A',
+            //     'valor_iva_bienes' => ['required', 'regex:/^\d{1,7}\.\d{2}$/'],
+            // ]);
 
+            // if ($validator->fails()) {
+            //     $errors = $validator->errors();
+            //     return response()->json([
+            //         'error' => 'Los campos requeridos no están presentes o son inválidos',
+            //         'errors' => $errors
+            //     ], 400);
+            // }
 
             // Crear un nuevo objeto de hoja de cálculo
             $spreadsheet = new Spreadsheet();
@@ -564,7 +606,30 @@ class ExcelController extends Controller
     public function exportExcel4PBOCP(Request $request)
     {
         try {
+            // $validator = Validator::make($request->all(), [
+            //     'tipo_archivo' => 'required|string|size:1|in:1',
+            //     'transaccion' => 'required|string|size:3|in:AUT',
+            //     'codigo_servicio' => 'required|string|size:2|in:CI',
+            //     'tipo_cuenta' => 'required|integer|in:0,10',
+            //     'numero_cuenta' => 'required|string|size:20',
+            //     'codigo_banco' => 'required|string|size:4',
+            //     'identificacion_servicio' => 'required|string|size:20',
+            //     'telefono' => 'nullable|string|size:10',
+            //     'forma_pago' => 'required|string|size:2|in:CU',
+            //     'moneda_movimiento' => 'required|string|size:3|in:USD',
+            //     'direccion_correo' => 'nullable|string|max:50',
+            //     'monto_maximo' => ['required', 'regex:/^\d{1,13}\.\d{2}$/'],
+            //     'fecha_inicio' => 'required|date_format:Ymd',
+            //     'fecha_final' => 'required|date_format:Ymd',
+            // ]);
 
+            // if ($validator->fails()) {
+            //     $errors = $validator->errors();
+            //     return response()->json([
+            //         'error' => 'Los campos requeridos no están presentes o son inválidos',
+            //         'errors' => $errors
+            //     ], 400);
+            // }
             // Crear un nuevo objeto de hoja de cálculo
             $spreadsheet = new Spreadsheet();
 
