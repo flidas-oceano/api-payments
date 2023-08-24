@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\{PassportAuthController, RebillController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController};
+use App\Http\Controllers\{PassportAuthController, RebillController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController, PlaceToPayController};
 use App\Http\Controllers\MercadoPagoController;
 use App\Http\Controllers\PaymentLinkController;
 use App\Http\Controllers\Webhooks\WebhookGatewayController;
@@ -112,3 +112,14 @@ Route::prefix("/payments_msk")->group(function () {
 Route::get("/mp/searchPaymentApprove/{so}", [MercadoPagoPaymentController::class, 'searchPaymentApprove']);
 
 Route::get('/getPaymentsStatusDistintContratoEfectivo', [PaymentLinkController::class, 'getPaymentsStatusDistintContratoEfectivo']);
+
+
+Route::prefix("/placetopay")->group(function () {
+    Route::get('/getAuth', [PlaceToPayController::class, 'getAuth']);
+    Route::get('/createSession', [PlaceToPayController::class, 'createSession']);
+    Route::get('/placetopay', [PlaceToPayController::class, 'index']);
+    Route::get('/createPayment', [PlaceToPayController::class, 'createPayment']);
+    
+    Route::post('/savePayments', [PlaceToPayController::class, 'savePayments']);
+});
+
