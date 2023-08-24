@@ -10,10 +10,6 @@ use stdClass;
 
 class PlaceToPayController extends Controller
 {
-    // Datos de autenticación
-    // public $login = "fcba839f74386227ed54fea97404b099";
-    // // public $secretKey = "w7b268M6uTU19LuH";
-    // public $secretKey = "4wj96wrxg5w4SB02";
     public $login_pu = "";
     public $secret_pu = "";
     public $login_su = "";
@@ -45,13 +41,12 @@ class PlaceToPayController extends Controller
             "auth" => $auth,
             "locale" => "es_CO",
             "payment" => [
-                // "reference" => $request->reference,
+                "reference" => $request->reference,
                 "reference" => "dasdasds",
                 "description" => "Prueba contrato de OceanoMedicina",
                 "amount" => [
                     "currency" => "USD",
-                    // "total" => $request->total
-                    "total" => 100
+                    "total" => $request->total,
                 ]
             ],
             "expiration" => $this->getDateExpiration(),

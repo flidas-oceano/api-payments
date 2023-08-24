@@ -116,10 +116,10 @@ Route::get('/getPaymentsStatusDistintContratoEfectivo', [PaymentLinkController::
 
 Route::prefix("/placetopay")->group(function () {
     Route::get('/getAuth', [PlaceToPayController::class, 'getAuth']);
-    Route::get('/createSession', [PlaceToPayController::class, 'createSession']);
+    Route::post('/createSession', [PlaceToPayController::class, 'createSession']);
     Route::get('/placetopay', [PlaceToPayController::class, 'index']);
     Route::get('/createPayment', [PlaceToPayController::class, 'createPayment']);
-    
+
     Route::post('/savePayments', [PlaceToPayController::class, 'savePayments']);
 });
 
