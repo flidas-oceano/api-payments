@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\{ExcelController, PassportAuthController, RebillController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController};
+use App\Http\Controllers\{ExcelController, PassportAuthController, RebillController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController, PlaceToPayController};
 use App\Http\Controllers\MercadoPagoController;
 use App\Http\Controllers\PaymentLinkController;
 use App\Http\Controllers\Webhooks\WebhookGatewayController;
@@ -125,3 +125,13 @@ Route::post('/ctc/exportExcel1BPOCP', [ExcelController::class, 'exportExcel1BPOC
 Route::post('/ctc/exportExcel2BPOCP', [ExcelController::class, 'exportExcel2BPOCP']);
 Route::post('/ctc/exportExcel3OBPOCP', [ExcelController::class, 'exportExcel3OBPOCP']);
 Route::post('/ctc/exportExcel4PBOCP', [ExcelController::class, 'exportExcel4PBOCP']);
+
+
+Route::prefix("/placetopay")->group(function () {
+    Route::get('/getAuth', [PlaceToPayController::class, 'getAuth']);
+    Route::post('/createSession', [PlaceToPayController::class, 'createSession']);
+    Route::get('/placetopay', [PlaceToPayController::class, 'index']);
+    Route::get('/createPayment', [PlaceToPayController::class, 'createPayment']);
+
+    Route::post('/savePayments', [PlaceToPayController::class, 'savePayments']);
+});
