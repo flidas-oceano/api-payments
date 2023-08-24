@@ -45,17 +45,19 @@ class PlaceToPayController extends Controller
             "auth" => $auth,
             "locale" => "es_CO",
             "payment" => [
-                "reference" => "1122334455",
-                "description" => "Prueba",
+                // "reference" => $request->reference,
+                "reference" => "dasdasds",
+                "description" => "Prueba contrato de OceanoMedicina",
                 "amount" => [
                     "currency" => "USD",
+                    // "total" => $request->total
                     "total" => 100
                 ]
             ],
             "expiration" => $this->getDateExpiration(),
             "returnUrl" => "https://dnetix.co/p2p/client",
             "ipAddress" => $clientIp, // Usar la dirección IP del cliente
-            "userAgent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            "userAgent" => $request->header('User-Agent')
         ];
 
         $client = new Client();
