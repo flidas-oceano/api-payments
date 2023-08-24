@@ -11,50 +11,61 @@ use stdClass;
 class PlaceToPayController extends Controller
 {
     // Datos de autenticación
-    public $login = "fcba839f74386227ed54fea97404b099";
-    // public $secretKey = "w7b268M6uTU19LuH";
-    public $secretKey = "4wj96wrxg5w4SB02";
+    // public $login = "fcba839f74386227ed54fea97404b099";
+    // // public $secretKey = "w7b268M6uTU19LuH";
+    // public $secretKey = "4wj96wrxg5w4SB02";
+    public $login_pu = "";
+    public $secret_pu = "";
+    public $login_su = "";
+    public $secret_su = "";
+
+
+    public function __construct() {
+        $this->login_pu = env("REACT_APP_PTP_LOGIN_PU");
+        $this->secret_pu = env("REACT_APP_PTP_SECRECT_PU");
+        $this->login_su = env("REACT_APP_PTP_LOGIN_SU");
+        $this->secret_su = env("REACT_APP_PTP_SECRECT_SU");
+    }
 
     public function getAuth(){
       // Generar autenticación
-      $auth = $this->generateAuthentication($this->login, $this->secretKey);
+      $auth = $this->generateAuthentication();
 
       return response()->json($auth);
     }
 
     public function createSession(Request $request)
     {
-        $url = "https://checkout-test.placetopay.com/api/session";
+        $url = "https://checkout-test.placetopay.ec/api/session";
+        $clientIp = $request->ip();
 
+        $auth = $this->generateAuthentication();
 
-        $auth = $this->generateAuthentication($this->login, $this->secretKey);
-
-        $data = '{
-            "locale": "es_CO",
-            "auth": ' . json_encode($auth) . ',
-            "payment": {
-                "reference": "1122334455",
-                "description": "Prueba",
-                "amount": {
-                    "currency": "USD",
-                    "total": 100
-                }
-            },
-            "expiration": "2021-12-30T00:00:00-05:00",
-            "returnUrl": "https://dnetix.co/p2p/client",
-            "ipAddress": "127.0.0.1",
-            "userAgent": "PlacetoPay Sandbox"
-        }';
+        $data = [
+            "auth" => $auth,
+            "locale" => "es_CO",
+            "payment" => [
+                "reference" => "1122334455",
+                "description" => "Prueba",
+                "amount" => [
+                    "currency" => "USD",
+                    "total" => 100
+                ]
+            ],
+            "expiration" => $this->getDateExpiration(),
+            "returnUrl" => "https://dnetix.co/p2p/client",
+            "ipAddress" => $clientIp, // Usar la dirección IP del cliente
+            "userAgent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        ];
 
         $client = new Client();
-
         try {
             $response = $client->post($url, [
                 'headers' => [
                     'Accept' => 'application/json',
                     'Content-Type' => 'application/json',
                 ],
-                'body' => $data,
+                'json' => $data,
             ]);
 
             $body = $response->getBody();
@@ -68,23 +79,38 @@ class PlaceToPayController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-
-        private function generateAuthentication(string $login, string $secretKey): array
+        private function getDateExpiration()
         {
-            $nonce = random_bytes(16);
+          // Obtener la fecha y hora actual
+            $currentDateTime = new \DateTime();
+            // Sumar 24 horas a la fecha actual
+            $currentDateTime->add(new \DateInterval('PT24H'));
+            // Formatear la fecha para que coincida con el formato ISO 8601
+            $seed = $currentDateTime->format('Y-m-d\TH:i:sP');
+
+            return $seed;
+        }
+        private function generateAuthentication()
+        {
+            $login = $this->login_pu;
+            $secretKey = $this->secret_pu;
             $seed = date('c');
-            $digest = base64_encode(hash('sha256', $nonce . $seed . $secretKey, true));
+            $rawNonce = rand();
+
+            $tranKey = base64_encode(hash('sha256', $rawNonce.$seed.$secretKey, true));
+            $nonce = base64_encode($rawNonce);
+
             return [
-                'login' => $login,
-                'tranKey' => $digest,
-                'nonce' => base64_encode($nonce),
-                'seed' => $seed,
+                  "login" => $login,
+                  "tranKey" => $tranKey,
+                  "nonce" => $nonce,
+                  "seed" => $seed,
             ];
         }
     public function index()
     {
         // Generar autenticación
-        $auth = $this->generateAuthentication($this->login, $this->secretKey);
+        $auth = $this->generateAuthentication();
 
         // return response()->json($auth);
 
