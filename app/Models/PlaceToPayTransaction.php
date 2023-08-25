@@ -27,6 +27,8 @@ class PlaceToPayTransaction extends Model
         'reference',
         'type',
         'token_collect_para_el_pago',
+        'expiration_date',
+
     ];
     private static $formAttributes = [
         'requestId',
@@ -42,6 +44,7 @@ class PlaceToPayTransaction extends Model
         'reason',
         'message',
         'date',
+        'expiration_date',
     ];
 
 }
