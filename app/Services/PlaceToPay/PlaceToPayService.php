@@ -81,6 +81,6 @@ class PlaceToPayService
             'Content-Type' => 'application/json',
         ])->post($url, $data)->json();
 
-        return ;
+        return $response;
     }
 }

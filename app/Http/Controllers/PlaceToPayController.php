@@ -26,7 +26,59 @@ class PlaceToPayController extends Controller
         $this->login_su = env("REACT_APP_PTP_LOGIN_SU");
         $this->secret_su = env("REACT_APP_PTP_SECRECT_SU");
     }
+    public function billSubscription(Request $request, $requestId){
+        try {
 
+
+            $requestSusbcription = PlaceToPayTransaction::where([ 'requestId' => $requestId ] )->get()->first();
+            $data = [
+                "auth" => $this->placeTopayService->generateAuthentication(),
+                "locale" => "es_CO",
+                "payer" => [
+                    "name" => "1122334455",
+                    "surname" => "Prueba",
+                    "email" => "facundobrizuela@oceano.com.ar",
+                    "document" => "1758859431",
+                    "documentType" => "CC",
+                ],
+                "payment" => [
+                    "reference" => "1122334455",
+                    "description" => "Prueba",
+                    "amount" => [
+                      "currency" => "USD",
+                      "total" => 100
+                    ]
+                ],
+                "instrument" => [
+                    "token" => [
+                      "token" => $requestSusbcription->token_collect_para_el_pago
+                    ]
+                ],
+                "expiration" => $this->placeTopayService->getDateExpiration(),
+                "returnUrl" => "https://dnetix.co/p2p/client",
+                "ipAddress" => $request->ip(), // Usar la dirección IP del cliente
+                "userAgent" => $request->header('User-Agent')
+            ];
+
+            $response = $this->placeTopayService->billSubscription($data);
+            // Aquí puedes procesar la respuesta como desees
+            // Por ejemplo, devolverla como una respuesta JSON
+           return response()->json($response);
+        } catch (\Exception $e) {
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString()
+            ];
+
+            Log::error("Error en billSubscription: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ]);
+        }
+    }
     public function savePaymentSubscription(Request $request){
         try {
             if( isset($request['data']['session']['id']) ){
@@ -215,8 +267,6 @@ class PlaceToPayController extends Controller
     }
     public function createSessionSuscription(Request $request)
     {
-        $clientIp = $request->ip();
-
         // "payment": {
         //     "reference": "PAY_ABC_1287",
         //     "description": "Pago por Placetopay",
@@ -235,7 +285,7 @@ class PlaceToPayController extends Controller
             ],
             "expiration" => $this->placeTopayService->getDateExpiration(),
             "returnUrl" => "https://dnetix.co/p2p/client",
-            "ipAddress" => $clientIp, // Usar la dirección IP del cliente
+            "ipAddress" => $request->ip(), // Usar la dirección IP del cliente
             "userAgent" => $request->header('User-Agent')
         ];
 
@@ -284,7 +334,6 @@ class PlaceToPayController extends Controller
     }
     public function createSession(Request $request)
     {
-        $clientIp = $request->ip();
         $auth = $this->placeTopayService->generateAuthentication();
 
         $data = [
@@ -300,7 +349,7 @@ class PlaceToPayController extends Controller
             ],
             "expiration" => $this->placeTopayService->getDateExpiration(),
             "returnUrl" => "https://dnetix.co/p2p/client",
-            "ipAddress" => $clientIp, // Usar la dirección IP del cliente
+            "ipAddress" => $request->ip(), // Usar la dirección IP del cliente
             "userAgent" => $request->header('User-Agent')
         ];
 
