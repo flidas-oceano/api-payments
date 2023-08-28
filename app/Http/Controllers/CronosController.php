@@ -888,8 +888,8 @@ class CronosController extends Controller
             $answer['regimen fiscal'] = $this->pax($data, 'Regimen_fiscal');
             //$answer['notas'] = $this->fetchNotes($this->pax($data,'id'));
             $answer['notas'] = '';
-            $answer['folio pago'] = $this->pax($data, 'foliio_pago');
-            $answer['folio suscription'] = $this->pax($data, 'foliio_suscripcion');
+            $answer['folio pago'] = $this->pax($data, 'folio_pago');
+            $answer['folio suscription'] = $this->pax($data, 'folio_suscripcion');
 
             $bonificar = intval($this->pax($data, 'Bonificar'));
 
