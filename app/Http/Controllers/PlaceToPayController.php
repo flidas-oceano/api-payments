@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\PlaceToPayTransaction;
+use App\Services\PlaceToPay\PlaceToPayService;
 use Illuminate\Http\Request;
 use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use stdClass;
 
@@ -14,138 +16,237 @@ class PlaceToPayController extends Controller
     public $secret_pu = "";
     public $login_su = "";
     public $secret_su = "";
+    public $placeTopayService = null;
 
 
-    public function __construct() {
+    public function __construct(PlaceToPayService $placeTopayService) {
+        $this->placeTopayService = $placeTopayService;
         $this->login_pu = env("REACT_APP_PTP_LOGIN_PU");
         $this->secret_pu = env("REACT_APP_PTP_SECRECT_PU");
         $this->login_su = env("REACT_APP_PTP_LOGIN_SU");
         $this->secret_su = env("REACT_APP_PTP_SECRECT_SU");
     }
+    public function billSubscription(Request $request, $requestId){
+        try {
 
-    public function getAuth(){
-      // Generar autenticación
-      $auth = $this->generateAuthentication();
 
-      return response()->json($auth);
-    }
-    public function updateSession(){
-            $requestQueEspero = '{
-                "redirectUrl": null,
-                "redirectsOutOfLightbox": false,
-                "session": {
-                    "id": 674259,
-                    "code": "S674259-T4",
-                    "locale": "es_CO",
-                    "type": "P",
-                    "skipResult": false,
-                    "showBanner": false,
-                    "status": {
-                        "status": "APPROVED",
-                        "resume": "El proceso de pago ha finalizado",
-                        "message": null,
-                        "updatedAt": "2023-08-24T21:37:47.000000Z"
-                    },
-                    "payment": {
-                        "allowPartial": false,
-                        "remaining": "0",
-                        "minPaymentValue": "1",
-                        "paid": "53226000",
-                        "recurring": null,
-                        "reference": "dasdasds",
-                        "description": "Prueba contrato de OceanoMedicina",
-                        "amount": {
-                            "currency": "USD",
-                            "total": "53226000",
-                            "taxes": null,
-                            "details": null
-                        },
-                        "items": null,
-                        "subscribe": false
-                    },
-                    "subscription": null,
-                    "returnUrl": "https://dnetix.co/p2p/client",
-                    "date": "2023-08-24T21:35:50.000000Z",
-                    "expirationMessage": "El proceso de pago se terminó",
-                    "expiration": "2023-08-25T21:35:50.000000Z",
-                    "fields": [
-                        {
-                            "label": "_processUrl_",
-                            "value": "https://checkout-test.placetopay.ec/spa/session/674259/c77f992a37635813687be563535224d4",
-                            "displayOn": "none"
-                        }
+            $requestSusbcription = PlaceToPayTransaction::where([ 'requestId' => $requestId ] )->get()->first();
+            $data = [
+                "auth" => $this->placeTopayService->generateAuthentication(),
+                "locale" => "es_CO",
+                "payer" => [
+                    "name" => "1122334455",
+                    "surname" => "Prueba",
+                    "email" => "facundobrizuela@oceano.com.ar",
+                    "document" => "1758859431",
+                    "documentType" => "CC",
+                ],
+                "payment" => [
+                    "reference" => "1122334455",
+                    "description" => "Prueba",
+                    "amount" => [
+                      "currency" => "USD",
+                      "total" => 100
                     ]
-                },
-                "payments": [
-                    {
-                        "status": "APPROVED",
-                        "resume": "Transacción Aprobada",
-                        "message": null,
-                        "date": "2023-08-24T21:37:46.000000Z",
-                        "authorization": "999999",
-                        "lastDigits": "1111",
-                        "accountNumber": null,
-                        "amount": "53226000",
-                        "paid": "53226000",
-                        "discount": null,
-                        "interest": null,
-                        "receipt": "399767",
-                        "ipAddress": "2800:810:471:194b:2908:25ca:58a:282e",
-                        "reference": "dasdasds",
-                        "paymentMethodLabel": "Visa",
-                        "paymentMethod": "visa",
-                        "responseCode": "00",
-                        "account": null,
-                        "payOrderPdfUrl": null,
-                        "transactionType": null,
-                        "redirectUrl": null
-                    }
                 ],
-                "subscriptions": [],
-                "notifyData": {
-                    "status": {
-                        "status": "APPROVED",
-                        "reason": "00",
-                        "message": "La petición ha sido aprobada exitosamente",
-                        "date": "2023-08-24T16:37:47-05:00"
-                    },
-                    "requestId": 674259,
-                    "reference": "dasdasds",
-                    "signature": "35ed6b52b04df3a372f2a3a84a49cd397d5bf1de"
-                },
-                "captcha": null
-            }';
-
-    }
-    public function getByRequestId($requestId)
-    {
-        $url = "https://checkout-test.placetopay.ec/api/session/".$requestId;
-        $data = [
-            "auth" => $this->generateAuthentication(),
-        ];
-
-        $client = new Client();
-            $response = $client->post($url, [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Content-Type' => 'application/json',
+                "instrument" => [
+                    "token" => [
+                      "token" => $requestSusbcription->token_collect_para_el_pago
+                    ]
                 ],
-                'json' => $data,
-            ]);
+                "expiration" => $this->placeTopayService->getDateExpiration(),
+                "returnUrl" => "https://dnetix.co/p2p/client",
+                "ipAddress" => $request->ip(), // Usar la dirección IP del cliente
+                "userAgent" => $request->header('User-Agent')
+            ];
 
-            $body = $response->getBody();
-            $result = json_decode($body, true);
-
+            $response = $this->placeTopayService->billSubscription($data);
             // Aquí puedes procesar la respuesta como desees
             // Por ejemplo, devolverla como una respuesta JSON
+           return response()->json($response);
+        } catch (\Exception $e) {
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString()
+            ];
 
-        return $result;
+            Log::error("Error en billSubscription: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ]);
+        }
+    }
+    public function savePaymentSubscription(Request $request){
+        try {
+            if( isset($request['data']['session']['id']) ){
+                $sessionSubscription = $this->placeTopayService->getByRequestId($request['data']['session']['id']);
+
+                PlaceToPayTransaction::updateOrCreate(
+                    [ 'requestId' => $sessionSubscription["requestId"] ],
+                    [
+                        'status' => $sessionSubscription["status"]["status"],
+                        'reason' => $sessionSubscription["status"]["reason"],
+                        'message' => $sessionSubscription["status"]["message"],
+                        'date' => $sessionSubscription["status"]["date"],
+                        'requestId' => $sessionSubscription["requestId"],
+                    ]
+                );
+                if($sessionSubscription['status']['status'] === "APPROVED"){
+                    if(isset($sessionSubscription['subscription'])){
+                        foreach($sessionSubscription['subscription']['instrument'] as $instrument){
+                            if($instrument['keyword'] === "token"){
+                                PlaceToPayTransaction::updateOrCreate(
+                                    [ 'requestId' => $sessionSubscription["requestId"] ],
+                                    [
+                                        'token_collect_para_el_pago' => $instrument['value']
+                                    ]
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+
+            // if(isset($request->status->status)){
+            //     if($request->status->status === "APPROVED"){
+            //         foreach($request->subscription->instrument as $instrument){
+            //             if($instrument->keyword === "token"){
+            //                 PlaceToPayTransaction::updateOrCreate(
+            //                     [ 'requestId' => $request["requestId"] ],
+            //                     [
+            //                       'status' => $request["status"]["status"],
+            //                       'reason' => $request["status"]["reason"],
+            //                       'message' => $request["status"]["message"],
+            //                       'date' => $request["status"]["date"],
+            //                       'requestId' => $request["requestId"],
+            //                       // 'processUrl' => $transaction["processUrl"],
+            //                       'reference' => $request["request"]["payment"]["reference"],
+            //                       'currency' => $request["request"]["payment"]["amount"]["currency"],
+            //                       'total' => $request["request"]["payment"]["amount"]["total"],
+            //                       'contact_id' => $request["request"]["payment"]["amount"]["amount"],
+            //                       'authorization' => $request["payment"] !== null ? $request["payment"]["authorization"] : null,//si sesta pagado tiene este payment
+            //                       // 'type' => isset($request["subscription"]) ? ///subscription o payment,
+            //                       'token_collect' => $instrument->value,
+            //                     ]
+            //                 );
+            //             }
+            //         }
+            //     }
+            // }
+
+            return response()->json([
+                "ok"
+            ]);
+        } catch (\Exception $e) {
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString()
+              ];
+
+            Log::error("Error en savePaymentSuscription: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ]);
+          }
+    }
+    public function updateSession(){
+        $requestQueEspero = '{
+            "redirectUrl": null,
+            "redirectsOutOfLightbox": false,
+            "session": {
+                "id": 674259,
+                "code": "S674259-T4",
+                "locale": "es_CO",
+                "type": "P",
+                "skipResult": false,
+                "showBanner": false,
+                "status": {
+                    "status": "APPROVED",
+                    "resume": "El proceso de pago ha finalizado",
+                    "message": null,
+                    "updatedAt": "2023-08-24T21:37:47.000000Z"
+                },
+                "payment": {
+                    "allowPartial": false,
+                    "remaining": "0",
+                    "minPaymentValue": "1",
+                    "paid": "53226000",
+                    "recurring": null,
+                    "reference": "dasdasds",
+                    "description": "Prueba contrato de OceanoMedicina",
+                    "amount": {
+                        "currency": "USD",
+                        "total": "53226000",
+                        "taxes": null,
+                        "details": null
+                    },
+                    "items": null,
+                    "subscribe": false
+                },
+                "subscription": null,
+                "returnUrl": "https://dnetix.co/p2p/client",
+                "date": "2023-08-24T21:35:50.000000Z",
+                "expirationMessage": "El proceso de pago se terminó",
+                "expiration": "2023-08-25T21:35:50.000000Z",
+                "fields": [
+                    {
+                        "label": "_processUrl_",
+                        "value": "https://checkout-test.placetopay.ec/spa/session/674259/c77f992a37635813687be563535224d4",
+                        "displayOn": "none"
+                    }
+                ]
+            },
+            "payments": [
+                {
+                    "status": "APPROVED",
+                    "resume": "Transacción Aprobada",
+                    "message": null,
+                    "date": "2023-08-24T21:37:46.000000Z",
+                    "authorization": "999999",
+                    "lastDigits": "1111",
+                    "accountNumber": null,
+                    "amount": "53226000",
+                    "paid": "53226000",
+                    "discount": null,
+                    "interest": null,
+                    "receipt": "399767",
+                    "ipAddress": "2800:810:471:194b:2908:25ca:58a:282e",
+                    "reference": "dasdasds",
+                    "paymentMethodLabel": "Visa",
+                    "paymentMethod": "visa",
+                    "responseCode": "00",
+                    "account": null,
+                    "payOrderPdfUrl": null,
+                    "transactionType": null,
+                    "redirectUrl": null
+                }
+            ],
+            "subscriptions": [],
+            "notifyData": {
+                "status": {
+                    "status": "APPROVED",
+                    "reason": "00",
+                    "message": "La petición ha sido aprobada exitosamente",
+                    "date": "2023-08-24T16:37:47-05:00"
+                },
+                "requestId": 674259,
+                "reference": "dasdasds",
+                "signature": "35ed6b52b04df3a372f2a3a84a49cd397d5bf1de"
+            },
+            "captcha": null
+        }';
     }
     public function getSessionByRequestId($requestId)
     {
         try {
             return response()->json(
-                $this->getByRequestId($requestId)
+                $this->placeTopayService->getByRequestId($requestId)
             );
         } catch (\Exception $e) {
             // Manejo de errores si ocurre alguno durante la solicitud
@@ -156,7 +257,7 @@ class PlaceToPayController extends Controller
                 'line' => $e->getLine(),
                 'file' => $e->getFile(),
                 'trace' => $e->getTraceAsString(),
-              ];
+            ];
 
             Log::error("Error en getSessionByRequestId: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
             return response()->json([
@@ -166,11 +267,6 @@ class PlaceToPayController extends Controller
     }
     public function createSessionSuscription(Request $request)
     {
-        $url = "https://checkout-test.placetopay.ec/api/session";
-        $clientIp = $request->ip();
-
-        $auth = $this->generateAuthentication();
-
         // "payment": {
         //     "reference": "PAY_ABC_1287",
         //     "description": "Pago por Placetopay",
@@ -181,30 +277,20 @@ class PlaceToPayController extends Controller
         //     "subscribe": true
         // }
         $data = [
-            "auth" => $auth,
+            "auth" => $this->placeTopayService->generateAuthentication(),
             "locale" => "es_CO",
             "subscription" => [
                 "reference" => "$request->reference",
                 "description" => "Prueba suscripcion contrato de OceanoMedicina"
             ],
-            "expiration" => $this->getDateExpiration(),
+            "expiration" => $this->placeTopayService->getDateExpiration(),
             "returnUrl" => "https://dnetix.co/p2p/client",
-            "ipAddress" => $clientIp, // Usar la dirección IP del cliente
+            "ipAddress" => $request->ip(), // Usar la dirección IP del cliente
             "userAgent" => $request->header('User-Agent')
         ];
 
-        $client = new Client();
         try {
-            $response = $client->post($url, [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Content-Type' => 'application/json',
-                ],
-                'json' => $data,
-            ]);
-
-            $body = $response->getBody();
-            $result = json_decode($body, true);
+            $result = $this->placeTopayService->create($data);
 
             if (isset($result['status']['status'])) {
                 $placeToPayTransaction = PlaceToPayTransaction::create([
@@ -219,17 +305,16 @@ class PlaceToPayController extends Controller
                     // 'total' =>              ,
                     // 'currency' =>           ,
                     // 'reference' =>         ,
-                    'type' => "suscription",
+                    'type' => "requestSubscription",
                     // 'token_collect_para_el_pago' => ,
                     'expiration_date' =>    $data['expiration'],
                 ]);
-                $getById = $this->getByRequestId($result['requestId']);
-
+                $getById = $this->placeTopayService->getByRequestId($result['requestId']);
             }
 
             // Aquí puedes procesar la respuesta como desees
             // Por ejemplo, devolverla como una respuesta JSON
-            return response()->json($result, $getById);
+            return response()->json([$result, $getById]);
         } catch (\Exception $e) {
             // Manejo de errores si ocurre alguno durante la solicitud
 
@@ -246,12 +331,10 @@ class PlaceToPayController extends Controller
                 $err
             ], 500);
         }
-    } public function createSession(Request $request)
+    }
+    public function createSession(Request $request)
     {
-        $url = "https://checkout-test.placetopay.ec/api/session";
-        $clientIp = $request->ip();
-
-        $auth = $this->generateAuthentication();
+        $auth = $this->placeTopayService->generateAuthentication();
 
         $data = [
             "auth" => $auth,
@@ -264,24 +347,15 @@ class PlaceToPayController extends Controller
                     "total" => $request->total,
                 ]
             ],
-            "expiration" => $this->getDateExpiration(),
+            "expiration" => $this->placeTopayService->getDateExpiration(),
             "returnUrl" => "https://dnetix.co/p2p/client",
-            "ipAddress" => $clientIp, // Usar la dirección IP del cliente
+            "ipAddress" => $request->ip(), // Usar la dirección IP del cliente
             "userAgent" => $request->header('User-Agent')
         ];
 
-        $client = new Client();
         try {
-            $response = $client->post($url, [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Content-Type' => 'application/json',
-                ],
-                'json' => $data,
-            ]);
 
-            $body = $response->getBody();
-            $result = json_decode($body, true);
+            $result = $this->placeTopayService->create($data);
 
             if (isset($result['status']['status'])) {
                 $placeToPayTransaction = PlaceToPayTransaction::create([
@@ -300,7 +374,7 @@ class PlaceToPayController extends Controller
                     // 'token_collect_para_el_pago' => ,
                     'expiration_date' =>    $data['expiration'],
                 ]);
-                $getById = $this->getByRequestId($result['requestId']);
+                $getById = $this->placeTopayService->getByRequestId($result['requestId']);
                 $placeToPayTransaction = PlaceToPayTransaction::where(["requestId" => $result['requestId']])->update([
                     'status' =>             $getById['status']['status'],
                     'reason' =>             $getById['status']['reason'],
@@ -329,7 +403,7 @@ class PlaceToPayController extends Controller
                 'line' => $e->getLine(),
                 'file' => $e->getFile(),
                 'trace' => $e->getTraceAsString(),
-              ];
+            ];
 
             Log::error("Error en createSession: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
             return response()->json([
@@ -337,38 +411,10 @@ class PlaceToPayController extends Controller
             ], 500);
         }
     }
-    private function getDateExpiration()
-    {
-          // Obtener la fecha y hora actual
-            $currentDateTime = new \DateTime();
-            // Sumar 24 horas a la fecha actual
-            $currentDateTime->add(new \DateInterval('PT24H'));
-            // Formatear la fecha para que coincida con el formato ISO 8601
-            $seed = $currentDateTime->format('Y-m-d\TH:i:sP');
-
-            return $seed;
-    }
-    private function generateAuthentication()
-    {
-            $login = $this->login_pu;
-            $secretKey = $this->secret_pu;
-            $seed = date('c');
-            $rawNonce = rand();
-
-            $tranKey = base64_encode(hash('sha256', $rawNonce.$seed.$secretKey, true));
-            $nonce = base64_encode($rawNonce);
-
-            return [
-                  "login" => $login,
-                  "tranKey" => $tranKey,
-                  "nonce" => $nonce,
-                  "seed" => $seed,
-            ];
-    }
     public function index()
     {
         // Generar autenticación
-        $auth = $this->generateAuthentication();
+        $auth = $this->placeTopayService->generateAuthentication();
 
         // return response()->json($auth);
 
@@ -434,7 +480,7 @@ class PlaceToPayController extends Controller
             "returnUrl": "https://dnetix.co/p2p/client",
             "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
             "paymentMethod": null,
-            "auth":'. $this->generateAuthentication($this->login, $this->secretKey) .'
+            "auth":'. $this->placeTopayService->generateAuthentication() .'
           }';
         //   (pagounico)
           $jsonCreatePaymentResponse = '{
@@ -456,11 +502,10 @@ class PlaceToPayController extends Controller
             $arrayResponse
         ]);
     }
-
     public function GetPaymentByRequestId(){
         // (pagounico)
         $jsonPaymentByIdRequest = '{
-            "auth":'. $this->generateAuthentication($this->login, $this->secretKey) .'
+            "auth":'. $this->placeTopayService->generateAuthentication() .'
           }';
           //Get del payment(pagounico) recien creado sin pagar todavia.
           $jsonPaymentByIdResponse = '{
@@ -513,6 +558,7 @@ class PlaceToPayController extends Controller
   // Esto es cuando se ejecuta el create sesion que es la creacion del pago unico. //Se paga a travez de la pasarela.
   public function savePayments(Request $request){
     try {
+
       foreach($request->transactions as $transaction){
         if($transaction["status"]["status"] === "OK"){
           //esta ok
@@ -550,7 +596,7 @@ class PlaceToPayController extends Controller
           'trace' => $e->getTraceAsString(),
         ];
 
-      Log::error("Error en PopulateProducts: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+      Log::error("Error en savePayments: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
       return response()->json([
           $err
       ]);

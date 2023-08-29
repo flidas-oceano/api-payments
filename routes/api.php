@@ -138,4 +138,6 @@ Route::prefix("/placetopay")->group(function () {
     Route::get('/createPayment', [PlaceToPayController::class, 'createPayment']);
 
     Route::post('/savePayments', [PlaceToPayController::class, 'savePayments']);
+    Route::post('/savePaymentSubscription', [PlaceToPayController::class, 'savePaymentSubscription']);
+    Route::get('/billSubscription/{requestId}', [PlaceToPayController::class, 'billSubscription']);
 });
