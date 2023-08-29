@@ -91,7 +91,7 @@ class ZohoController extends Controller
             $records = $response->getData(); //To get response data
             $answer = $records[0];
         } catch (\zcrmsdk\crm\exception\ZCRMException $e) {
-            Log::error($e);
+            Log::debug($e);
         }
         return ($answer);
     }
