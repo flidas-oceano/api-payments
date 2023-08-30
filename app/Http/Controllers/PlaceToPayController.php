@@ -26,9 +26,52 @@ class PlaceToPayController extends Controller
         $this->login_su = env("REACT_APP_PTP_LOGIN_SU");
         $this->secret_su = env("REACT_APP_PTP_SECRECT_SU");
     }
+    public function pruebaregladepago(){
+        try {
+         $this->placeTopayService->createInstallments();
+        // $this->payInstallmentsSubscriptions();
+        } catch (\Exception $e) {
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString()
+            ];
+
+            Log::error("Error en pruebaregladepago: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ]);
+        }
+    }
     public function billSubscription(Request $request, $requestId){
         try {
-
+            // {
+            //     so: ASD31813D3,
+            //     payer:{
+            //         "name" => "1122334455",
+            //         "surname" => "Prueba",
+            //         "email" => "facundobrizuela@oceano.com.ar",
+            //         "document" => "1758859431",
+            //         "documentType" => "CC",//harcodeado
+            //     }
+            //     pu:{ //null
+            //         total
+            //         currency
+            //     }
+            //     su{ //null
+            //         total
+            //         cant
+            //         currency
+            //     }
+            //     sup{//null
+            //         total
+            //         primermonto
+            //         cuotas restantes
+            //         currency
+            //     }
+            // }
 
             $requestSusbcription = PlaceToPayTransaction::where([ 'requestId' => $requestId ] )->get()->first();
             $data = [
@@ -46,7 +89,7 @@ class PlaceToPayController extends Controller
                     "description" => "Prueba",
                     "amount" => [
                       "currency" => "USD",
-                      "total" => 100
+                      "total" => 455
                     ]
                 ],
                 "instrument" => [
@@ -299,7 +342,7 @@ class PlaceToPayController extends Controller
                     'message' =>            $result['status']['message'],
                     'date' =>               $result['status']['date'],
                     'requestId' =>          $result['requestId'],
-                    'processUrl' =>         $result['processUrl'],
+                    'processUrl' =>         $this->placeTopayService->reduceUrl($result['processUrl']),
                     // 'contact_id' => ,
                     // 'authorization' => ,
                     // 'total' =>              ,
@@ -364,7 +407,7 @@ class PlaceToPayController extends Controller
                     'message' =>            $result['status']['message'],
                     'date' =>               $result['status']['date'],
                     'requestId' =>          $result['requestId'],
-                    'processUrl' =>         $result['processUrl'],
+                    'processUrl' =>         $this->placeTopayService->reduceUrl($result['processUrl']),
                     // 'contact_id' => ,
                     // 'authorization' => ,
                     'total' =>              $data['payment']['amount']['total'],
