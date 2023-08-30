@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Contact;
 use App\Models\Lead;
 use App\Models\PlaceToPayTransaction;
 use App\Services\PlaceToPay\PlaceToPayService;
@@ -18,7 +19,6 @@ class PlaceToPayController extends Controller
     public $login_su = "";
     public $secret_su = "";
     public $placeTopayService = null;
-
 
     public function __construct(PlaceToPayService $placeTopayService) {
         $this->placeTopayService = $placeTopayService;
@@ -311,6 +311,30 @@ class PlaceToPayController extends Controller
     }
     public function createSessionSuscription(Request $request)
     {
+        // {
+        //     "so": "ASD31813D3",
+        //     "payer":{
+        //         "name" : "Facundo",
+        //         "surname" : "Brizuela",
+        //         "email" : "facundobrizuela@oceano.com.ar",
+        //         "document" : "1758859431",
+        //         "documentType" : "CC"
+        //     },
+        //     "su":{
+        //         "total" 20000:,
+        //         "cant_cuotas": 10,
+        //         "valor_cuota": 2000,
+        //         "currency": "USD",
+        //     }
+        //     "sup":{ //20000/10 = 2k x mes
+        //         "total"20000: ,
+        //         "cant_cuotas": 10,
+        //         "primer_cuota": 1000,
+        //         "valor_cuota": 2111,
+        //         "currency": "USD",
+        //     }
+        // }
+
         // "payment": {
         //     "reference": "PAY_ABC_1287",
         //     "description": "Pago por Placetopay",
@@ -378,42 +402,40 @@ class PlaceToPayController extends Controller
     }
     public function createSession(Request $request)
     {
-        // {
-        //     "so": "ASD31813D3",
-        //     "payer":{
-        //         "name" : "Facundo",
-        //         "surname" : "Brizuela",
-        //         "email" : "facundobrizuela@oceano.com.ar",
-        //         "document" : "1758859431",
-        //         "documentType" : "CC",
-        //     },
-        //     "pu": { //null
-        //         "total" : 455,
-        //         "currency" : "USD"
-        //     }
-        // }
+        try {
+            $lead =Lead::updateOrCreate(
+                [ 'email' => $request['payer']['email'] ],
+            [
+                'name' => $request['payer']['email'],
+                'username' => $request['payer']['surname'],
+                'email' => $request['payer']['email'],
+            ]);
+            $contact = Contact::updateOrCreate(
+                [ 'id' => $lead->contact_id ],
+            [
+                'dni' => $request['payer']['document'],
+            ]);
 
-        // $lead = Lead::where(['email' => 'facundobrizuela@oceano.com.ar'])->get()->first();
+            $lead->contact_id = $contact->id;
+            $lead->save();
 
-        $auth = $this->placeTopayService->generateAuthentication();
-
-        $payer = [
-            "name" => $request['payer']['name'],
-            "surname" => $request['payer']['surname'],
-            "email" => $request['payer']['email'],
-            "document" => $request['payer']['document'],
-            "documentType" => "CC",
-        ];
-        $payment = [
-            "reference" => $request['so'],
-            "description" => "Prueba contrato de OceanoMedicina",
-            "amount" => [
-                "currency" => "USD",
-                "total" => $request['pu']['total'],
-            ]
-        ];
+            $payer = [
+                "name" => $request['payer']['name'],
+                "surname" => $request['payer']['surname'],
+                "email" => $request['payer']['email'],
+                "document" => $request['payer']['document'],
+                "documentType" => "CC",
+            ];
+            $payment = [
+                "reference" => $request['so'],
+                "description" => "Prueba contrato de OceanoMedicina",
+                "amount" => [
+                    "currency" => "USD",
+                    "total" => $request['payment']['total'],
+                ]
+            ];
         $data = [
-            "auth" => $auth,
+            "auth" => $this->placeTopayService->generateAuthentication(),
             "locale" => "es_CO",
             "payer" => $payer,
             "payment" => $payment,
@@ -422,7 +444,6 @@ class PlaceToPayController extends Controller
             "ipAddress" => $request->ip(), // Usar la dirección IP del cliente
             "userAgent" => $request->header('User-Agent')
         ];
-        try {
 
             $result = $this->placeTopayService->create($data);
 
@@ -434,7 +455,7 @@ class PlaceToPayController extends Controller
                     'date' =>               $result['status']['date'],
                     'requestId' =>          $result['requestId'],
                     'processUrl' =>         $this->placeTopayService->reduceUrl($result['processUrl']),
-                    // 'contact_id' => ,
+                    'contact_id' =>         $lead->contact_id,
                     // 'authorization' => ,
                     'total' =>              $data['payment']['amount']['total'],
                     'currency' =>           $data['payment']['amount']['currency'],
@@ -449,17 +470,6 @@ class PlaceToPayController extends Controller
                     'status' =>             $getById['status']['status'],
                     'reason' =>             $getById['status']['reason'],
                     'message' =>            $getById['status']['message'],
-                    // 'date' =>               $result['status']['date'],
-                    // 'requestId' =>          $result['requestId'],
-                    // 'processUrl' =>         $result['processUrl'],
-                    // 'contact_id' => ,
-                    // 'authorization' => ,
-                    // 'total' =>              $data['payment']['amount']['total'],
-                    // 'currency' =>           $data['payment']['amount']['currency'],
-                    // 'reference' =>          $data['payment']['reference'],
-                    // 'type' => "payment",
-                    // 'token_collect_para_el_pago' => ,
-                    // 'expiration_date' =>    $data['expiration'],
                 ]);
             }
 
@@ -472,7 +482,7 @@ class PlaceToPayController extends Controller
                 'exception' => get_class($e),
                 'line' => $e->getLine(),
                 'file' => $e->getFile(),
-                'trace' => $e->getTraceAsString(),
+                // 'trace' => $e->getTraceAsString(),
             ];
 
             Log::error("Error en createSession: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
@@ -525,6 +535,9 @@ class PlaceToPayController extends Controller
             echo "Error: " . $e->getMessage();
         }
     }
+
+    //actualizar zoho.
+    //TODO: con ptp en el controlador de zoho.
 
     public function createPayment(){
         // (pagounico)
