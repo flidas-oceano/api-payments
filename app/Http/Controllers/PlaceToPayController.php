@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Lead;
 use App\Models\PlaceToPayTransaction;
 use App\Services\PlaceToPay\PlaceToPayService;
 use Illuminate\Http\Request;
@@ -377,25 +378,50 @@ class PlaceToPayController extends Controller
     }
     public function createSession(Request $request)
     {
+        // {
+        //     "so": "ASD31813D3",
+        //     "payer":{
+        //         "name" : "Facundo",
+        //         "surname" : "Brizuela",
+        //         "email" : "facundobrizuela@oceano.com.ar",
+        //         "document" : "1758859431",
+        //         "documentType" : "CC",
+        //     },
+        //     "pu": { //null
+        //         "total" : 455,
+        //         "currency" : "USD"
+        //     }
+        // }
+
+        // $lead = Lead::where(['email' => 'facundobrizuela@oceano.com.ar'])->get()->first();
+
         $auth = $this->placeTopayService->generateAuthentication();
 
+        $payer = [
+            "name" => $request['payer']['name'],
+            "surname" => $request['payer']['surname'],
+            "email" => $request['payer']['email'],
+            "document" => $request['payer']['document'],
+            "documentType" => "CC",
+        ];
+        $payment = [
+            "reference" => $request['so'],
+            "description" => "Prueba contrato de OceanoMedicina",
+            "amount" => [
+                "currency" => "USD",
+                "total" => $request['pu']['total'],
+            ]
+        ];
         $data = [
             "auth" => $auth,
             "locale" => "es_CO",
-            "payment" => [
-                "reference" => $request->reference,
-                "description" => "Prueba contrato de OceanoMedicina",
-                "amount" => [
-                    "currency" => "USD",
-                    "total" => $request->total,
-                ]
-            ],
+            "payer" => $payer,
+            "payment" => $payment,
             "expiration" => $this->placeTopayService->getDateExpiration(),
             "returnUrl" => "https://dnetix.co/p2p/client",
             "ipAddress" => $request->ip(), // Usar la dirección IP del cliente
             "userAgent" => $request->header('User-Agent')
         ];
-
         try {
 
             $result = $this->placeTopayService->create($data);
@@ -418,7 +444,8 @@ class PlaceToPayController extends Controller
                     'expiration_date' =>    $data['expiration'],
                 ]);
                 $getById = $this->placeTopayService->getByRequestId($result['requestId']);
-                $placeToPayTransaction = PlaceToPayTransaction::where(["requestId" => $result['requestId']])->update([
+                $placeToPayTransaction = PlaceToPayTransaction::where(["requestId" => $result['requestId']])
+                ->update([
                     'status' =>             $getById['status']['status'],
                     'reason' =>             $getById['status']['reason'],
                     'message' =>            $getById['status']['message'],
