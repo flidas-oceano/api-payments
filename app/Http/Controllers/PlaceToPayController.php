@@ -125,8 +125,8 @@ class PlaceToPayController extends Controller
     }
     public function savePaymentSubscription(Request $request){
         try {
-            if( isset($request['data']['session']['id']) ){
-                $sessionSubscription = $this->placeTopayService->getByRequestId($request['data']['session']['id']);
+            if( isset($request['requestId']) ){
+                $sessionSubscription = $this->placeTopayService->getByRequestId($request['requestId']);
 
                 PlaceToPayTransaction::updateOrCreate(
                     [ 'requestId' => $sessionSubscription["requestId"] ],
@@ -153,34 +153,6 @@ class PlaceToPayController extends Controller
                     }
                 }
             }
-
-            // if(isset($request->status->status)){
-            //     if($request->status->status === "APPROVED"){
-            //         foreach($request->subscription->instrument as $instrument){
-            //             if($instrument->keyword === "token"){
-            //                 PlaceToPayTransaction::updateOrCreate(
-            //                     [ 'requestId' => $request["requestId"] ],
-            //                     [
-            //                       'status' => $request["status"]["status"],
-            //                       'reason' => $request["status"]["reason"],
-            //                       'message' => $request["status"]["message"],
-            //                       'date' => $request["status"]["date"],
-            //                       'requestId' => $request["requestId"],
-            //                       // 'processUrl' => $transaction["processUrl"],
-            //                       'reference' => $request["request"]["payment"]["reference"],
-            //                       'currency' => $request["request"]["payment"]["amount"]["currency"],
-            //                       'total' => $request["request"]["payment"]["amount"]["total"],
-            //                       'contact_id' => $request["request"]["payment"]["amount"]["amount"],
-            //                       'authorization' => $request["payment"] !== null ? $request["payment"]["authorization"] : null,//si sesta pagado tiene este payment
-            //                       // 'type' => isset($request["subscription"]) ? ///subscription o payment,
-            //                       'token_collect' => $instrument->value,
-            //                     ]
-            //                 );
-            //             }
-            //         }
-            //     }
-            // }
-
             return response()->json([
                 "ok"
             ]);

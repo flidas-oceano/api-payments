@@ -16,7 +16,8 @@ class AddColumnsToPlacetopayTransactionsTable extends Migration
         Schema::table('placetopay_transactions', function (Blueprint $table) {
             $table->integer("quotes")->nullable()->default(null);
             $table->integer("first_installment")->nullable()->default(null);
-            $table->integer("remaining_installments")->nullable()->default(null);        });
+            $table->integer("remaining_installments")->nullable()->default(null);
+        });
     }
 
     /**
