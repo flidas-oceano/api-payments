@@ -309,32 +309,8 @@ class PlaceToPayController extends Controller
             ], 500);
         }
     }
-    public function createSessionSuscription(Request $request)
+    public function createSessionSubscription(Request $request)
     {
-        // {
-        //     "so": "ASD31813D3",
-        //     "payer":{
-        //         "name" : "Facundo",
-        //         "surname" : "Brizuela",
-        //         "email" : "facundobrizuela@oceano.com.ar",
-        //         "document" : "1758859431",
-        //         "documentType" : "CC"
-        //     },
-        //     "su":{
-        //         "total" 20000:,
-        //         "cant_cuotas": 10,
-        //         "valor_cuota": 2000,
-        //         "currency": "USD",
-        //     }
-        //     "sup":{ //20000/10 = 2k x mes
-        //         "total"20000: ,
-        //         "cant_cuotas": 10,
-        //         "primer_cuota": 1000,
-        //         "valor_cuota": 2111,
-        //         "currency": "USD",
-        //     }
-        // }
-
         // "payment": {
         //     "reference": "PAY_ABC_1287",
         //     "description": "Pago por Placetopay",
@@ -344,13 +320,40 @@ class PlaceToPayController extends Controller
         //     },
         //     "subscribe": true
         // }
+
+
+        // {
+        //     "su":{
+        //      "total" 20000:,
+        //      "cant_cuotas": 10,
+        //      "valor_cuota": 2000,
+        //      "currency": "USD",
+        //     },
+        //     "sup":{ //20000/10 = 2k x mes
+        //         "total"20000: ,
+        //         "cant_cuotas": 10,
+        //         "primer_cuota": 1000,
+        //         "valor_cuota": 2111,
+        //         "currency": "USD",
+        //     }
+        // }
+
+        $payer = [
+            "name" => $request['payer']['name'],
+            "surname" => $request['payer']['surname'],
+            "email" => $request['payer']['email'],
+            "document" => $request['payer']['document'],
+            "documentType" => "CC",
+        ];
+        $subscription = [
+            "reference" => $request['so'],
+            "description" => "Prueba suscripcion contrato de OceanoMedicina"
+        ];
         $data = [
             "auth" => $this->placeTopayService->generateAuthentication(),
             "locale" => "es_CO",
-            "subscription" => [
-                "reference" => "$request->reference",
-                "description" => "Prueba suscripcion contrato de OceanoMedicina"
-            ],
+            "payer" => $payer,
+            "subscription" => $subscription,
             "expiration" => $this->placeTopayService->getDateExpiration(),
             "returnUrl" => "https://dnetix.co/p2p/client",
             "ipAddress" => $request->ip(), // Usar la dirección IP del cliente
@@ -368,11 +371,16 @@ class PlaceToPayController extends Controller
                     'date' =>               $result['status']['date'],
                     'requestId' =>          $result['requestId'],
                     'processUrl' =>         $this->placeTopayService->reduceUrl($result['processUrl']),
+
+                    'total' => $request['payment']['total'],
+                    'currency' => 'USD',
+                    'quotes' => $request['payment']['quotes'],
+                    'remaining_installments' => $request['payment']['amount'],
+
                     // 'contact_id' => ,
                     // 'authorization' => ,
-                    // 'total' =>              ,
-                    // 'currency' =>           ,
-                    // 'reference' =>         ,
+
+                    'reference' => $request['so'],
                     'type' => "requestSubscription",
                     // 'token_collect_para_el_pago' => ,
                     'expiration_date' =>    $data['expiration'],
@@ -391,7 +399,7 @@ class PlaceToPayController extends Controller
                 'exception' => get_class($e),
                 'line' => $e->getLine(),
                 'file' => $e->getFile(),
-                'trace' => $e->getTraceAsString(),
+                // 'trace' => $e->getTraceAsString(),
               ];
 
             Log::error("Error en createSessionSuscription: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
