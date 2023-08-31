@@ -1343,7 +1343,7 @@ class CronosController extends Controller
             }
         }
 
-        Log::info('prod details' . print_r($productDetails, true));
+        //Log::info('prod details' . print_r($productDetails, true));
 
         //si pudo crear los product details
         if ($prodStatus) {
