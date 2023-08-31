@@ -473,13 +473,9 @@ class CronosController extends Controller
             if (!$ignore) {
                 if (!$special) {
                     Log::info('envio a españa');
-
                     $what = $this->post_spain($dataReady);
-
                     // Log::info('españa responde ' . $what['log']);
-
                     $e->log = $what['log'];
-
                     //salió bien, cambia el estado
                     if ($what['answer'] == 'ok')
                         $e->msk = 1;
@@ -1377,7 +1373,7 @@ class CronosController extends Controller
                 'Pais_de_facturaci_n' => $element['contrato']["pais"],
 
                 'folio_pago' => isset($element['contrato']['folio pago']) ? $element['contrato']['folio pago'] : null,
-                'folio_suscripcion' => isset($element['contrato']['folio suscripcion']) ? $element['contrato']['folio suscripcion'] : null,
+                'folio_suscripcion' => isset($element['contrato']['folio suscription']) ? $element['contrato']['folio suscription'] : null,
 
                 'Modo_de_pago' => $mododepago,
                 'Monto_de_parcialidad' => $element['contrato']['anticipo 1er cuota'],

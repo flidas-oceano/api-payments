@@ -130,12 +130,16 @@ Route::post('/ctc/exportExcel4PBOCP', [ExcelController::class, 'exportExcel4PBOC
 Route::prefix("/placetopay")->group(function () {
     Route::get('/getAuth', [PlaceToPayController::class, 'getAuth']);
     Route::post('/createSession', [PlaceToPayController::class, 'createSession']);
-    Route::post('/createSessionSuscription', [PlaceToPayController::class, 'createSessionSuscription']);
+    Route::post('/createSessionSubscription', [PlaceToPayController::class, 'createSessionSubscription']);
     Route::get('/getSessionByRequestId/{requestId}', [PlaceToPayController::class, 'getSessionByRequestId']);
-
 
     Route::get('/placetopay', [PlaceToPayController::class, 'index']);
     Route::get('/createPayment', [PlaceToPayController::class, 'createPayment']);
 
     Route::post('/savePayments', [PlaceToPayController::class, 'savePayments']);
+    Route::post('/savePaymentSubscription', [PlaceToPayController::class, 'savePaymentSubscription']);
+    Route::get('/billSubscription/{requestId}', [PlaceToPayController::class, 'billSubscription']);
+
+    Route::get('/pruebaregladepago', [PlaceToPayController::class, 'pruebaregladepago']);
+
 });
