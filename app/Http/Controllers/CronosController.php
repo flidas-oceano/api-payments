@@ -326,42 +326,11 @@ class CronosController extends Controller
         return ($answer);
     }
 
-    //--------------------------------
-    //--------------------------------
-    //--------------------------------
-    //--------------------------------
-    //--------------------------------
-    //--------------------------------
-    //--------------------------------
+
     //--------------------------------
     //URL para CRON
     //--------------------------------
-    //--------------------------------
-    //--------------------------------
-    //--------------------------------
-    //--------------------------------
-    //--------------------------------
-    //--------------------------------
-    //--------------------------------
-    //--------------------------------
 
-
-
-
-    /*
-    public function checkpackage()
-    {
-    $this->render(false);
-    if(isset($_POST['response']))
-    {
-    $response = json_decode($_POST['response']);
-    $data = $response->data;
-    $pack = $this->packData($data, 'check');
-    $this->response = $this->response->withType('json')->withStringBody(json_encode($pack));
-    return $this->response;
-    }
-    }
-    */
 
     private function processDeletions()
     {
@@ -680,6 +649,17 @@ class CronosController extends Controller
                 $pack['contrato']['codigo_combo'] = 'ignore';
             else
                 $pack['contrato']['codigo_combo'] = $this->pax($orderData, 'C_digo_de_Combo');
+
+            $pack['contrato']['banco emisor'] = $this->pax($orderData, 'Banco_emisor');
+            $pack['contrato']['tipo de cuenta'] = $this->pax($orderData, 'Tipo_de_Cuenta');
+            $pack['contrato']['nro cuenta'] = $this->pax($orderData, 'N_mero_de_Cuenta');
+            $pack['contrato']['nro operacion'] = $this->pax($orderData, 'Numero_de_operaci_n');
+            $pack['contrato']['resultado cobro'] = $this->pax($orderData, 'Resultado_del_cobro');
+            $pack['contrato']['nro movimiento'] = $this->pax($orderData, 'N_mero_de_movimiento');
+
+            $pack['contacto']['tipo documento'] = $this->pax($orderData, 'Tipo_de_Documento');
+            $pack['contacto']['dni'] = $this->pax($orderData, 'L_nea_nica_3');
+
         } else {
             $pack['contrato']['codigo_combo'] = 'ignore';
         }
@@ -841,6 +821,7 @@ class CronosController extends Controller
             //$answer['nro de cuotas'] = $this->pax($data,'Cantidad');
             $answer['nro de cuotas'] = $this->pax($data, 'Cuotas_totales');
             $answer['total general'] = $this->pax($data, 'Grand_Total');
+            $answer['tipo documento'] = $this->pax($data, 'Tipo_de_Documento');
             $answer['dni'] = str_replace(".", "", $this->filter($this->pax($data, 'L_nea_nica_3')));
             $answer['cuit'] = $this->pax($data, 'CUIT_CUIL');
             $answer['nombre y apellido'] = $this->pax($data, 'L_nea_nica_6');
@@ -901,6 +882,7 @@ class CronosController extends Controller
                 //$answer['ecom_certificaciones'] = $this->pax($data,'Certificaciones');
             }
         } else if ($who == 'contacto') {
+            $answer['tipo documento'] = $this->pax($data, 'Tipo_de_Documento');
             $answer['dni'] = str_replace(".", "", $this->filter($this->pax3($data, 'DNI')));
             $answer['nombre de contacto'] = $this->pax3($data, 'Last_Name') . ', ' . $this->pax3($data, 'First_Name');
             $answer['correo electronico'] = $this->pax3($data, 'Email');
@@ -1275,6 +1257,8 @@ class CronosController extends Controller
 
         $contactData = array(
             "ID_Personal" => $element['contacto']['dni'],
+            "Identificacion" => $element['contacto']['dni'],
+            "Tipo_de_Documento" => $element['contacto']['tipo documento'],
             'First_Name' => $name,
             'Last_Name' => $surname,
             'Email' => $element['contacto']["correo electronico"],
@@ -1339,7 +1323,7 @@ class CronosController extends Controller
             }
         }
 
-        Log::info('prod details' . print_r($productDetails, true));
+        //Log::info('prod details' . print_r($productDetails, true));
 
         //si pudo crear los product details
         if ($prodStatus) {
@@ -1372,6 +1356,12 @@ class CronosController extends Controller
                 'Quote_Stage' => $element['contrato']["estado de contrato"],
                 'Pais_de_facturaci_n' => $element['contrato']["pais"],
 
+                'Banco_emisor' => $element['contrato']['banco emisor'],
+                'Tipo_de_cuenta' => $element['contrato']['tipo de cuenta'],
+                'N_mero_de_Cuenta' => $element['contrato']['nro cuenta'],
+                'Resultado_del_cobro' => $element['contrato']['resultado cobro'],
+                'N_mero_de_movimiento' => $element['contrato']['nro movimiento'],
+
                 'folio_pago' => isset($element['contrato']['folio pago']) ? $element['contrato']['folio pago'] : null,
                 'folio_suscripcion' => isset($element['contrato']['folio suscription']) ? $element['contrato']['folio suscription'] : null,
 
@@ -1381,6 +1371,7 @@ class CronosController extends Controller
                 'Monto_de_cada_pago_restantes' => $element['contrato']['monto cuotas restantes'],
                 'M_todo_de_pago' => $element['contrato']["modalidad de pago del anticipo"],
                 'subscription_id' => $sub_id,
+                'mp_subscription_id' => $sub_id,
                 'Discount' => $element['contrato']['ajuste de cobro'],
 
                 "Seleccione_total_de_pagos_recurrentes" => $element['contrato']["cuotas totales"],
