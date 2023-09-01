@@ -26,7 +26,6 @@ class PlaceToPaySubscription extends Model
         'nro_quote',
         'reference',
         'type',
-        'token_collect_para_el_pago',
         'expiration_date',
         'transactionId'
     ];
@@ -44,7 +43,6 @@ class PlaceToPaySubscription extends Model
         'currency',
         'reference',
         'type',
-        'token_collect_para_el_pago',
         'expiration_date',
         'transactionId'
     ];

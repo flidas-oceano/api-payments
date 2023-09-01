@@ -148,6 +148,8 @@ class PlaceToPayController extends Controller
                                         'token_collect_para_el_pago' => $instrument['value']
                                     ]
                                 );
+                                // realizar primer pago de subscripcion
+                                $this->placeTopayService->payFirstQuoteCreateRestQuotesByRequestId($sessionSubscription["requestId"]);
                             }
                         }
                     }
@@ -169,7 +171,7 @@ class PlaceToPayController extends Controller
             return response()->json([
                 $err
             ]);
-          }
+        }
     }
     public function updateSession(){
         $requestQueEspero = '{
@@ -618,8 +620,8 @@ class PlaceToPayController extends Controller
         ]);
     }
 
-  // Esto es cuando se ejecuta el create sesion que es la creacion del pago unico. //Se paga a travez de la pasarela.
-  public function savePayments(Request $request){
+    // Esto es cuando se ejecuta el create sesion que es la creacion del pago unico. //Se paga a travez de la pasarela.
+    public function savePayments(Request $request){
     try {
 
       foreach($request->transactions as $transaction){
@@ -664,9 +666,9 @@ class PlaceToPayController extends Controller
           $err
       ]);
     }
-  }
-  //requestId() payment unico
-  public function requestId(Request $request){
+    }
+    //requestId() payment unico
+    public function requestId(Request $request){
     try {
 
       // ver si en el body de request tengo subscription o payment y ponerlo en el type
@@ -712,9 +714,9 @@ class PlaceToPayController extends Controller
           $err
       ]);
     }
-  }
+    }
 
-  public function pasounocreatesession(){
+    public function pasounocreatesession(){
     $createRequest =  json_decode('{
       "buyer": {
         "name": "Demetris",
@@ -912,8 +914,8 @@ class PlaceToPayController extends Controller
     }');
     //VISA 4716375184092180 12/29 111 APROVED
     $responseAprovedgGetRequestInformation = '';
-  }
-  public function subscription (){
+    }
+    public function subscription (){
     // Payment Request (createRequest)
     $createRequest = '{
       "buyer": {
@@ -1411,5 +1413,5 @@ class PlaceToPayController extends Controller
       ]
     }';
 
-  }
+    }
 }

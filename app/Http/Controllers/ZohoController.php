@@ -16,7 +16,7 @@ use zcrmsdk\crm\crud\ZCRMInventoryLineItem;
 use App\Http\Requests\UpdateContractZohoRequest;
 use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
 
-use App\Models\{Contact, Lead, Profession, PurchaseProgress, Speciality, MethodContact, SourceLead};
+use App\Models\{Contact, Lead, Profession, PurchaseProgress, Speciality, MethodContact, PlaceToPayTransaction, SourceLead};
 
 class ZohoController extends Controller
 {
@@ -184,7 +184,6 @@ class ZohoController extends Controller
 
         return ($answer);
     }
-
 
     //gestiona un error de subida de record
     //error es el codigo y el mensaje
@@ -359,6 +358,41 @@ class ZohoController extends Controller
         else
             return response()->json($updateContract);
     }
+    public function updateZohoPTP($result,$requestIdRequestSubscription)
+    {
+        $requestsSubscription = PlaceToPayTransaction::where( [ 'requestId' => $requestIdRequestSubscription ])->get()->first();
+        $dataUpdate = [
+           //payer// 'Email' => $result['response']'request']['payer']['email'],
+       //     'Anticipo' => $request->installment_amount,
+           'Saldo' =>  $result['response']['request']['payment']['amount']['total'],
+           'Cantidad' => $requestsSubscription->quotes,
+       //     //Nro de cuotas
+           'Monto_de_cuotas_restantes' => $requestsSubscription->isAdvancedSubscription() ? $requestsSubscription->first_installment : $requestsSubscription->installmentsToPay(),
+       //     //Costo de cada cuota
+           'Cuotas_restantes_sin_anticipo' => $requestsSubscription->isAdvancedSubscription() ? $requestsSubscription->quotes - 1 : null,
+       //     'DNI' => '',
+            'Fecha_de_Vto' => date('Y-m-d'),
+           'Status' => 'Contrato Efectivo',
+           'Modalidad_de_pago_del_Anticipo' => 'PTP',
+           'Medio_de_Pago' => 'PTP',
+       //     'Es_Suscri' => boolval($request->is_suscri),
+       //     'Suscripcion_con_Parcialidad' => $requestsSubscription->first_installment !== null? false:false,
+       //     'mp_subscription_id' => $request->subscriptionId,
+    //    payer //     'L_nea_nica_6' => $request->fullname,
+    //    payer //     'Billing_Street' => $request->address,
+           'L_nea_nica_3' => $result['response']['request']['payer']['document'],
+       //     'Tel_fono_Facturacion' => $request->phone,
+       //     'Discount' => abs($request->adjustment)
+        ];
+
+        // $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
+
+    //     if ($updateContract['result'] == 'error')
+    //         return response()->json($updateContract, 500);
+    //     else
+    //         return response()->json($updateContract);
+    }
+
 
     private function getIdentification($identification, $country)
     {

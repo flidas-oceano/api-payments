@@ -2,6 +2,7 @@
 
 namespace App\Services\PlaceToPay;
 
+use App\Http\Controllers\ZohoController;
 use App\Models\PlaceToPaySubscription;
 use App\Models\PlaceToPayTransaction;
 use Illuminate\Support\Facades\Http;
@@ -12,8 +13,10 @@ class PlaceToPayService
     private $secret_pu;
     private $login_su;
     private $secret_su;
+    private $zohoController;
 
-    public function __construct() {
+    public function __construct(ZohoController $zohoController) {
+        $this->zohoController = $zohoController;
         $this->login_pu = env("REACT_APP_PTP_LOGIN_PU");
         $this->secret_pu = env("REACT_APP_PTP_SECRECT_PU");
         $this->login_su = env("REACT_APP_PTP_LOGIN_SU");
@@ -69,19 +72,64 @@ class PlaceToPayService
 
         $response = $this->billSubscription($data);
         // guardas registro primer cuota
-        PlaceToPaySubscription::create([
-            'transactionId' => $request->id,
-            'nro_quote' => $nro_quote,
-            'date' => $response['status']['date'],
-            'requestId' => $response['requestId'],
-            'total' => $response['request']['payment']['amount']['total'],
-            'currency' => $response['request']['payment']['amount']['currency'],
-            'status' => $response['status']['status'],
-        ]);
+        // PlaceToPaySubscription::create([
+        //     'transactionId' => $request->id,
+        //     'nro_quote' => $nro_quote,
+        //     'date' => $response['status']['date'],
+        //     'requestId' => $response['requestId'],
+        //     'total' => $response['request']['payment']['amount']['total'],
+        //     'currency' => $response['request']['payment']['amount']['currency'],
+        //     'status' => $response['status']['status'],
+        // ]);
+        // actualizar session
+        // PlaceToPayTransaction::where(['requestId'])->update([
+        //     // 'cuotaspagadas' => 1;
+        // ]);
 
         //Se realizo el pago exitosamente ?
-        return ($response['status']['status'] === 'APPROVED')? true: false;
+        return [
+            "response" => $response,
+            "data" => $data,
+        ];
+
+        // return ($response['status']['status'] === 'APPROVED')? true: false;
     }
+    public function payFirstQuoteCreateRestQuotesByRequestId($requestIdRequestSubscription){
+        $requestsSubscription = PlaceToPayTransaction::where( [ 'requestId' => $requestIdRequestSubscription ])->get()->first();
+        if (!(count($requestsSubscription->subscriptions) === $requestsSubscription->quotes)) {
+            //No estan creadas todas las cuotas de la suscripcion
+
+            //empiezo pagando la primer cuota
+            $success = false;
+            //es anticipo ?
+            if($requestsSubscription->first_installment !== null)
+                $result = $this->pagarCuotaSuscripcionAnticipo($requestsSubscription);
+            else
+                $result = $this->pagarCuotaSuscripcion($requestsSubscription, 1);
+
+                // creas todas las cuotas restantes, si hay
+            if($result['response']['status']['status'] === 'APPROVED'){
+
+                $this->zohoController->updateZohoPTP($result,$requestIdRequestSubscription);
+
+                // // crear cuotas
+                // if($requestsSubscription->quotes > 1){
+                //    for ($i = 2; $i <= $requestsSubscription->quotes; $i++) {
+                //         PlaceToPaySubscription::create([
+                //            'transactionId' => $requestsSubscription->id,
+                //            'nro_quote' => $i,
+                //            // 'date' => $response['status']['date'],
+                //            // 'requestId' => $response['status']['status'],
+                //            'total' => $requestsSubscription->remaining_installments,
+                //            'currency' => $requestsSubscription->currency,
+                //            // 'type' => 'subscription',
+                //         ]);
+                //     }
+                // }
+            }
+        }
+    }
+
     public function createInstallments(){
         $requestsSubscription = PlaceToPayTransaction::where(['type' => 'requestSubscription','status' => 'APPROVED'])->get();
         foreach($requestsSubscription as $request){
