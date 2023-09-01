@@ -387,10 +387,10 @@ class ZohoController extends Controller
 
         // $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
 
-        if ($updateContract['result'] == 'error')
-            return response()->json($updateContract, 500);
-        else
-            return response()->json($updateContract);
+    //     if ($updateContract['result'] == 'error')
+    //         return response()->json($updateContract, 500);
+    //     else
+    //         return response()->json($updateContract);
     }
 
 
