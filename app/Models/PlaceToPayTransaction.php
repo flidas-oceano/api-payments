@@ -31,6 +31,7 @@ class PlaceToPayTransaction extends Model
         'remaining_installments',
         'first_installment',
         'quotes',
+        'installments_paid',
     ];
     private static $formAttributes = [
         'requestId',
@@ -50,7 +51,15 @@ class PlaceToPayTransaction extends Model
         'remaining_installments',
         'first_installment',
         'quotes',
+        'installments_paid',
     ];
+    function isAdvancedSubscription() {
+        return $this->first_installment !== null;
+    }
+    function installmentsToPay() {
+        $diferencia = $this->quotes -  $this->installments_paid;
+        return $diferencia;
+    }
     public function subscriptions()
     {
         return $this->hasMany(PlaceToPaySubscription::class, 'transactionId');

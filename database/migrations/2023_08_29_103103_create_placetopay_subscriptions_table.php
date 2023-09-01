@@ -28,7 +28,6 @@ class CreatePlacetopaySubscriptionsTable extends Migration
             $table->integer("nro_quote")->nullable()->default(null);
             $table->string("reference")->nullable()->default(null);
             $table->string("type")->nullable()->default(null);
-            $table->string("token_collect_para_el_pago")->nullable()->default(null);//para realizar el pago de la suscripcion
             $table->string("expiration_date")->nullable()->default(null);
 
             $table->foreignId('transactionId')->nullable()->default(null)
