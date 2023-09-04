@@ -57,13 +57,11 @@ class Lead extends Model
         $profession = Profession::where('id', $this->profession)->first()->name;
         return $profession;
     }
-
     public function contact()
     {
         // $contact = Contact::where('id', $this->contact_id_fk)->first();
-        $contact = $this->belongsTo(Contact::class, 'contact_id_fk');
+        $contact = $this->belongsTo(Contact::class, 'contact_id');
         return $contact;
-        // return $contact;
     }
     public function source_lead()
     {

@@ -53,6 +53,9 @@ class PlaceToPayTransaction extends Model
         'quotes',
         'installments_paid',
     ];
+    function isSubscription() {
+        return ($this->type === 'requestSubscription') ? true: false;
+    }
     function isAdvancedSubscription() {
         return $this->first_installment !== null;
     }
@@ -63,5 +66,9 @@ class PlaceToPayTransaction extends Model
     public function subscriptions()
     {
         return $this->hasMany(PlaceToPaySubscription::class, 'transactionId');
+    }
+    public function lead()
+    {
+        return $this->belongsTo(Lead::class, 'lead_id');
     }
 }
