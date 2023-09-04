@@ -1358,7 +1358,7 @@ class CronosController extends Controller
 
                 'Banco_emisor' => $element['contrato']['banco emisor'],
                 'Tipo_de_cuenta' => $element['contrato']['tipo de cuenta'],
-                'N_mero_de_Cuenta' => $element['contrato']['nro cuenta'],
+                'N_mero_de_Cuenta' => isset($element['contrato']['nro cuenta']) ? $element['contrato']['nro cuenta'] : null,
                 'Resultado_del_cobro' => $element['contrato']['resultado cobro'],
                 'N_mero_de_movimiento' => $element['contrato']['nro movimiento'],
 
