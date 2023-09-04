@@ -1371,7 +1371,7 @@ class CronosController extends Controller
                 'Monto_de_cada_pago_restantes' => $element['contrato']['monto cuotas restantes'],
                 'M_todo_de_pago' => $element['contrato']["modalidad de pago del anticipo"],
                 'subscription_id' => $sub_id,
-                'mp_subscription_id' => $sub_id,
+                'mp_subscription_id' => isset($element['contrato']['nro operacion']) ? $element['contrato']['nro operacion'] : null,
                 'Discount' => $element['contrato']['ajuste de cobro'],
 
                 "Seleccione_total_de_pagos_recurrentes" => $element['contrato']["cuotas totales"],
