@@ -19,8 +19,10 @@ class PlaceToPayController extends Controller
     public $login_su = "";
     public $secret_su = "";
     public $placeTopayService = null;
+    public $zohoController = null;
 
-    public function __construct(PlaceToPayService $placeTopayService) {
+    public function __construct(PlaceToPayService $placeTopayService, ZohoController $zohoController) {
+        $this->zohoController = $zohoController;
         $this->placeTopayService = $placeTopayService;
         $this->login_pu = env("REACT_APP_PTP_LOGIN_PU");
         $this->secret_pu = env("REACT_APP_PTP_SECRECT_PU");
@@ -312,6 +314,11 @@ class PlaceToPayController extends Controller
         //     }
         // }
 
+        //comprador - el que recibe el curso
+        $buyer = [
+
+        ];
+        //pagador - el que paga
         $payer = [
             "name" => $request['payer']['name'],
             "surname" => $request['payer']['surname'],
@@ -453,6 +460,10 @@ class PlaceToPayController extends Controller
                     'reason' =>             $getById['status']['reason'],
                     'message' =>            $getById['status']['message'],
                 ]);
+                if(isset($getById['status']['status']) && $getById['status']['status'] === "APPROVED" ){
+
+                    $this->zohoController->updateZohoPTP($getById,$result['requestId']);
+                }
             }
 
             // Aquí puedes procesar la respuesta como desees

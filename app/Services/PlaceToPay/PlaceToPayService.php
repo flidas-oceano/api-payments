@@ -110,7 +110,7 @@ class PlaceToPayService
                 // creas todas las cuotas restantes, si hay
             if($result['response']['status']['status'] === 'APPROVED'){
 
-                $this->zohoController->updateZohoPTP($result,$requestIdRequestSubscription);
+                $responseUpdateZohoPTP = $this->zohoController->updateZohoPTP($result,$requestIdRequestSubscription);
 
                 // // crear cuotas
                 // if($requestsSubscription->quotes > 1){
