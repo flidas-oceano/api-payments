@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddColumsPlacetopayTransactionsTable extends Migration
+class AddColumsToPlacetopayTransactionsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -14,7 +14,10 @@ class AddColumsPlacetopayTransactionsTable extends Migration
     public function up()
     {
         Schema::table('placetopay_transactions', function (Blueprint $table) {
-            $table->string("installments_paid")->nullable()->default(null);
+            $table->foreignId('lead_id')
+                    ->nullable()->default(null)
+                    ->references('id')
+                    ->on('leads');
         });
     }
 
@@ -26,7 +29,8 @@ class AddColumsPlacetopayTransactionsTable extends Migration
     public function down()
     {
         Schema::table('placetopay_transactions', function (Blueprint $table) {
-            $table->dropColumn('installments_paid');
+            $table->dropForeign(['lead_id']);
+            $table->dropColumn('lead_id');
         });
     }
 }
