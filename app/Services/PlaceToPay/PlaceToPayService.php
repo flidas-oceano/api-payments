@@ -39,20 +39,30 @@ class PlaceToPayService
         PlaceToPaySubscription::where('status', '!=' , 'APPROVED')->get();
     }
     public function pagarCuotaSuscripcion($request, $nro_quote){
+        $requestSubscriptionById = $this->getByRequestId($request['requestId']);
         // pagar primer cuota de subscripcion normal, no anticipo
         $payer = [
-            "name" => "Facundo",//$request->lead->name
-            "surname" => "Brizuela",//$request->lead->username
-            "email" => "facundobrizuela@oceano.com.ar",//$request->lead->email
-            "document" => "1758859431",//contact->dni,rut,rfc,mui
-            "documentType" => "CC",//hardcodeado
+            "name" => $requestSubscriptionById['request']['payer']['name'],//$request->lead->name
+            "surname" => $requestSubscriptionById['request']['payer']['surname'],//$request->lead->username
+            "email" => $requestSubscriptionById['request']['payer']['email'],//$request->lead->email
+            "document" => $requestSubscriptionById['request']['payer']['document'],//contact->dni,rut,rfc,mui
+            "documentType" => $requestSubscriptionById['request']['payer']['documentType'],
+            "mobile" => $requestSubscriptionById['request']['payer']['mobile'],
+            "address" => [ //domicilio
+                // "country" => $request['country'],
+                // "state" => $request['state'],
+                // "city" => $request['city'],
+                // "postalCode" => $request['postalCode'],
+                "street" => $requestSubscriptionById['request']['payer']['address']['street'],
+                // "phone" => $request['phone'],//+573214445566
+            ]
         ];
         $payment = [
             "reference" => 'Cuota '.$nro_quote.'-'.$request['reference'],
             "description" => "Prueba pago de cuota subscripcion",
             "amount" => [
-            "currency" => $request['currency'],
-            "total" => $request['remaining_installments']
+                "currency" => $request['currency'],
+                "total" => $request['remaining_installments']
             ]
         ];
         $data = [
@@ -128,6 +138,7 @@ class PlaceToPayService
                     }
                 }
             }
+            return $result;
         }
     }
 

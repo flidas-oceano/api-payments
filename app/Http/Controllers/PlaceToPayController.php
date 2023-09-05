@@ -130,7 +130,7 @@ class PlaceToPayController extends Controller
             if( isset($request['requestId']) ){
                 $sessionSubscription = $this->placeTopayService->getByRequestId($request['requestId']);
 
-                PlaceToPayTransaction::updateOrCreate(
+                $updateRequestSession = PlaceToPayTransaction::updateOrCreate(
                     [ 'requestId' => $sessionSubscription["requestId"] ],
                     [
                         'status' => $sessionSubscription["status"]["status"],
@@ -151,14 +151,18 @@ class PlaceToPayController extends Controller
                                     ]
                                 );
                                 // realizar primer pago de subscripcion
-                                $this->placeTopayService->payFirstQuoteCreateRestQuotesByRequestId($sessionSubscription["requestId"]);
+                                $result = $this->placeTopayService->payFirstQuoteCreateRestQuotesByRequestId($sessionSubscription["requestId"]);
+                                return response()->json([
+                                    "updateRequestSession" => $updateRequestSession,
+                                    "result" => "Se pago con exito la primer cuota"
+                                ]);
                             }
                         }
                     }
                 }
             }
             return response()->json([
-                "ok"
+                "updateRequestSession" => $updateRequestSession,
             ]);
         } catch (\Exception $e) {
             $err = [
@@ -237,7 +241,16 @@ class PlaceToPayController extends Controller
             "surname" => $request['payer']['surname'],
             "email" => $request['payer']['email'],
             "document" => $request['payer']['document'],
-            "documentType" => "CC",
+            "documentType" => $request['payer']['documentType'],
+            "mobile" => $request['payer']['mobile'],
+            "address" => [ //domicilio
+                // "country" => $request['country'],
+                // "state" => $request['state'],
+                // "city" => $request['city'],
+                // "postalCode" => $request['postalCode'],
+                "street" => $request['payer']['address']['street'],
+                // "phone" => $request['phone'],//+573214445566
+            ]
         ];
         $subscription = [
             "reference" => $request['so'],
@@ -269,7 +282,7 @@ class PlaceToPayController extends Controller
                     'total' => $request['payment']['total'],
                     'currency' => 'USD',
                     'quotes' => $request['payment']['quotes'],
-                    'remaining_installments' => $request['payment']['amount'],
+                    'remaining_installments' => $request['payment']['remaining_installments'],
 
                     // 'contact_id' => ,
                     // 'authorization' => ,
@@ -323,13 +336,15 @@ class PlaceToPayController extends Controller
             // $lead->contact_id = $contact->id;
             // $lead->save();
 
+            // CI - Cédula de identidad - '/^\d{10}$/' // RUC - Registro Único de Contribuyentes - '/^\d{13}$/'
+
             $payer = [
                 "name" => $request['payer']['name'],
                 "surname" => $request['payer']['surname'],
                 "email" => $request['payer']['email'],
                 "document" => $request['payer']['document'],
-                "documentType" => $request['payer']['documentType'], // CI - Cédula de identidad - '/^\d{10}$/' // RUC - Registro Único de Contribuyentes - '/^\d{13}$/'
-                "mobile" => $request['payer']['mobile'],//+573214445566//usuario o empresa
+                "documentType" => $request['payer']['documentType'],
+                "mobile" => $request['payer']['mobile'],
                 "address" => [ //domicilio
                     // "country" => $request['country'],
                     // "state" => $request['state'],
