@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CreateSessionSubscriptionRequest;
 use App\Models\Contact;
 use App\Models\Lead;
 use App\Models\PlaceToPayTransaction;
@@ -127,43 +128,38 @@ class PlaceToPayController extends Controller
     }
     public function savePaymentSubscription(Request $request){
         try {
-            if( isset($request['requestId']) ){
-                $sessionSubscription = $this->placeTopayService->getByRequestId($request['requestId']);
+            $sessionSubscription = $this->placeTopayService->getByRequestId($request['requestId']);
 
-                $updateRequestSession = PlaceToPayTransaction::updateOrCreate(
-                    [ 'requestId' => $sessionSubscription["requestId"] ],
-                    [
-                        'status' => $sessionSubscription["status"]["status"],
-                        'reason' => $sessionSubscription["status"]["reason"],
-                        'message' => $sessionSubscription["status"]["message"],
-                        'date' => $sessionSubscription["status"]["date"],
-                        'requestId' => $sessionSubscription["requestId"],
-                    ]
-                );
-                if($sessionSubscription['status']['status'] === "APPROVED"){
-                    if(isset($sessionSubscription['subscription'])){
-                        foreach($sessionSubscription['subscription']['instrument'] as $instrument){
-                            if($instrument['keyword'] === "token"){
-                                PlaceToPayTransaction::updateOrCreate(
-                                    [ 'requestId' => $sessionSubscription["requestId"] ],
-                                    [
-                                        'token_collect_para_el_pago' => $instrument['value']
-                                    ]
-                                );
-                                // realizar primer pago de subscripcion
-                                $result = $this->placeTopayService->payFirstQuoteCreateRestQuotesByRequestId($sessionSubscription["requestId"]);
-                                return response()->json([
-                                    "updateRequestSession" => $updateRequestSession,
-                                    "result" => "Se pago con exito la primer cuota"
-                                ]);
-                            }
+            $updateRequestSession = PlaceToPayTransaction::updateOrCreate(
+                [ 'requestId' => $sessionSubscription["requestId"] ],
+                [
+                    'status' => $sessionSubscription["status"]["status"],
+                    'reason' => $sessionSubscription["status"]["reason"],
+                    'message' => $sessionSubscription["status"]["message"],
+                    'date' => $sessionSubscription["status"]["date"],
+                    'requestId' => $sessionSubscription["requestId"],
+                ]
+            );
+            if($sessionSubscription['status']['status'] === "APPROVED"){
+                if(isset($sessionSubscription['subscription'])){
+                    foreach($sessionSubscription['subscription']['instrument'] as $instrument){
+                        if($instrument['keyword'] === "token"){
+                            PlaceToPayTransaction::updateOrCreate(
+                                [ 'requestId' => $sessionSubscription["requestId"] ],
+                                [
+                                    'token_collect_para_el_pago' => $instrument['value']
+                                ]
+                            );
+                            // realizar primer pago de subscripcion
+                            $result = $this->placeTopayService->payFirstQuoteCreateRestQuotesByRequestId($sessionSubscription["requestId"]);
+                            return response()->json([
+                                "updateRequestSession" => $updateRequestSession,
+                                "result" => "Se pago con exito la primer cuota"
+                            ]);
                         }
                     }
                 }
             }
-            return response()->json([
-                "updateRequestSession" => $updateRequestSession,
-            ]);
         } catch (\Exception $e) {
             $err = [
                 'message' => $e->getMessage(),
@@ -203,7 +199,8 @@ class PlaceToPayController extends Controller
             ], 500);
         }
     }
-    public function createSessionSubscription(Request $request)
+    public function createSessionSubscription(CreateSessionSubscriptionRequest $request)
+    // CreateSessionSubscriptionRequestk
     {
         // // "payment": {
         //     "reference": "PAY_ABC_1287",
@@ -466,7 +463,6 @@ class PlaceToPayController extends Controller
     }
     //actualizar zoho.
     //TODO: con ptp en el controlador de zoho.
-
 
     // Esto es cuando se ejecuta el create sesion que es la creacion del pago unico. //Se paga a travez de la pasarela.
     public function savePayments(Request $request){
