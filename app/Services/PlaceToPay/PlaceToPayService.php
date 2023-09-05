@@ -1084,6 +1084,52 @@ class PlaceToPayService
                 $arrayResponse
             ]);
         }
+        public function createPayment(){
+            // (pagounico)
+            $jsonCreatePaymentRequest = '{
+                "buyer": {
+                  "name": "Otha",
+                  "surname": "Kautzer",
+                  "email": "dnetix@yopmail.com",
+                  "document": "1040035000",
+                  "documentType": "CC",
+                  "mobile": 3006108300
+                },
+                "payment": {
+                  "reference": "TEST_20230804_153102",
+                  "description": "Consequatur sit dicta rem ut a praesentium.",
+                  "amount": {
+                    "currency": "COP",
+                    "total": 106000
+                  }
+                },
+                "expiration": "2023-08-05T15:31:02-05:00",
+                "ipAddress": "186.19.80.249",
+                "returnUrl": "https://dnetix.co/p2p/client",
+                "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+                "paymentMethod": null,
+                "auth":'. $this->generateAuthentication() .'
+              }';
+            //   (pagounico)
+              $jsonCreatePaymentResponse = '{
+                  "status": {
+                      "status": "OK",
+                      "reason": "PC",
+                      "message": "La petición se ha procesado correctamente",
+                      "date": "2023-08-05T09:59:09-05:00"
+                    },
+                    "requestId": "668933",
+                    "processUrl": "https://checkout-test.placetopay.ec/spa/session/668933/18a1c7856f0ea52b55df228f9115639b"
+                }';
+
+            $arrayRequest = json_decode($jsonCreatePaymentRequest, true);
+            $arrayResponse = json_decode($jsonCreatePaymentResponse, true);
+
+            return response()->json([
+                $arrayRequest,
+                $arrayResponse
+            ]);
+        }
     //End //Objetos de ejemplo
 
 }

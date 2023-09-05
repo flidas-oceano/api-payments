@@ -329,13 +329,14 @@ class PlaceToPayController extends Controller
                 "email" => $request['payer']['email'],
                 "document" => $request['payer']['document'],
                 "documentType" => $request['payer']['documentType'], // CI - Cédula de identidad - '/^\d{10}$/' // RUC - Registro Único de Contribuyentes - '/^\d{13}$/'
-                "address" => [
+                "mobile" => $request['payer']['mobile'],//+573214445566//usuario o empresa
+                "address" => [ //domicilio
                     // "country" => $request['country'],
                     // "state" => $request['state'],
                     // "city" => $request['city'],
                     // "postalCode" => $request['postalCode'],
                     "street" => $request['payer']['address']['street'],
-                    // "phone" => $request['phone'],
+                    // "phone" => $request['phone'],//+573214445566
                 ]
             ];
             $payment = [
@@ -450,52 +451,7 @@ class PlaceToPayController extends Controller
     }
     //actualizar zoho.
     //TODO: con ptp en el controlador de zoho.
-    public function createPayment(){
-        // (pagounico)
-        $jsonCreatePaymentRequest = '{
-            "buyer": {
-              "name": "Otha",
-              "surname": "Kautzer",
-              "email": "dnetix@yopmail.com",
-              "document": "1040035000",
-              "documentType": "CC",
-              "mobile": 3006108300
-            },
-            "payment": {
-              "reference": "TEST_20230804_153102",
-              "description": "Consequatur sit dicta rem ut a praesentium.",
-              "amount": {
-                "currency": "COP",
-                "total": 106000
-              }
-            },
-            "expiration": "2023-08-05T15:31:02-05:00",
-            "ipAddress": "186.19.80.249",
-            "returnUrl": "https://dnetix.co/p2p/client",
-            "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
-            "paymentMethod": null,
-            "auth":'. $this->placeTopayService->generateAuthentication() .'
-          }';
-        //   (pagounico)
-          $jsonCreatePaymentResponse = '{
-              "status": {
-                  "status": "OK",
-                  "reason": "PC",
-                  "message": "La petición se ha procesado correctamente",
-                  "date": "2023-08-05T09:59:09-05:00"
-                },
-                "requestId": "668933",
-                "processUrl": "https://checkout-test.placetopay.ec/spa/session/668933/18a1c7856f0ea52b55df228f9115639b"
-            }';
 
-        $arrayRequest = json_decode($jsonCreatePaymentRequest, true);
-        $arrayResponse = json_decode($jsonCreatePaymentResponse, true);
-
-        return response()->json([
-            $arrayRequest,
-            $arrayResponse
-        ]);
-    }
 
     // Esto es cuando se ejecuta el create sesion que es la creacion del pago unico. //Se paga a travez de la pasarela.
     public function savePayments(Request $request){
@@ -503,7 +459,7 @@ class PlaceToPayController extends Controller
             if( isset($request['requestId']) ){
                 $sessionSubscription = $this->placeTopayService->getByRequestId($request['requestId']);
 
-                PlaceToPayTransaction::updateOrCreate(
+                $updatedDB = PlaceToPayTransaction::updateOrCreate(
                     [ 'requestId' => $sessionSubscription["requestId"] ],
                     [
                         'status' => $sessionSubscription["status"]["status"],
@@ -513,25 +469,24 @@ class PlaceToPayController extends Controller
                         'requestId' => $sessionSubscription["requestId"],
 
                         // 'processUrl' => $transaction["processUrl"],
-                        'reference' => $request["request"]["payment"]["reference"],
-                        'currency' => $request["request"]["payment"]["amount"]["currency"],
-                        'total' => $request["request"]["payment"]["amount"]["total"],
-                        'contact_id' => $request["request"]["payment"]["amount"]["amount"],
+                        // 'reference' => $request["request"]["payment"]["reference"],
+                        // 'currency' => $request["request"]["payment"]["amount"]["currency"],
+                        // 'total' => $request["request"]["payment"]["amount"]["total"],
+                        // 'contact_id' => $request["request"]["payment"]["amount"]["amount"],
                         'authorization' => $request["payment"] !== null ? $request["payment"]["authorization"] : null,//si sesta pagado tiene este payment
                         // 'type' => isset($request["subscription"]) ? ///subscription o payment,
                         // 'token_collect' => $request["processUrl"],
                     ]
                 );
+                $updateContract = null;
                 if($sessionSubscription['status']['status'] === "APPROVED"){
-
+                    $updateContract = $this->zohoController->updateZohoPTP($request,$sessionSubscription,$sessionSubscription["requestId"]);
                 }
+                return response()->json([
+                    $updatedDB,
+                    $updateContract
+                ]);
             }
-
-            return response()->json([
-                // $arrayRequest,
-                // $arrayResponse
-            ]);
-
         } catch (\Exception $e) {
         $err = [
             'message' => $e->getMessage(),
