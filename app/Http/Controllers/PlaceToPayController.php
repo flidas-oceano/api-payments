@@ -31,8 +31,8 @@ class PlaceToPayController extends Controller
     }
     public function pruebaregladepago(){
         try {
-         $this->placeTopayService->createInstallments();
-        // $this->payInstallmentsSubscriptions();
+            $this->placeTopayService->createInstallments();
+            // $this->payInstallmentsSubscriptions();
         } catch (\Exception $e) {
             $err = [
                 'message' => $e->getMessage(),
@@ -201,7 +201,7 @@ class PlaceToPayController extends Controller
     }
     public function createSessionSubscription(Request $request)
     {
-        // "payment": {
+        // // "payment": {
         //     "reference": "PAY_ABC_1287",
         //     "description": "Pago por Placetopay",
         //     "amount": {
@@ -209,8 +209,7 @@ class PlaceToPayController extends Controller
         //         "total": 1000
         //     },
         //     "subscribe": true
-        // }
-
+        // //}
 
         // {
         //     "su":{
@@ -306,28 +305,38 @@ class PlaceToPayController extends Controller
     public function createSession(Request $request)
     {
         try {
-            $lead =Lead::updateOrCreate(
-                [ 'email' => $request['payer']['email'] ],
-            [
-                'name' => $request['payer']['email'],
-                'username' => $request['payer']['surname'],
-                'email' => $request['payer']['email'],
-            ]);
-            $contact = Contact::updateOrCreate(
-                [ 'id' => $lead->contact_id ],
-            [
-                'dni' => $request['payer']['document'],
-            ]);
+            // $lead = Lead::updateOrCreate(
+            //     [ 'email' => $request['payer']['email'] ],
+            //     [
+            //         'name' => $request['payer']['email'],
+            //         'username' => $request['payer']['surname'],
+            //         'email' => $request['payer']['email'],
+            //     ]
+            // );
+            // $contact = Contact::updateOrCreate(
+            //     [ 'id' => $lead->contact_id ],
+            //     [
+            //         'dni' => $request['payer']['document'],
+            //     ]
+            // );
 
-            $lead->contact_id = $contact->id;
-            $lead->save();
+            // $lead->contact_id = $contact->id;
+            // $lead->save();
 
             $payer = [
                 "name" => $request['payer']['name'],
                 "surname" => $request['payer']['surname'],
                 "email" => $request['payer']['email'],
                 "document" => $request['payer']['document'],
-                "documentType" => "CC",
+                "documentType" => $request['payer']['documentType'], // CI - Cédula de identidad - '/^\d{10}$/' // RUC - Registro Único de Contribuyentes - '/^\d{13}$/'
+                "address" => [
+                    // "country" => $request['country'],
+                    // "state" => $request['state'],
+                    // "city" => $request['city'],
+                    // "postalCode" => $request['postalCode'],
+                    "street" => $request['payer']['address']['street'],
+                    // "phone" => $request['phone'],
+                ]
             ];
             $payment = [
                 "reference" => $request['so'],
@@ -337,16 +346,16 @@ class PlaceToPayController extends Controller
                     "total" => $request['payment']['total'],
                 ]
             ];
-        $data = [
-            "auth" => $this->placeTopayService->generateAuthentication(),
-            "locale" => "es_CO",
-            "payer" => $payer,
-            "payment" => $payment,
-            "expiration" => $this->placeTopayService->getDateExpiration(),
-            "returnUrl" => "https://dnetix.co/p2p/client",
-            "ipAddress" => $request->ip(), // Usar la dirección IP del cliente
-            "userAgent" => $request->header('User-Agent')
-        ];
+            $data = [
+                "auth" => $this->placeTopayService->generateAuthentication(),
+                "locale" => "es_CO",
+                "payer" => $payer,
+                "payment" => $payment,
+                "expiration" => $this->placeTopayService->getDateExpiration(),
+                "returnUrl" => "https://dnetix.co/p2p/client",
+                "ipAddress" => $request->ip(), // Usar la dirección IP del cliente
+                "userAgent" => $request->header('User-Agent')
+            ];
 
             $result = $this->placeTopayService->create($data);
 
@@ -358,7 +367,8 @@ class PlaceToPayController extends Controller
                     'date' =>               $result['status']['date'],
                     'requestId' =>          $result['requestId'],
                     'processUrl' =>         $this->placeTopayService->reduceUrl($result['processUrl']),
-                    'contact_id' =>         $lead->contact_id,
+                    // 'contact_id' =>         $lead->contact_id,
+                    // 'lead_id' =>            $lead->id,
                     // 'authorization' => ,
                     'total' =>              $data['payment']['amount']['total'],
                     'currency' =>           $data['payment']['amount']['currency'],
@@ -374,10 +384,6 @@ class PlaceToPayController extends Controller
                     'reason' =>             $getById['status']['reason'],
                     'message' =>            $getById['status']['message'],
                 ]);
-                if(isset($getById['status']['status']) && $getById['status']['status'] === "APPROVED" ){
-
-                    $this->zohoController->updateZohoPTP($getById,$result['requestId']);
-                }
             }
 
             // Aquí puedes procesar la respuesta como desees
@@ -490,89 +496,41 @@ class PlaceToPayController extends Controller
             $arrayResponse
         ]);
     }
-    public function GetPaymentByRequestId(){
-        // (pagounico)
-        $jsonPaymentByIdRequest = '{
-            "auth":'. $this->placeTopayService->generateAuthentication() .'
-          }';
-          //Get del payment(pagounico) recien creado sin pagar todavia.
-          $jsonPaymentByIdResponse = '{
-            "requestId": "668933",
-            "status": {
-              "status": "PENDING",
-              "reason": "PC",
-              "message": "La petición se encuentra activa",
-              "date": "2023-08-05T09:59:16-05:00"
-            },
-            "request": {
-              "locale": "es_CO",
-              "buyer": {
-                "document": "1040035000",
-                "documentType": "CC",
-                "name": "Rahsaan",
-                "surname": "Auer",
-                "email": "dnetix@yopmail.com",
-                "mobile": "3006108300"
-              },
-              "payment": {
-                "reference": "TEST_20230805_095901",
-                "description": "Voluptatem qui et hic numquam magnam.",
-                "amount": {
-                  "currency": "COP",
-                  "total": 140000
-                },
-                "allowPartial": false,
-                "subscribe": false
-              },
-              "returnUrl": "https://dnetix.co/p2p/client",
-              "ipAddress": "190.49.106.4",
-              "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
-              "expiration": "2023-08-06T09:59:01-05:00",
-              "captureAddress": false,
-              "skipResult": false,
-              "noBuyerFill": false
-            }
-          }';
 
-        $arrayRequest = json_decode($jsonPaymentByIdRequest, true);
-        $arrayResponse = json_decode($jsonPaymentByIdResponse, true);
-
-        return response()->json([
-            $arrayRequest,
-            $arrayResponse
-        ]);
-    }
     // Esto es cuando se ejecuta el create sesion que es la creacion del pago unico. //Se paga a travez de la pasarela.
     public function savePayments(Request $request){
         try {
+            if( isset($request['requestId']) ){
+                $sessionSubscription = $this->placeTopayService->getByRequestId($request['requestId']);
 
-        foreach($request->transactions as $transaction){
-            if($transaction["status"]["status"] === "OK"){
-            //esta ok
-            PlaceToPayTransaction::updateOrCreate(
-                ['requestId' => $transaction["requestId"]],
-                [
-                'status' => $transaction["status"]["status"],
-                'reason' => $transaction["status"]["reason"],
-                'message' => $transaction["status"]["message"],
-                'date' => $transaction["status"]["date"],
-                'requestId' => $transaction["requestId"],
-                // 'processUrl' => $transaction["processUrl"],
-                'reference' => $request["request"]["payment"]["reference"],
-                'currency' => $request["request"]["payment"]["amount"]["currency"],
-                'total' => $request["request"]["payment"]["amount"]["total"],
-                'contact_id' => $request["request"]["payment"]["amount"]["amount"],
-                'authorization' => $request["payment"] !== null ? $request["payment"]["authorization"] : null,//si sesta pagado tiene este payment
-                // 'type' => isset($request["subscription"]) ? ///subscription o payment,
-                // 'token_collect' => $request["processUrl"],
-            ]);
+                PlaceToPayTransaction::updateOrCreate(
+                    [ 'requestId' => $sessionSubscription["requestId"] ],
+                    [
+                        'status' => $sessionSubscription["status"]["status"],
+                        'reason' => $sessionSubscription["status"]["reason"],
+                        'message' => $sessionSubscription["status"]["message"],
+                        'date' => $sessionSubscription["status"]["date"],
+                        'requestId' => $sessionSubscription["requestId"],
+
+                        // 'processUrl' => $transaction["processUrl"],
+                        'reference' => $request["request"]["payment"]["reference"],
+                        'currency' => $request["request"]["payment"]["amount"]["currency"],
+                        'total' => $request["request"]["payment"]["amount"]["total"],
+                        'contact_id' => $request["request"]["payment"]["amount"]["amount"],
+                        'authorization' => $request["payment"] !== null ? $request["payment"]["authorization"] : null,//si sesta pagado tiene este payment
+                        // 'type' => isset($request["subscription"]) ? ///subscription o payment,
+                        // 'token_collect' => $request["processUrl"],
+                    ]
+                );
+                if($sessionSubscription['status']['status'] === "APPROVED"){
+
+                }
             }
-        }
 
-        return response()->json([
-            // $arrayRequest,
-            // $arrayResponse
-        ]);
+            return response()->json([
+                // $arrayRequest,
+                // $arrayResponse
+            ]);
 
         } catch (\Exception $e) {
         $err = [
@@ -580,7 +538,7 @@ class PlaceToPayController extends Controller
             'exception' => get_class($e),
             'line' => $e->getLine(),
             'file' => $e->getFile(),
-            'trace' => $e->getTraceAsString(),
+            // 'trace' => $e->getTraceAsString(),
             ];
 
         Log::error("Error en savePayments: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));

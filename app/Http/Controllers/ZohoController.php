@@ -377,12 +377,11 @@ class ZohoController extends Controller
             'Medio_de_Pago' => 'PTP',
             'Es_Suscri' => $requestsSubscription->isSubscription(),
             'Suscripcion_con_Parcialidad' => $requestsSubscription->isAdvancedSubscription(),
-       //     'mp_subscription_id' => $request->subscriptionId, // id de la suscripcion o de los pagos ?
             'L_nea_nica_6' => $result['data']['payer']['name'] . $result['data']['payer']['surname'],
-            'Billing_Street' => $requestsSubscription->lead->contact->street,
+            // 'Billing_Street' => $requestsSubscription->lead->contact->street, // $request['address']
             'L_nea_nica_3' => $result['response']['request']['payer']['document'],
             'Tel_fono_Facturacion' => $requestsSubscription->telephone,
-       //     'Discount' => abs($request->adjustment)
+            // 'Discount' => abs($request->adjustment)
         ];
 
         // $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);

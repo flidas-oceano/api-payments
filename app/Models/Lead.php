@@ -25,6 +25,7 @@ class Lead extends Model
         'profession',
         'speciality',
         'source_lead',
+        'contact_id',
     ];
     public $timestamps = true;
     public $hidden = ['created_at', 'updated_at', 'lead_status', 'id'];

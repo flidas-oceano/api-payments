@@ -21,6 +21,7 @@ class PlaceToPayTransaction extends Model
         'requestId',
         'processUrl',
         'contact_id',
+        'lead_id',
         'authorization',
         'total',
         'currency',
