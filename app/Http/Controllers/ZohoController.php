@@ -17,11 +17,13 @@ use App\Http\Requests\UpdateContractZohoRequest;
 use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
 
 use App\Models\{Contact, Lead, Profession, PurchaseProgress, Speciality, MethodContact, PlaceToPayTransaction, SourceLead};
+use App\Services\PlaceToPay\PlaceToPayService;
 
 class ZohoController extends Controller
 {
 
     public $emi_owner;
+    public $placeToPayService = null;
 
     public function reinit()
     {
@@ -53,11 +55,12 @@ class ZohoController extends Controller
         }
     }
 
-    public function __construct()
+    public function __construct(PlaceToPayService $placeToPayService)
     {
         try {
-            $this->emi_owner = '2712674000000899001';
+            $this->placeToPayService = $placeToPayService;
 
+            $this->emi_owner = '2712674000000899001';
 
             ZCRMRestClient::initialize([
                 "client_id" => env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_CLIENT_ID') : env('ZOHO_API_PAYMENTS_PROD_CLIENT_ID'),
@@ -358,7 +361,43 @@ class ZohoController extends Controller
         else
             return response()->json($updateContract);
     }
-    public function updateZohoPTP($request, $result, $requestIdRequestSubscription)
+    public function updateZohoPTP(Request $request)
+    {
+        $requestsSubscription = PlaceToPayTransaction::where( [ 'requestId' => $request['requestId'] ])->get()->first();
+        $result = $this->placeToPayService->getByRequestId($requestsSubscription);
+
+        $dataUpdate = [
+            'Email' => $result['request']['payer']['email'], //si tiene que ir el email del comprador hay que crear el payment con buyer aparte del payer
+            'Anticipo' => $requestsSubscription->first_installment,
+            'Saldo' =>  $result['request']['payment']['amount']['total'],
+            'Cantidad' => $requestsSubscription->quotes,
+       //     //Nro de cuotas
+           'Monto_de_cuotas_restantes' => $requestsSubscription->isAdvancedSubscription() ? $requestsSubscription->first_installment : $requestsSubscription->installmentsToPay(),
+       //     //Costo de cada cuota
+            'Cuotas_restantes_sin_anticipo' => $requestsSubscription->isAdvancedSubscription() ? $requestsSubscription->quotes - 1 : null,
+            'DNI' => '',
+            'Fecha_de_Vto' => date('Y-m-d'),
+            'Status' => 'Contrato Efectivo',
+            'Modalidad_de_pago_del_Anticipo' => 'PlaceToPay',
+            'Medio_de_Pago' => 'PlaceToPay',
+            'Es_Suscri' => $requestsSubscription->isSubscription(),
+            'Suscripcion_con_Parcialidad' => $requestsSubscription->isAdvancedSubscription(),
+            'L_nea_nica_6' => $result['request']['payer']['name'] ." ". $result['request']['payer']['surname'],
+            'Billing_Street' => $result['request']['payer']['address']['street'],
+            'L_nea_nica_3' => $result['request']['payer']['document'],
+            'Tel_fono_Facturacion' => $result['request']['payer']['mobile'],
+            'Discount' => abs($request['adjustment'])
+        ];
+
+        $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
+
+        if ($updateContract['result'] == 'error')
+            return response()->json($updateContract, 500);
+        else
+            return response()->json($updateContract);
+    }
+
+    public function updateZohoPlaceToPay($request, $result, $requestIdRequestSubscription)
     {
         $requestsSubscription = PlaceToPayTransaction::where( [ 'requestId' => $requestIdRequestSubscription ])->get()->first();
 
@@ -374,8 +413,8 @@ class ZohoController extends Controller
             'DNI' => '',
             'Fecha_de_Vto' => date('Y-m-d'),
             'Status' => 'Contrato Efectivo',
-            'Modalidad_de_pago_del_Anticipo' => 'PTP',
-            'Medio_de_Pago' => 'PTP',
+            'Modalidad_de_pago_del_Anticipo' => 'PlaceToPay',
+            'Medio_de_Pago' => 'PlaceToPay',
             'Es_Suscri' => $requestsSubscription->isSubscription(),
             'Suscripcion_con_Parcialidad' => $requestsSubscription->isAdvancedSubscription(),
             'L_nea_nica_6' => $result['request']['payer']['name'] ." ". $result['request']['payer']['surname'],
@@ -393,7 +432,6 @@ class ZohoController extends Controller
         //     else
         //         return response()->json($updateContract);
     }
-
 
     private function getIdentification($identification, $country)
     {

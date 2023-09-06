@@ -254,14 +254,14 @@ class PlaceToPayController extends Controller
             "document" => $request['payer']['document'],
             "documentType" => $request['payer']['documentType'],
             "mobile" => $request['payer']['mobile'],
-            "address" => [ //domicilio
-                // "country" => $request['country'],
-                // "state" => $request['state'],
-                // "city" => $request['city'],
-                // "postalCode" => $request['postalCode'],
-                "street" => $request['payer']['address']['street'],
-                // "phone" => $request['phone'],//+573214445566
-            ]
+            // "address" => [ //domicilio
+            //     // "country" => $request['country'],
+            //     // "state" => $request['state'],
+            //     // "city" => $request['city'],
+            //     // "postalCode" => $request['postalCode'],
+            //     "street" => $request['payer']['address']['street'],
+            //     // "phone" => $request['phone'],//+573214445566
+            // ]
         ];
         $subscription = [
             "reference" => $request['so'],
@@ -505,7 +505,8 @@ class PlaceToPayController extends Controller
                 );
                 $updateContract = null;
                 if($sessionSubscription['status']['status'] === "APPROVED"){
-                    $updateContract = $this->zohoController->updateZohoPTP($request,$sessionSubscription,$sessionSubscription["requestId"]);
+                    //usar el metodo del controlador
+                    // $updateContract = $this->zohoController->updateZohoPlaceToPay($request,$sessionSubscription,$sessionSubscription["requestId"]);
                 }
                 return response()->json([
                     $updatedDB,

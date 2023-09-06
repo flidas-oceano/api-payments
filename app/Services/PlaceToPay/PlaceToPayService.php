@@ -49,14 +49,14 @@ class PlaceToPayService
             "document" => $requestSubscriptionById['request']['payer']['document'],//contact->dni,rut,rfc,mui
             "documentType" => $requestSubscriptionById['request']['payer']['documentType'],
             "mobile" => $requestSubscriptionById['request']['payer']['mobile'],
-            "address" => [ //domicilio
-                // "country" => $request['country'],
-                // "state" => $request['state'],
-                // "city" => $request['city'],
-                // "postalCode" => $request['postalCode'],
-                "street" => $requestSubscriptionById['request']['payer']['address']['street'],
-                // "phone" => $request['phone'],//+573214445566
-            ]
+            // "address" => [ //domicilio
+            //     // "country" => $request['country'],
+            //     // "state" => $request['state'],
+            //     // "city" => $request['city'],
+            //     // "postalCode" => $request['postalCode'],
+            //     "street" => $requestSubscriptionById['request']['payer']['address']['street'],
+            //     // "phone" => $request['phone'],//+573214445566
+            // ]
         ];
         $payment = [
             "reference" => 'Cuota '.$nro_quote.'-'.$request['reference'],
@@ -122,7 +122,7 @@ class PlaceToPayService
                 // creas todas las cuotas restantes, si hay
             if($result['response']['status']['status'] === 'APPROVED'){
 
-                // $responseUpdateZohoPTP = $this->zohoController->updateZohoPTP($result,$requestIdRequestSubscription);
+                // $responseUpdateZohoPlaceToPay = $this->zohoController->updateZohoPlaceToPay($result,$requestIdRequestSubscription);
 
                 // // crear cuotas
                 if($requestsSubscription->quotes > 1){
