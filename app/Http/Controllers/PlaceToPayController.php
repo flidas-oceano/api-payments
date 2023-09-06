@@ -214,7 +214,7 @@ class PlaceToPayController extends Controller
         }
     }
     // public function createSessionSubscription(CreateSessionSubscriptionRequest $request)
-    public function createSessionSubscription(Request $request)
+    public function createSessionSubscription(CreateSessionSubscriptionRequest $request)
     {
         // // "payment": {
         //     "reference": "PAY_ABC_1287",
