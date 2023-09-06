@@ -141,4 +141,8 @@ Route::prefix("/placetopay")->group(function () {
     Route::get('/billSubscription/{requestId}', [PlaceToPayController::class, 'billSubscription']);
 
     Route::get('/pruebaregladepago', [PlaceToPayController::class, 'pruebaregladepago']);
+
+
+    Route::post('/generatePaymentLink', [PlaceToPayPaymentLinkController::class, 'create']);
+    Route::get('/getPaymentLink/{saleId}', [PlaceToPayPaymentLinkController::class, 'show']);
 });
