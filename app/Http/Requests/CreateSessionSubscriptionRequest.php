@@ -35,13 +35,12 @@ class CreateSessionSubscriptionRequest extends FormRequest
             'payer.address.street.required' => 'El campo Calle de la dirección del pagador es obligatorio.',
             'payment.total.required' => 'El campo Total del pago es obligatorio.',
             'payment.total.numeric' => 'El campo Total del pago debe ser un número válido.',
-            'payment.currency.required' => 'El campo Moneda del pago es obligatorio.',
             'payment.quotes.required' => 'El campo Cuotas es obligatorio.',
             'payment.quotes.integer' => 'El campo Cuotas debe ser un número entero.',
             'payment.remaining_installments.required' => 'El campo Cuotas restantes es obligatorio.',
             'payment.remaining_installments.numeric' => 'El campo Cuotas restantes debe ser un número válido.',
             'payment.type.required' => 'El campo Tipo de pago es obligatorio.',
-            'payment.type.in' => 'El campo Tipo de pago debe ser SUBSCRIPCION o PARCIAL.',
+            'payment.type.in' => 'El campo Tipo de pago debe ser Suscripción o Parcial.',
         ];
     }
     /**
@@ -78,10 +77,9 @@ class CreateSessionSubscriptionRequest extends FormRequest
             'payer.mobile' => 'required|string',
             'payer.address.street' => 'required|string',
             'payment.total' => 'required|numeric',
-            'payment.currency' => 'required|string',
             'payment.quotes' => 'required|integer',
             'payment.remaining_installments' => 'required|numeric',
-            'payment.type' => 'required|string|in:SUBSCRIPCION,PARCIAL',
+            'payment.type' => 'required|string|in:Suscripción,Parcial',
         ];
     }
     protected function failedValidation(Validator $validator)
