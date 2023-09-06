@@ -5,6 +5,7 @@ namespace App\Services\PlaceToPay;
 use App\Http\Controllers\ZohoController;
 use App\Models\PlaceToPaySubscription;
 use App\Models\PlaceToPayTransaction;
+use Exception;
 use Illuminate\Support\Facades\Http;
 use stdClass;
 
@@ -142,6 +143,7 @@ class PlaceToPayService
         }
     }
 
+    //Utils
     public function createInstallments(){
         $requestsSubscription = PlaceToPayTransaction::where(['type' => 'requestSubscription','status' => 'APPROVED'])->get();
         foreach($requestsSubscription as $request){
@@ -224,12 +226,28 @@ class PlaceToPayService
                   "seed" => $seed,
             ];
     }
+    public function isResponseValid($response){
+        // Verificar si la respuesta indica un fallo
+        if (isset($response['status']['status']) && $response['status']['status'] === 'FAILED') {
+            $errorReason = $response['status']['reason'];
+            $errorMessage = $response['status']['message'];
+            $errorDate = $response['status']['date'];
+
+            // Aquí lanzamos una excepción personalizada
+            throw new Exception("Payment request failed: Reason: $errorReason, Message: $errorMessage, Date: $errorDate");
+        }
+    }
+    // End //Utils
+
+    // URLS
     public function create($data){
         $url = "https://checkout-test.placetopay.ec/api/session";
         $response = Http::withHeaders([
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
         ])->post($url, $data)->json();
+
+        $this->isResponseValid($response);
 
         return $response;
     }
@@ -254,9 +272,10 @@ class PlaceToPayService
             'Content-Type' => 'application/json',
         ])->post($url, $data)->json();
 
+
         return $response;
     }
-
+    ///End URLS
 
     // //Objetos de ejemplo
         public function pasounocreatesession(){

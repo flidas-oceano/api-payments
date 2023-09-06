@@ -13,7 +13,7 @@ class PlaceToPaySubscription extends Model
     protected $primaryKey = 'id';
 
     public $fillable = [
-        'requestIdFather',
+        'id',
         'status',
         'reason',
         'message',
@@ -30,7 +30,7 @@ class PlaceToPaySubscription extends Model
         'transactionId'
     ];
     private static $formAttributes = [
-
+        'id',
         'requestIdFather',
         'status',
         'reason',

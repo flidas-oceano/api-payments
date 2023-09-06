@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CreateSessionSubscriptionRequest;
 use App\Models\Contact;
 use App\Models\Lead;
+use App\Models\PlaceToPaySubscription;
 use App\Models\PlaceToPayTransaction;
 use App\Services\PlaceToPay\PlaceToPayService;
 use Illuminate\Http\Request;
@@ -127,7 +128,20 @@ class PlaceToPayController extends Controller
         }
     }
     public function savePaymentSubscription(Request $request){
+        $validatedData = $this->validate($request, [
+            'requestId' => 'required',
+        ], [
+            'requestId.required' => 'El campo requestId es obligatorio.',
+        ]);
         try {
+
+            $requestsTransaction = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();
+            if(count($requestsTransaction->subscriptions)>0){
+                return response()->json([
+                    "result" => "Ya se ha realizado el pago de la primera cuota."
+                ]);
+            }
+
             $sessionSubscription = $this->placeTopayService->getByRequestId($request['requestId']);
 
             $updateRequestSession = PlaceToPayTransaction::updateOrCreate(
@@ -199,8 +213,8 @@ class PlaceToPayController extends Controller
             ], 500);
         }
     }
-    public function createSessionSubscription(CreateSessionSubscriptionRequest $request)
-    // CreateSessionSubscriptionRequestk
+    // public function createSessionSubscription(CreateSessionSubscriptionRequest $request)
+    public function createSessionSubscription(Request $request)
     {
         // // "payment": {
         //     "reference": "PAY_ABC_1287",

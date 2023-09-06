@@ -14,6 +14,7 @@ class PlaceToPayTransaction extends Model
     protected $primaryKey = 'id';
 
     public $fillable = [
+        'id',
         'status',
         'reason',
         'message',
@@ -33,8 +34,10 @@ class PlaceToPayTransaction extends Model
         'first_installment',
         'quotes',
         'installments_paid',
+
     ];
     private static $formAttributes = [
+        'id',
         'requestId',
         'processUrl',
         'contact_id',
