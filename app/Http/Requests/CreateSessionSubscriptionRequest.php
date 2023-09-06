@@ -40,7 +40,7 @@ class CreateSessionSubscriptionRequest extends FormRequest
             'payment.remaining_installments.required' => 'El campo Cuotas restantes es obligatorio.',
             'payment.remaining_installments.numeric' => 'El campo Cuotas restantes debe ser un número válido.',
             'payment.type.required' => 'El campo Tipo de pago es obligatorio.',
-            'payment.type.in' => 'El campo Tipo de pago debe ser Suscripción o Parcial.',
+            'payment.type.in' => 'El campo Tipo de pago debe ser Suscripción o Parcialidad.',
         ];
     }
     /**
@@ -79,7 +79,7 @@ class CreateSessionSubscriptionRequest extends FormRequest
             'payment.total' => 'required|numeric',
             'payment.quotes' => 'required|integer',
             'payment.remaining_installments' => 'required|numeric',
-            'payment.type' => 'required|string|in:Suscripción,Parcial',
+            'payment.type' => 'required|string|in:Suscripción,Parcialidad',
         ];
     }
     protected function failedValidation(Validator $validator)
