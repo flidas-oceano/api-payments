@@ -2,7 +2,6 @@
 
 namespace App\Services\PlaceToPay;
 
-use App\Http\Controllers\ZohoController;
 use App\Models\PlaceToPaySubscription;
 use App\Models\PlaceToPayTransaction;
 use Exception;
@@ -15,10 +14,9 @@ class PlaceToPayService
     private $secret_pu;
     private $login_su;
     private $secret_su;
-    private $zohoController;
 
-    public function __construct(ZohoController $zohoController) {
-        $this->zohoController = $zohoController;
+    public function __construct()
+    {
         $this->login_pu = env("REACT_APP_PTP_LOGIN_PU");
         $this->secret_pu = env("REACT_APP_PTP_SECRECT_PU");
         $this->login_su = env("REACT_APP_PTP_LOGIN_SU");
@@ -26,27 +24,35 @@ class PlaceToPayService
     }
     public function getDateExpiration()
     {
-          // Obtener la fecha y hora actual
-            $currentDateTime = new \DateTime();
-            // Sumar 24 horas a la fecha actual
-            $currentDateTime->add(new \DateInterval('PT24H'));
-            // Formatear la fecha para que coincida con el formato ISO 8601
-            $seed = $currentDateTime->format('Y-m-d\TH:i:sP');
+        // Obtener la fecha y hora actual
+        $currentDateTime = new \DateTime();
+        // Sumar 24 horas a la fecha actual
+        $currentDateTime->add(new \DateInterval('PT24H'));
+        // Formatear la fecha para que coincida con el formato ISO 8601
+        $seed = $currentDateTime->format('Y-m-d\TH:i:sP');
 
-            return $seed;
+        return $seed;
     }
-    public function pagarCuotaSuscripcionAnticipo(){}
-    public function payInstallmentsSubscriptions(){
-        PlaceToPaySubscription::where('status', '!=' , 'APPROVED')->get();
+    public function pagarCuotaSuscripcionAnticipo()
+    {
     }
-    public function pagarCuotaSuscripcion($request, $nro_quote){
+    public function payInstallmentsSubscriptions()
+    {
+        PlaceToPaySubscription::where('status', '!=', 'APPROVED')->get();
+    }
+    public function pagarCuotaSuscripcion($request, $nro_quote)
+    {
         $requestSubscriptionById = $this->getByRequestId($request['requestId']);
         // pagar primer cuota de subscripcion normal, no anticipo
         $payer = [
-            "name" => $requestSubscriptionById['request']['payer']['name'],//$request->lead->name
-            "surname" => $requestSubscriptionById['request']['payer']['surname'],//$request->lead->username
-            "email" => $requestSubscriptionById['request']['payer']['email'],//$request->lead->email
-            "document" => $requestSubscriptionById['request']['payer']['document'],//contact->dni,rut,rfc,mui
+            "name" => $requestSubscriptionById['request']['payer']['name'],
+            //$request->lead->name
+            "surname" => $requestSubscriptionById['request']['payer']['surname'],
+            //$request->lead->username
+            "email" => $requestSubscriptionById['request']['payer']['email'],
+            //$request->lead->email
+            "document" => $requestSubscriptionById['request']['payer']['document'],
+            //contact->dni,rut,rfc,mui
             "documentType" => $requestSubscriptionById['request']['payer']['documentType'],
             "mobile" => $requestSubscriptionById['request']['payer']['mobile'],
             // "address" => [ //domicilio
@@ -59,7 +65,7 @@ class PlaceToPayService
             // ]
         ];
         $payment = [
-            "reference" => 'Cuota '.$nro_quote.'-'.$request['reference'],
+            "reference" => 'Cuota ' . $nro_quote . '-' . $request['reference'],
             "description" => "Prueba pago de cuota subscripcion",
             "amount" => [
                 "currency" => $request['currency'],
@@ -73,7 +79,7 @@ class PlaceToPayService
             "payment" => $payment,
             "instrument" => [
                 "token" => [
-                "token" => $request['token_collect_para_el_pago']
+                    "token" => $request['token_collect_para_el_pago']
                 ]
             ],
             "expiration" => $this->getDateExpiration(),
@@ -106,35 +112,36 @@ class PlaceToPayService
 
         // return ($response['status']['status'] === 'APPROVED')? true: false;
     }
-    public function payFirstQuoteCreateRestQuotesByRequestId($requestIdRequestSubscription){
-        $requestsSubscription = PlaceToPayTransaction::where( [ 'requestId' => $requestIdRequestSubscription ])->get()->first();
+    public function payFirstQuoteCreateRestQuotesByRequestId($requestIdRequestSubscription)
+    {
+        $requestsSubscription = PlaceToPayTransaction::where(['requestId' => $requestIdRequestSubscription])->get()->first();
         if (!(count($requestsSubscription->subscriptions) === $requestsSubscription->quotes)) {
             //No estan creadas todas las cuotas de la suscripcion
 
             //empiezo pagando la primer cuota
             $success = false;
             //es anticipo ?
-            if($requestsSubscription->first_installment !== null)
+            if ($requestsSubscription->first_installment !== null)
                 $result = $this->pagarCuotaSuscripcionAnticipo($requestsSubscription);
             else
                 $result = $this->pagarCuotaSuscripcion($requestsSubscription, 1);
 
-                // creas todas las cuotas restantes, si hay
-            if($result['response']['status']['status'] === 'APPROVED'){
+            // creas todas las cuotas restantes, si hay
+            if ($result['response']['status']['status'] === 'APPROVED') {
 
                 // $responseUpdateZohoPlaceToPay = $this->zohoController->updateZohoPlaceToPay($result,$requestIdRequestSubscription);
 
                 // // crear cuotas
-                if($requestsSubscription->quotes > 1){
-                   for ($i = 2; $i <= $requestsSubscription->quotes; $i++) {
+                if ($requestsSubscription->quotes > 1) {
+                    for ($i = 2; $i <= $requestsSubscription->quotes; $i++) {
                         PlaceToPaySubscription::create([
-                           'transactionId' => $requestsSubscription->id,
-                           'nro_quote' => $i,
-                           // 'date' => $response['status']['date'],
-                           // 'requestId' => $response['status']['status'],
-                           'total' => $requestsSubscription->remaining_installments,
-                           'currency' => $requestsSubscription->currency,
-                           // 'type' => 'subscription',
+                            'transactionId' => $requestsSubscription->id,
+                            'nro_quote' => $i,
+                            // 'date' => $response['status']['date'],
+                            // 'requestId' => $response['status']['status'],
+                            'total' => $requestsSubscription->remaining_installments,
+                            'currency' => $requestsSubscription->currency,
+                            // 'type' => 'subscription',
                         ]);
                     }
                 }
@@ -144,9 +151,10 @@ class PlaceToPayService
     }
 
     //Utils
-    public function createInstallments(){
-        $requestsSubscription = PlaceToPayTransaction::where(['type' => 'requestSubscription','status' => 'APPROVED'])->get();
-        foreach($requestsSubscription as $request){
+    public function createInstallments()
+    {
+        $requestsSubscription = PlaceToPayTransaction::where(['type' => 'requestSubscription', 'status' => 'APPROVED'])->get();
+        foreach ($requestsSubscription as $request) {
 
             //ver si ya se crearon las cuotas
             if (!(count($request->subscriptions) === $request->quotes)) {
@@ -156,24 +164,24 @@ class PlaceToPayService
 
                 $success = false;
                 //es anticipo ?
-                if($request->first_installment !== null)
+                if ($request->first_installment !== null)
                     $success = $this->pagarCuotaSuscripcionAnticipo($request);
                 else
                     $success = $this->pagarCuotaSuscripcion($request, 1);
 
                 // creas todas las cuotas restantes, si hay
-                if($success){
+                if ($success) {
                     // pagar cuotas
-                    if($request->quotes > 1){
-                       for ($i = 2; $i <= $request->quotes; $i++) {
+                    if ($request->quotes > 1) {
+                        for ($i = 2; $i <= $request->quotes; $i++) {
                             PlaceToPaySubscription::create([
-                               'transactionId' => $request->id,
-                               'nro_quote' => $i,
-                               // 'date' => $response['status']['date'],
-                               // 'requestId' => $response['status']['status'],
-                               'total' => $request->remaining_installments,
-                               'currency' => $request->currency,
-                               // 'type' => 'subscription',
+                                'transactionId' => $request->id,
+                                'nro_quote' => $i,
+                                // 'date' => $response['status']['date'],
+                                // 'requestId' => $response['status']['status'],
+                                'total' => $request->remaining_installments,
+                                'currency' => $request->currency,
+                                // 'type' => 'subscription',
                             ]);
                         }
                     }
@@ -197,13 +205,15 @@ class PlaceToPayService
             // }
         }
     }
-    public function reduceUrl($url){
+    public function reduceUrl($url)
+    {
         // $url = "https://checkout-test.placetopay.ec/spa/session/674726/64b7bae0b1abda60fc3d0b29d30493e8";
         $parts = explode("/", $url); // Dividir la URL en partes usando "/" como separador
         $ultimo_dato = end($parts); // Tomar el último elemento de las partes
         return $ultimo_dato;
     }
-    public function getAuth(){
+    public function getAuth()
+    {
         // Generar autenticación
         $auth = $this->generateAuthentication();
 
@@ -211,22 +221,23 @@ class PlaceToPayService
     }
     public function generateAuthentication()
     {
-            $login = $this->login_pu;
-            $secretKey = $this->secret_pu;
-            $seed = date('c');
-            $rawNonce = rand();
+        $login = $this->login_pu;
+        $secretKey = $this->secret_pu;
+        $seed = date('c');
+        $rawNonce = rand();
 
-            $tranKey = base64_encode(hash('sha256', $rawNonce.$seed.$secretKey, true));
-            $nonce = base64_encode($rawNonce);
+        $tranKey = base64_encode(hash('sha256', $rawNonce . $seed . $secretKey, true));
+        $nonce = base64_encode($rawNonce);
 
-            return [
-                  "login" => $login,
-                  "tranKey" => $tranKey,
-                  "nonce" => $nonce,
-                  "seed" => $seed,
-            ];
+        return [
+            "login" => $login,
+            "tranKey" => $tranKey,
+            "nonce" => $nonce,
+            "seed" => $seed,
+        ];
     }
-    public function isResponseValid($response){
+    public function isResponseValid($response)
+    {
         // Verificar si la respuesta indica un fallo
         if (isset($response['status']['status']) && $response['status']['status'] === 'FAILED') {
             $errorReason = $response['status']['reason'];
@@ -240,7 +251,8 @@ class PlaceToPayService
     // End //Utils
 
     // URLS
-    public function create($data){
+    public function create($data)
+    {
         $url = "https://checkout-test.placetopay.ec/api/session";
         $response = Http::withHeaders([
             'Accept' => 'application/json',
@@ -253,7 +265,7 @@ class PlaceToPayService
     }
     public function getByRequestId($requestId)
     {
-        $url = "https://checkout-test.placetopay.ec/api/session/".$requestId;
+        $url = "https://checkout-test.placetopay.ec/api/session/" . $requestId;
         $data = [
             "auth" => $this->generateAuthentication(),
         ];
@@ -265,7 +277,8 @@ class PlaceToPayService
 
         return $response;
     }
-    public function billSubscription($data){
+    public function billSubscription($data)
+    {
         $url = "https://checkout-test.placetopay.ec/api/collect";
         $response = Http::withHeaders([
             'Accept' => 'application/json',
@@ -278,8 +291,9 @@ class PlaceToPayService
     ///End URLS
 
     // //Objetos de ejemplo
-        public function pasounocreatesession(){
-            $createRequest =  json_decode('{
+    public function pasounocreatesession()
+    {
+        $createRequest = json_decode('{
                 "buyer": {
                     "name": "Demetris",
                     "surname": "Quigley",
@@ -309,7 +323,7 @@ class PlaceToPayService
                 }
             }');
 
-            $responseCreateRequest = json_decode('{
+        $responseCreateRequest = json_decode('{
                 "status": {
                     "status": "OK",
                     "reason": "PC",
@@ -320,18 +334,18 @@ class PlaceToPayService
                 "processUrl": "https://checkout-test.placetopay.ec/spa/session/669292/36f326c478555ec0dbe2fb4dc9683f81"
             }');
 
-            //crear una suscripcion es:
-            //Guardar las transacciones ok. Que todavia estan sin pagar.
-            $placeToPayTransactions = new stdClass();
-            $placeToPayTransactions->requestId  = $responseCreateRequest->requestId;
-            $placeToPayTransactions->status     = $responseCreateRequest->status->status;
-            $placeToPayTransactions->date       = $responseCreateRequest->status->date; // solo se guarda cuando se crea la transaccion ok. y cuando cambia de estado definitivo approved, rejected,etc.
-            $placeToPayTransactions->reason     = $responseCreateRequest->status->reason;
-            $placeToPayTransactions->message    = $responseCreateRequest->status->message;
-            $placeToPayTransactions->processUrl = $responseCreateRequest->processUrl;
+        //crear una suscripcion es:
+        //Guardar las transacciones ok. Que todavia estan sin pagar.
+        $placeToPayTransactions = new stdClass();
+        $placeToPayTransactions->requestId = $responseCreateRequest->requestId;
+        $placeToPayTransactions->status = $responseCreateRequest->status->status;
+        $placeToPayTransactions->date = $responseCreateRequest->status->date; // solo se guarda cuando se crea la transaccion ok. y cuando cambia de estado definitivo approved, rejected,etc.
+        $placeToPayTransactions->reason = $responseCreateRequest->status->reason;
+        $placeToPayTransactions->message = $responseCreateRequest->status->message;
+        $placeToPayTransactions->processUrl = $responseCreateRequest->processUrl;
 
-            //requestId: 669292
-            $getRequestInformation = json_decode('{
+        //requestId: 669292
+        $getRequestInformation = json_decode('{
                 "auth": {
                     "login": "fcba839f74386227ed54fea97404b099",
                     "tranKey": "vxBYop+GDsCBBzzAND5GGbhaeEc=",
@@ -339,8 +353,8 @@ class PlaceToPayService
                     "seed": "2023-08-07T17:42:15-05:00"
                 }
             }');
-            //VISA 4716375184092180 12/29 111 PENDING
-            $responsePendingGetRequestInformation = json_decode('{
+        //VISA 4716375184092180 12/29 111 PENDING
+        $responsePendingGetRequestInformation = json_decode('{
                 "requestId": "669292",
                 "status": {
                     "status": "PENDING",
@@ -377,18 +391,18 @@ class PlaceToPayService
                     "noBuyerFill": false
                 }
             }');
-            //buscar por requestId
-            $placeToPayTransactions->requestId  = $responsePendingGetRequestInformation->requestId;
-            $placeToPayTransactions->status     = $responsePendingGetRequestInformation->status->status;
-            $placeToPayTransactions->date       = $responsePendingGetRequestInformation->status->date; //se guarda el estado porque tiene que ser pagado.
-            $placeToPayTransactions->reason     = $responsePendingGetRequestInformation->status->reason;
-            $placeToPayTransactions->message    = $responsePendingGetRequestInformation->status->message;
-            $placeToPayTransactions->currency   = $responsePendingGetRequestInformation->request->payment->amount->currency;
-            $placeToPayTransactions->total      = $responsePendingGetRequestInformation->request->payment->amount->total;
-            $placeToPayTransactions->reference  = $responsePendingGetRequestInformation->request->payment->reference; // enrealidad buscar el buyer en contactos.
-            $placeToPayTransactions->requestId  = $responsePendingGetRequestInformation->requestId;
+        //buscar por requestId
+        $placeToPayTransactions->requestId = $responsePendingGetRequestInformation->requestId;
+        $placeToPayTransactions->status = $responsePendingGetRequestInformation->status->status;
+        $placeToPayTransactions->date = $responsePendingGetRequestInformation->status->date; //se guarda el estado porque tiene que ser pagado.
+        $placeToPayTransactions->reason = $responsePendingGetRequestInformation->status->reason;
+        $placeToPayTransactions->message = $responsePendingGetRequestInformation->status->message;
+        $placeToPayTransactions->currency = $responsePendingGetRequestInformation->request->payment->amount->currency;
+        $placeToPayTransactions->total = $responsePendingGetRequestInformation->request->payment->amount->total;
+        $placeToPayTransactions->reference = $responsePendingGetRequestInformation->request->payment->reference; // enrealidad buscar el buyer en contactos.
+        $placeToPayTransactions->requestId = $responsePendingGetRequestInformation->requestId;
 
-            $createRequest2 =  json_decode('{
+        $createRequest2 = json_decode('{
                 "buyer": {
                     "name": "Demetris",
                     "surname": "Quigley",
@@ -417,7 +431,7 @@ class PlaceToPayService
                     "seed": "2023-08-07T17:50:04-05:00"
                 }
             }');
-            $responseCreateRequest2 = json_decode('{
+        $responseCreateRequest2 = json_decode('{
                 "status": {
                     "status": "OK",
                     "reason": "PC",
@@ -428,8 +442,8 @@ class PlaceToPayService
                 "processUrl": "https://checkout-test.placetopay.ec/spa/session/669295/88bb48a38fa3e87b1aa9794daf7b392d"
             }');
 
-            //requestId: 669295
-            $getRequestInformation2 = json_decode('{
+        //requestId: 669295
+        $getRequestInformation2 = json_decode('{
                 "auth": {
                     "login": "fcba839f74386227ed54fea97404b099",
                     "tranKey": "xkBRio2rGuuXm8kZ1s7bdVv5qFs=",
@@ -437,7 +451,7 @@ class PlaceToPayService
                     "seed": "2023-08-07T17:55:25-05:00"
                 }
             }');
-            $responsePendingGetRequestInformation = json_decode('{
+        $responsePendingGetRequestInformation = json_decode('{
                 "requestId": "669295",
                 "status": {
                     "status": "PENDING",
@@ -474,12 +488,13 @@ class PlaceToPayService
                     "noBuyerFill": false
                 }
             }');
-            //VISA 4716375184092180 12/29 111 APROVED
-            $responseAprovedgGetRequestInformation = '';
-        }
-        public function subscription (){
-            // Payment Request (createRequest)
-            $createRequest = '{
+        //VISA 4716375184092180 12/29 111 APROVED
+        $responseAprovedgGetRequestInformation = '';
+    }
+    public function subscription()
+    {
+        // Payment Request (createRequest)
+        $createRequest = '{
                 "buyer": {
                     "name": "Virginie",
                     "surname": "Koch",
@@ -504,7 +519,7 @@ class PlaceToPayService
                     "seed": "2023-08-07T18:01:47-05:00"
                 }
             }';
-            $responseCreateRequest = '{
+        $responseCreateRequest = '{
                 "status": {
                     "status": "OK",
                     "reason": "PC",
@@ -515,9 +530,9 @@ class PlaceToPayService
                 "processUrl": "https://checkout-test.placetopay.ec/spa/session/669300/b2bfc90a0d2c4e9528472925e79f13f7"
             }';
 
-            //Request Information (getRequestInformation)
-            //requestId: 669300 PENDING
-            $getRequestInformationRequest = '{
+        //Request Information (getRequestInformation)
+        //requestId: 669300 PENDING
+        $getRequestInformationRequest = '{
                 "auth": {
                     "login": "dc630cc168489ebed4cdd94c0c1a1dd9",
                     "tranKey": "2jaJTQIm6bi8ONAxpS8QLGEBf9k=",
@@ -525,7 +540,7 @@ class PlaceToPayService
                     "seed": "2023-08-07T18:02:41-05:00"
                 }
             }';
-            $responsePendingGetRequestInformationRequest = '{
+        $responsePendingGetRequestInformationRequest = '{
                 "requestId": "669300",
                 "status": {
                     "status": "PENDING",
@@ -556,9 +571,9 @@ class PlaceToPayService
                     "noBuyerFill": false
                 }
             }';
-            //despues del (lighbox) pagada
-            //VISA 4111111111111111 12/29 111 APPROVED
-            $responseApprovedGetRequestInformation = '{
+        //despues del (lighbox) pagada
+        //VISA 4111111111111111 12/29 111 APPROVED
+        $responseApprovedGetRequestInformation = '{
                 "requestId": "669300",
                 "status": {
                     "status": "APPROVED",
@@ -649,11 +664,11 @@ class PlaceToPayService
                 }
             }';
 
-            //Con el requesti id buscas el token y con el el collect realizas el pago.
-            //cada request te devuelve un registro de pago.
+        //Con el requesti id buscas el token y con el el collect realizas el pago.
+        //cada request te devuelve un registro de pago.
 
-            // Collect Request (collect) pago de suscripcion.
-            $collectRequest = '{
+        // Collect Request (collect) pago de suscripcion.
+        $collectRequest = '{
                 "payer": {
                     "name": "Corbin",
                     "surname": "Glover",
@@ -675,7 +690,7 @@ class PlaceToPayService
                     }
                 }
             }';
-            $responseApprovedCollectRequest = '{
+        $responseApprovedCollectRequest = '{
                 "requestId": "669305",
                 "status": {
                     "status": "APPROVED",
@@ -813,8 +828,8 @@ class PlaceToPayService
                     }
                 ]
             }';
-            // Collect Request (collect) pago2 de suscripcion. Con el mismo token. Da requestId diferentes.
-            $collectRequest2 = '{
+        // Collect Request (collect) pago2 de suscripcion. Con el mismo token. Da requestId diferentes.
+        $collectRequest2 = '{
                 "payer": {
                     "name": "Corbin",
                     "surname": "Glover",
@@ -836,7 +851,7 @@ class PlaceToPayService
                     }
                 }
             }';
-            $responseApprovedCollectRequest2 = '{
+        $responseApprovedCollectRequest2 = '{
                 "requestId": "669306",
                 "status": {
                     "status": "APPROVED",
@@ -974,9 +989,10 @@ class PlaceToPayService
                     }
                 ]
             }';
-        }
-        public function updateSession(){
-            $requestQueEspero = '{
+    }
+    public function updateSession()
+    {
+        $requestQueEspero = '{
                 "redirectUrl": null,
                 "redirectsOutOfLightbox": false,
                 "session": {
@@ -1061,14 +1077,15 @@ class PlaceToPayService
                 },
                 "captcha": null
             }';
-        }
-        public function GetPaymentByRequestId(){
-            // (pagounico)
-            $jsonPaymentByIdRequest = '{
-                "auth":'. $this->generateAuthentication() .'
+    }
+    public function GetPaymentByRequestId()
+    {
+        // (pagounico)
+        $jsonPaymentByIdRequest = '{
+                "auth":' . $this->generateAuthentication() . '
               }';
-              //Get del payment(pagounico) recien creado sin pagar todavia.
-              $jsonPaymentByIdResponse = '{
+        //Get del payment(pagounico) recien creado sin pagar todavia.
+        $jsonPaymentByIdResponse = '{
                 "requestId": "668933",
                 "status": {
                   "status": "PENDING",
@@ -1106,17 +1123,18 @@ class PlaceToPayService
                 }
               }';
 
-            $arrayRequest = json_decode($jsonPaymentByIdRequest, true);
-            $arrayResponse = json_decode($jsonPaymentByIdResponse, true);
+        $arrayRequest = json_decode($jsonPaymentByIdRequest, true);
+        $arrayResponse = json_decode($jsonPaymentByIdResponse, true);
 
-            return response()->json([
-                $arrayRequest,
-                $arrayResponse
-            ]);
-        }
-        public function createPayment(){
-            // (pagounico)
-            $jsonCreatePaymentRequest = '{
+        return response()->json([
+            $arrayRequest,
+            $arrayResponse
+        ]);
+    }
+    public function createPayment()
+    {
+        // (pagounico)
+        $jsonCreatePaymentRequest = '{
                 "buyer": {
                   "name": "Otha",
                   "surname": "Kautzer",
@@ -1138,10 +1156,10 @@ class PlaceToPayService
                 "returnUrl": "https://dnetix.co/p2p/client",
                 "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
                 "paymentMethod": null,
-                "auth":'. $this->generateAuthentication() .'
+                "auth":' . $this->generateAuthentication() . '
               }';
-            //   (pagounico)
-              $jsonCreatePaymentResponse = '{
+        //   (pagounico)
+        $jsonCreatePaymentResponse = '{
                   "status": {
                       "status": "OK",
                       "reason": "PC",
@@ -1152,14 +1170,14 @@ class PlaceToPayService
                     "processUrl": "https://checkout-test.placetopay.ec/spa/session/668933/18a1c7856f0ea52b55df228f9115639b"
                 }';
 
-            $arrayRequest = json_decode($jsonCreatePaymentRequest, true);
-            $arrayResponse = json_decode($jsonCreatePaymentResponse, true);
+        $arrayRequest = json_decode($jsonCreatePaymentRequest, true);
+        $arrayResponse = json_decode($jsonCreatePaymentResponse, true);
 
-            return response()->json([
-                $arrayRequest,
-                $arrayResponse
-            ]);
-        }
+        return response()->json([
+            $arrayRequest,
+            $arrayResponse
+        ]);
+    }
     //End //Objetos de ejemplo
 
 }

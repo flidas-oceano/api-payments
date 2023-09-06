@@ -363,17 +363,18 @@ class ZohoController extends Controller
     }
     public function updateZohoPTP(Request $request)
     {
-        $requestsSubscription = PlaceToPayTransaction::where( [ 'requestId' => $request['requestId'] ])->get()->first();
+        $requestsSubscription = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();
         $result = $this->placeToPayService->getByRequestId($requestsSubscription);
 
         $dataUpdate = [
-            'Email' => $result['request']['payer']['email'], //si tiene que ir el email del comprador hay que crear el payment con buyer aparte del payer
+            'Email' => $result['request']['payer']['email'],
+            //si tiene que ir el email del comprador hay que crear el payment con buyer aparte del payer
             'Anticipo' => $requestsSubscription->first_installment,
-            'Saldo' =>  $result['request']['payment']['amount']['total'],
+            'Saldo' => $result['request']['payment']['amount']['total'],
             'Cantidad' => $requestsSubscription->quotes,
-       //     //Nro de cuotas
-           'Monto_de_cuotas_restantes' => $requestsSubscription->isAdvancedSubscription() ? $requestsSubscription->first_installment : $requestsSubscription->installmentsToPay(),
-       //     //Costo de cada cuota
+            //     //Nro de cuotas
+            'Monto_de_cuotas_restantes' => $requestsSubscription->isAdvancedSubscription() ? $requestsSubscription->first_installment : $requestsSubscription->installmentsToPay(),
+            //     //Costo de cada cuota
             'Cuotas_restantes_sin_anticipo' => $requestsSubscription->isAdvancedSubscription() ? $requestsSubscription->quotes - 1 : null,
             'DNI' => '',
             'Fecha_de_Vto' => date('Y-m-d'),
@@ -382,7 +383,7 @@ class ZohoController extends Controller
             'Medio_de_Pago' => 'PlaceToPay',
             'Es_Suscri' => $requestsSubscription->isSubscription(),
             'Suscripcion_con_Parcialidad' => $requestsSubscription->isAdvancedSubscription(),
-            'L_nea_nica_6' => $result['request']['payer']['name'] ." ". $result['request']['payer']['surname'],
+            'L_nea_nica_6' => $result['request']['payer']['name'] . " " . $result['request']['payer']['surname'],
             'Billing_Street' => $result['request']['payer']['address']['street'],
             'L_nea_nica_3' => $result['request']['payer']['document'],
             'Tel_fono_Facturacion' => $result['request']['payer']['mobile'],
@@ -399,16 +400,17 @@ class ZohoController extends Controller
 
     public function updateZohoPlaceToPay($request, $result, $requestIdRequestSubscription)
     {
-        $requestsSubscription = PlaceToPayTransaction::where( [ 'requestId' => $requestIdRequestSubscription ])->get()->first();
+        $requestsSubscription = PlaceToPayTransaction::where(['requestId' => $requestIdRequestSubscription])->get()->first();
 
         $dataUpdate = [
-            'Email' => $result['request']['payer']['email'], //si tiene que ir el email del comprador hay que crear el payment con buyer aparte del payer
+            'Email' => $result['request']['payer']['email'],
+            //si tiene que ir el email del comprador hay que crear el payment con buyer aparte del payer
             'Anticipo' => $requestsSubscription->first_installment,
-            'Saldo' =>  $result['request']['payment']['amount']['total'],
+            'Saldo' => $result['request']['payment']['amount']['total'],
             'Cantidad' => $requestsSubscription->quotes,
-       //     //Nro de cuotas
-           'Monto_de_cuotas_restantes' => $requestsSubscription->isAdvancedSubscription() ? $requestsSubscription->first_installment : $requestsSubscription->installmentsToPay(),
-       //     //Costo de cada cuota
+            //     //Nro de cuotas
+            'Monto_de_cuotas_restantes' => $requestsSubscription->isAdvancedSubscription() ? $requestsSubscription->first_installment : $requestsSubscription->installmentsToPay(),
+            //     //Costo de cada cuota
             'Cuotas_restantes_sin_anticipo' => $requestsSubscription->isAdvancedSubscription() ? $requestsSubscription->quotes - 1 : null,
             'DNI' => '',
             'Fecha_de_Vto' => date('Y-m-d'),
@@ -417,7 +419,7 @@ class ZohoController extends Controller
             'Medio_de_Pago' => 'PlaceToPay',
             'Es_Suscri' => $requestsSubscription->isSubscription(),
             'Suscripcion_con_Parcialidad' => $requestsSubscription->isAdvancedSubscription(),
-            'L_nea_nica_6' => $result['request']['payer']['name'] ." ". $result['request']['payer']['surname'],
+            'L_nea_nica_6' => $result['request']['payer']['name'] . " " . $result['request']['payer']['surname'],
             'Billing_Street' => $result['request']['payer']['address']['street'],
             'L_nea_nica_3' => $result['request']['payer']['document'],
             'Tel_fono_Facturacion' => $result['request']['payer']['mobile'],
