@@ -265,6 +265,10 @@ class PlaceToPayService
     }
     public function getByRequestId($requestId)
     {
+        if ($requestId === null) {
+            throw new \InvalidArgumentException("El parámetro 'requestId' es obligatorio.");
+        }
+
         $url = "https://checkout-test.placetopay.ec/api/session/" . $requestId;
         $data = [
             "auth" => $this->generateAuthentication(),
@@ -274,6 +278,8 @@ class PlaceToPayService
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
         ])->post($url, $data)->json();
+
+        $this->isResponseValid($response);
 
         return $response;
     }
