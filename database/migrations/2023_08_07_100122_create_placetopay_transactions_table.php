@@ -29,6 +29,11 @@ class CreatePlacetopayTransactionsTable extends Migration
             $table->string("reference")->nullable()->default(null);
             $table->string("type")->nullable()->default(null);
             $table->string("token_collect_para_el_pago")->nullable()->default(null);//para realizar el pago de la suscripcion
+            $table->string("expiration_date")->nullable()->default(null);
+            $table->integer("quotes")->nullable()->default(null);
+            $table->integer("first_installment")->nullable()->default(null);
+            $table->integer("remaining_installments")->nullable()->default(null);
+            $table->integer("installments_paid")->nullable()->default(null);
 
             $table->timestamps();
         });

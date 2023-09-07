@@ -14,6 +14,7 @@ class PlaceToPayTransaction extends Model
     protected $primaryKey = 'id';
 
     public $fillable = [
+        'id',
         'status',
         'reason',
         'message',
@@ -21,6 +22,7 @@ class PlaceToPayTransaction extends Model
         'requestId',
         'processUrl',
         'contact_id',
+        'lead_id',
         'authorization',
         'total',
         'currency',
@@ -31,8 +33,11 @@ class PlaceToPayTransaction extends Model
         'remaining_installments',
         'first_installment',
         'quotes',
+        'installments_paid',
+
     ];
     private static $formAttributes = [
+        'id',
         'requestId',
         'processUrl',
         'contact_id',
@@ -50,9 +55,24 @@ class PlaceToPayTransaction extends Model
         'remaining_installments',
         'first_installment',
         'quotes',
+        'installments_paid',
     ];
+    function isSubscription() {
+        return ($this->type === 'requestSubscription') ? true: false;
+    }
+    function isAdvancedSubscription() {
+        return $this->first_installment !== null;
+    }
+    function installmentsToPay() {
+        $diferencia = $this->quotes -  $this->installments_paid;
+        return $diferencia;
+    }
     public function subscriptions()
     {
         return $this->hasMany(PlaceToPaySubscription::class, 'transactionId');
+    }
+    public function lead()
+    {
+        return $this->belongsTo(Lead::class, 'lead_id');
     }
 }

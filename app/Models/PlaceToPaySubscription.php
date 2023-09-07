@@ -13,7 +13,7 @@ class PlaceToPaySubscription extends Model
     protected $primaryKey = 'id';
 
     public $fillable = [
-        'requestIdFather',
+        'id',
         'status',
         'reason',
         'message',
@@ -26,12 +26,11 @@ class PlaceToPaySubscription extends Model
         'nro_quote',
         'reference',
         'type',
-        'token_collect_para_el_pago',
         'expiration_date',
         'transactionId'
     ];
     private static $formAttributes = [
-
+        'id',
         'requestIdFather',
         'status',
         'reason',
@@ -44,7 +43,6 @@ class PlaceToPaySubscription extends Model
         'currency',
         'reference',
         'type',
-        'token_collect_para_el_pago',
         'expiration_date',
         'transactionId'
     ];

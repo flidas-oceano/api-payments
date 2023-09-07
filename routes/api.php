@@ -62,6 +62,7 @@ Route::get('/stripe/customer/search/{email}', [StripePaymentController::class, '
 Route::post('/updateZohoCTCZohoCRM', [ZohoController::class, 'updateZohoCTC']);
 Route::post('/updateZohoStripeZohoCRM', [ZohoController::class, 'updateZohoStripe']);
 Route::post('/updateZohoMPZohoCRM', [ZohoController::class, 'updateZohoMP']);
+Route::post('/updateZohoPTP', [ZohoController::class, 'updateZohoPTP']);
 Route::post('/setContractStatus', [ContractController::class, 'setContractStatus']);
 
 
@@ -126,7 +127,6 @@ Route::post('/ctc/exportExcel2BPOCP', [ExcelController::class, 'exportExcel2BPOC
 Route::post('/ctc/exportExcel3OBPOCP', [ExcelController::class, 'exportExcel3OBPOCP']);
 Route::post('/ctc/exportExcel4PBOCP', [ExcelController::class, 'exportExcel4PBOCP']);
 
-
 Route::prefix("/placetopay")->group(function () {
     Route::get('/getAuth', [PlaceToPayController::class, 'getAuth']);
     Route::post('/createSession', [PlaceToPayController::class, 'createSession']);
@@ -142,4 +142,7 @@ Route::prefix("/placetopay")->group(function () {
 
     Route::get('/pruebaregladepago', [PlaceToPayController::class, 'pruebaregladepago']);
 
+
+    Route::post('/generatePaymentLink', [PlaceToPayPaymentLinkController::class, 'create']);
+    Route::get('/getPaymentLink/{saleId}', [PlaceToPayPaymentLinkController::class, 'show']);
 });

@@ -13,7 +13,7 @@ class Contact extends Model
     protected $fillable = [
         'id',
         'entity_id_crm',
-        'sex',  
+        'sex',
         'date_of_birth',
         'registration_number',
         'area_of_work',
@@ -55,7 +55,6 @@ class Contact extends Model
         $lead = $this->hasOne(Lead::class, 'contact_id', 'id');
         return $lead;
     }
-
     public static function getFormAttributes()
     {
         return self::$formAttributes;

@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreatePaymentLinksTable extends Migration
+class CreatePlacetopayPaymentLinks extends Migration
 {
     /**
      * Run the migrations.
@@ -13,10 +13,12 @@ class CreatePaymentLinksTable extends Migration
      */
     public function up()
     {
-        Schema::create('payment_links', function (Blueprint $table) {
+        Schema::create('placetopay_payment_links', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId("rebill_customer_id")->references('id')->on("rebill_customers")->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignId("transactionId")
+                ->references('id')
+                ->on("placetopay_transactions");
             $table->string("gateway");
             $table->string("type");
             $table->integer("quotes");
@@ -36,6 +38,9 @@ class CreatePaymentLinksTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('payment_links');
+        Schema::dropIfExists('placetopay_payment_links');
     }
 }
+
+// php artisan migrate:rollback --step=1 --path=/database/migrations/2023_09_05_160451_create_placetopay_payment_links.php
+// php artisan migrate --path=/database/migrations/2023_09_05_160451_create_placetopay_payment_links.php
