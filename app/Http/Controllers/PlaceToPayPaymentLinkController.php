@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\PaymentLink;
 use App\Models\PlaceToPayPaymentLink;
+use App\Models\PlaceToPayTransaction;
 use App\Models\RebillCustomer;
 use App\Services\PlaceToPay\PlaceToPayService;
 use Faker\Provider\ar_EG\Payment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PlaceToPayPaymentLinkController extends Controller
 {
@@ -18,11 +20,116 @@ class PlaceToPayPaymentLinkController extends Controller
         $this->placeToPayService = $placeToPayService;
     }
 
+    // public function createSessionSubscription(CreateSessionSubscriptionRequest $request)
+    public function createSessionSubscription(Request $request)
+    {
+        //comprador - el que recibe el curso
+        $buyer = [
+            "name" => $request['payer']['name'],
+            "surname" => $request['payer']['surname'],
+            "email" => $request['payer']['email'],
+            "document" => $request['payer']['document'],
+            "documentType" => $request['payer']['documentType'],
+            "mobile" => $request['payer']['mobile'],
+            // "address" => [ //domicilio
+            //     // "country" => $request['country'],
+            //     // "state" => $request['state'],
+            //     // "city" => $request['city'],
+            //     // "postalCode" => $request['postalCode'],
+            //     "street" => $request['payer']['address']['street'],
+            //     // "phone" => $request['phone'],//+573214445566
+            // ]
+        ];
+        $payer = [
+            "name" => $request['payer']['name'],
+            "surname" => $request['payer']['surname'],
+            "email" => $request['payer']['email'],
+            "document" => $request['payer']['document'],
+            "documentType" => $request['payer']['documentType'],
+            "mobile" => $request['payer']['mobile'],
+            // "address" => [ //domicilio
+            //     // "country" => $request['country'],
+            //     // "state" => $request['state'],
+            //     // "city" => $request['city'],
+            //     // "postalCode" => $request['postalCode'],
+            //     "street" => $request['payer']['address']['street'],
+            //     // "phone" => $request['phone'],//+573214445566
+            // ]
+        ];
+        $subscription = [
+            "reference" => $request['so'],
+            "description" => "Prueba suscripcion contrato de OceanoMedicina"
+        ];
+        $data = [
+            "auth" => $this->placeToPayService->generateAuthentication(),
+            "locale" => "es_CO",
+            "payer" => $payer,
+            "subscription" => $subscription,
+            "expiration" => $this->placeToPayService->getDateExpiration(),
+            "returnUrl" => "https://dnetix.co/p2p/client",
+            "ipAddress" => $request->ip(),
+            // Usar la dirección IP del cliente
+            "userAgent" => $request->header('User-Agent')
+        ];
+
+        try {
+            $result = $this->placeToPayService->create($data);
+
+            if (isset($result['status']['status'])) {
+                $placeToPayTransaction = PlaceToPayTransaction::create([
+                    'status' => $result['status']['status'],
+                    'reason' => $result['status']['reason'],
+                    'message' => $result['status']['message'],
+                    'date' => $result['status']['date'],
+                    'requestId' => $result['requestId'],
+                    'processUrl' => $this->placeToPayService->reduceUrl($result['processUrl']),
+
+                    'total' => $request['payment']['total'],
+                    'currency' => 'USD',
+                    'quotes' => $request['payment']['quotes'],
+                    'remaining_installments' => $request['payment']['remaining_installments'],
+
+                    // 'contact_id' => ,
+                    // 'authorization' => ,
+
+                    'reference' => $request['so'],
+                    'type' => "requestSubscription",
+                    // 'token_collect_para_el_pago' => ,
+                    'expiration_date' => $data['expiration'],
+                ]);
+                $getById = $this->placeToPayService->getByRequestId($result['requestId']);
+            }
+
+            // Aquí puedes procesar la respuesta como desees
+            // Por ejemplo, devolverla como una respuesta JSON
+            return response()->json([$result, $getById]);
+        } catch (\Exception $e) {
+            // Manejo de errores si ocurre alguno durante la solicitud
+
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString(),
+            ];
+
+            Log::error("Error en createSessionSuscription: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ], 500);
+        }
+    }
+
     public function create(Request $request)
     {
+        $objetoStdClass = $this->placeToPayService->getByRequestId($request['requestId'] ?? null);
+        // $objetoStdClass = $placeToPayService->getByRequestId(677217);
+        // Convertir el objeto stdClass en un objeto PHP
+        $transaction = json_decode(json_encode($objetoStdClass), false);
+
         $rebillCustomerData = $request->only(['email', 'phone', 'personalId', 'address', 'fullName', 'zip']);
         $paymentLinkData = $request->only(['gateway', 'type', 'contract_entity_id', 'contract_so', 'status', 'quotes', 'country']);
-
 
         $customer = RebillCustomer::updateOrCreate(["email" => $rebillCustomerData["email"]], $rebillCustomerData);
         $paymentLinkData['rebill_customer_id'] = $customer->id;
@@ -44,13 +151,28 @@ class PlaceToPayPaymentLinkController extends Controller
         return response()->json(["customer" => $customer, "payment" => $paymentLink, "type" => "paymentLink"]);
     }
 
-    public function show(Request $request, $saleId)
+    public function getPaymentLink(Request $request, $saleId)
     {
-        $paymentLinkPTP = PlaceToPayPaymentLink::where('contract_entity_id', $saleId)->first();
-        $objetoStdClass = $this->placeToPayService->getByRequestId($paymentLinkPTP->transaction->requesId);
-        // $objetoStdClass = $placeToPayService->getByRequestId(677217);
-        // Convertir el objeto stdClass en un objeto PHP
-        $transaction = json_decode(json_encode($objetoStdClass), false);
-        return response()->json(["customer" => $transaction->request->payer, "checkout" => $paymentLinkPTP]);
+        try{
+            $paymentLinkPTP = PlaceToPayPaymentLink::where('contract_entity_id', $saleId)->first();
+            $objetoStdClass = $this->placeToPayService->getByRequestId($paymentLinkPTP->transaction->requestId);
+            // $objetoStdClass = $placeToPayService->getByRequestId(677217);
+            // Convertir el objeto stdClass en un objeto PHP
+            $transaction = json_decode(json_encode($objetoStdClass), false);
+            return response()->json(["customer" => $transaction->request->payer, "checkout" => $paymentLinkPTP]);
+        } catch (\Exception $e) {
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString(),
+            ];
+
+            Log::error("Error en PlaceToPayPaymentLinkController-getPaymentLink: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ]);
+        }
     }
 }
