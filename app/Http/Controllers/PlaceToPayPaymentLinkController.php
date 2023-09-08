@@ -123,32 +123,75 @@ class PlaceToPayPaymentLinkController extends Controller
 
     public function create(Request $request)
     {
-        $objetoStdClass = $this->placeToPayService->getByRequestId($request['requestId'] ?? null);
-        // $objetoStdClass = $placeToPayService->getByRequestId(677217);
-        // Convertir el objeto stdClass en un objeto PHP
-        $transaction = json_decode(json_encode($objetoStdClass), false);
+        $rules = [
+            'requestId' => 'required',
+            'gateway' => 'required',
+            'type' => 'required',
+            'contract_entity_id' => 'required',
+            'contract_so' => 'required',
+            'status' => 'required',
+            'quotes' => 'required',
+            'country' => 'required',
+        ];
 
-        $rebillCustomerData = $request->only(['email', 'phone', 'personalId', 'address', 'fullName', 'zip']);
-        $paymentLinkData = $request->only(['gateway', 'type', 'contract_entity_id', 'contract_so', 'status', 'quotes', 'country']);
+        $messages = [
+            'requestId.required' => 'El campo requestId es obligatorio.',
+            'gateway.required' => 'El campo gateway es obligatorio.',
+            'type.required' => 'El campo type es obligatorio.',
+            'contract_entity_id.required' => 'El campo contract_entity_id es obligatorio.',
+            'contract_so.required' => 'El campo contract_so es obligatorio.',
+            'status.required' => 'El campo status es obligatorio.',
+            'quotes.required' => 'El campo quotes es obligatorio.',
+            'country.required' => 'El campo country es obligatorio.',
+        ];
 
-        $customer = RebillCustomer::updateOrCreate(["email" => $rebillCustomerData["email"]], $rebillCustomerData);
-        $paymentLinkData['rebill_customer_id'] = $customer->id;
+        $this->validate($request, $rules, $messages);
 
-        $paymentLinks = PaymentLink::where([
-            ["contract_so", $paymentLinkData["contract_so"]],
-            ["status", "!=", "Contrato Efectivo"]
-        ])->get();
+        try {
 
-        if($paymentLinks->count() > 0){
-            $paymentLinks->first()->update($paymentLinkData);
-            $paymentLink = PaymentLink::where(
-                "contract_so" , $paymentLinkData["contract_so"]
-            )->get()->first();
-        }else{
-            $paymentLink = PaymentLink::create($paymentLinkData);
+            //estos datos se usan para actualizar o crear el contacto en db // $rebillCustomerData = $request->only(['email', 'phone', 'personalId', 'address', 'fullName', 'zip']);
+            // mandame la informacion de datos personalescuando crees la susbscripcion. No se puede actualizar datos
+
+            //obtener datos personales
+            $paymentLinkPTP = PlaceToPayPaymentLink::where('contract_entity_id', $request['requestId'] ?? null)->first();
+            $objetoStdClass = $this->placeToPayService->getByRequestId($paymentLinkPTP->transaction->requestId);
+            // $objetoStdClass = $placeToPayService->getByRequestId(677217);
+            // Convertir el objeto stdClass en un objeto PHP
+            $transactionByRequestId = json_decode(json_encode($objetoStdClass), false);
+
+            //paymentLink data
+            $paymentLinkData = $request->only(['gateway', 'type', 'contract_entity_id', 'contract_so', 'status', 'quotes', 'country']);
+            $paymentLinkData['transactionId'] = $transactionByRequestId->id;
+
+            $paymentLinks = PlaceToPayPaymentLink::where([
+                ["contract_so", $paymentLinkData["contract_so"]],
+                ["status", "!=", "Contrato Efectivo"]
+            ])->get();
+
+            if($paymentLinks->count() > 0){
+                $paymentLinks->first()->update($paymentLinkData);
+                $paymentLink = PlaceToPayPaymentLink::where(
+                    "contract_so" , $paymentLinkData["contract_so"]
+                )->get()->first();
+            }else{
+                $paymentLink = PlaceToPayPaymentLink::create($paymentLinkData);
+            }
+
+            return response()->json(["transactionByRequestId" => $transactionByRequestId, "payment" => $paymentLink, "type" => "paymentLink"]);
+        } catch (\Exception $e) {
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString()
+            ];
+
+            Log::error("Error en PlaceToPayPaymentLinkController-create: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ]);
         }
-
-        return response()->json(["customer" => $customer, "payment" => $paymentLink, "type" => "paymentLink"]);
     }
 
     public function getPaymentLink(Request $request, $saleId)
@@ -159,7 +202,7 @@ class PlaceToPayPaymentLinkController extends Controller
             // $objetoStdClass = $placeToPayService->getByRequestId(677217);
             // Convertir el objeto stdClass en un objeto PHP
             $transaction = json_decode(json_encode($objetoStdClass), false);
-            return response()->json(["customer" => $transaction->request->payer, "checkout" => $paymentLinkPTP]);
+            return response()->json(["payer" => $transaction->request->payer, "checkout" => $paymentLinkPTP]);
         } catch (\Exception $e) {
             $err = [
                 'message' => $e->getMessage(),

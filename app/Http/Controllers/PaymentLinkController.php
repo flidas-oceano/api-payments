@@ -21,11 +21,13 @@ class PaymentLinkController extends Controller
 
     public function create(Request $request)
     {
+
+        //datos personales
         $rebillCustomerData = $request->only(['email', 'phone', 'personalId', 'address', 'fullName', 'zip']);
-        $paymentLinkData = $request->only(['gateway', 'type', 'contract_entity_id', 'contract_so', 'status', 'quotes', 'country']);
-
-
         $customer = RebillCustomer::updateOrCreate(["email" => $rebillCustomerData["email"]], $rebillCustomerData);
+
+        //paymentLink data
+        $paymentLinkData = $request->only(['gateway', 'type', 'contract_entity_id', 'contract_so', 'status', 'quotes', 'country']);
         $paymentLinkData['rebill_customer_id'] = $customer->id;
 
         $paymentLinks = PaymentLink::where([
