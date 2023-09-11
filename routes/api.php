@@ -113,6 +113,10 @@ Route::prefix("/payments_msk")->group(function () {
     Route::get('/list', [\App\Http\Controllers\PaymentsMsk\ReadPaymentMskController::class, 'list']);
 });
 
+Route::prefix("/contifico")->group(function () {
+    Route::post('/user/create', [\App\Http\Controllers\Contifico\ContificoController::class, 'createUser']);
+});
+
 Route::get("/mp/searchPaymentApprove/{so}", [MercadoPagoPaymentController::class, 'searchPaymentApprove']);
 
 Route::get('/getPaymentsStatusDistintContratoEfectivo', [PaymentLinkController::class, 'getPaymentsStatusDistintContratoEfectivo']);

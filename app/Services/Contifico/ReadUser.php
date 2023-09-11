@@ -30,9 +30,13 @@ class ReadUser implements IRead
      */
     public function findBy($data)
     {
-        $limit = $data['limit'] ?? 100;
-        $page = $data['page'] ?? 1;
-        $response = ($this->request->get("/sistema/api/v1/persona?status=SUCCEEDED&take=$limit&page=$page&email={$data['email']}"))->getBody()->getContents();
+        //$limit = $data['limit'] ?? 100;
+        //$page = $data['page'] ?? 1;
+        $query = "";
+        if (isset($data['identification'])) {
+            $query .= "&identificacion=".$data['identification'];
+        }
+        $response = ($this->request->get("/sistema/api/v1/persona?1=1".$query))->getBody()->getContents();
 
         return json_decode($response, true);
     }
