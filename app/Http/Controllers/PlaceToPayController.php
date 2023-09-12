@@ -220,35 +220,8 @@ class PlaceToPayController extends Controller
             ], 500);
         }
     }
-    // public function createSessionSubscription(CreateSessionSubscriptionRequest $request)
     public function createSessionSubscription(CreateSessionSubscriptionRequest $request)
     {
-        // // "payment": {
-        //     "reference": "PAY_ABC_1287",
-        //     "description": "Pago por Placetopay",
-        //     "amount": {
-        //         "currency": "USD",
-        //         "total": 1000
-        //     },
-        //     "subscribe": true
-        // //}
-
-        // {
-        //     "su":{
-        //      "total" 20000:,
-        //      "cant_cuotas": 10,
-        //      "valor_cuota": 2000,
-        //      "currency": "USD",
-        //     },
-        //     "sup":{ //20000/10 = 2k x mes
-        //         "total"20000: ,
-        //         "cant_cuotas": 10,
-        //         "primer_cuota": 1000,
-        //         "valor_cuota": 2111,
-        //         "currency": "USD",
-        //     }
-        // }
-
         //comprador - el que recibe el curso
         $buyer = [
 
@@ -485,9 +458,6 @@ class PlaceToPayController extends Controller
             echo "Error: " . $e->getMessage();
         }
     }
-    //actualizar zoho.
-    //TODO: con ptp en el controlador de zoho.
-
     // Esto es cuando se ejecuta el create sesion que es la creacion del pago unico. //Se paga a travez de la pasarela.
     public function savePayments(Request $request)
     {

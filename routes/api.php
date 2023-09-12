@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\{ExcelController, PassportAuthController, RebillController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController, PlaceToPayController};
+use App\Http\Controllers\{ExcelController, PassportAuthController, RebillController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController, PlaceToPayController, PlaceToPayPaymentLinkController};
 use App\Http\Controllers\MercadoPagoController;
 use App\Http\Controllers\PaymentLinkController;
 use App\Http\Controllers\Webhooks\WebhookGatewayController;
@@ -148,5 +148,5 @@ Route::prefix("/placetopay")->group(function () {
 
 
     Route::post('/generatePaymentLink', [PlaceToPayPaymentLinkController::class, 'create']);
-    Route::get('/getPaymentLink/{saleId}', [PlaceToPayPaymentLinkController::class, 'show']);
+    Route::get('/getPaymentLink/{saleId}', [PlaceToPayPaymentLinkController::class, 'getPaymentLink']);
 });
