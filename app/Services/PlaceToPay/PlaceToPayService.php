@@ -4,6 +4,7 @@ namespace App\Services\PlaceToPay;
 
 use App\Models\PlaceToPaySubscription;
 use App\Models\PlaceToPayTransaction;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use stdClass;
@@ -247,6 +248,59 @@ class PlaceToPayService
             // Aquí lanzamos una excepción personalizada
             throw new Exception("Payment request failed: Reason: $errorReason, Message: $errorMessage, Date: $errorDate");
         }
+    }
+    // use App\Services\PlaceToPay\PlaceToPayService;
+    // $placeToPayService = new PlaceToPayService();
+    // $proximaCuota = $placeToPayService->dateToPay(2023,1,30);
+    public function dateToPay($año,$mes,$diaCobroPrimerCuota){
+        // Verifica si el día es válido (entre 1 y 31)
+        if ($diaCobroPrimerCuota < 1 || $diaCobroPrimerCuota > 31) {
+          // Maneja un mensaje de error o toma alguna acción apropiada
+            return "Día inválido";
+        }
+
+        $cuotaAnterior = new stdClass();
+        // Construir la fecha con el día 1 y el mes y año variables
+
+        $fecha = Carbon::create($año, $mes, 1);
+        $cuotaAnterior->fechaCobro = $fecha;
+        // Obtener el día de la fecha
+        // $cuotaAnterior->diaCobro = (int) $cuotaAnterior->fechaCobro->format('d');
+        //cuantos dias faltan para que termine el mes
+        $cuotaAnterior->ultimoDiaDelMes = (int) $cuotaAnterior->fechaCobro->format('t');
+        //dias que faltan para que termine el mes
+        $cuotaAnterior->diasRestantes = $cuotaAnterior->ultimoDiaDelMes - (int) $cuotaAnterior->fechaCobro->format('j');
+        //Conseguir el mes siguiente.
+        // Suma los días restantes + 1 a la fecha actual
+        $cuotaAnterior->diasRestantes++;
+
+        $mesSiguiente = new stdClass();
+        $mesSiguiente->primerDia = $cuotaAnterior->fechaCobro->modify("+{$cuotaAnterior->diasRestantes} days");
+        $mesSiguiente->ultimoDiaDelMes = (int) $mesSiguiente->primerDia->format('t');
+
+        if ($diaCobroPrimerCuota <= 28) {
+            // Modificar el día a "x"
+            $mesSiguiente->fechaCobro = $mesSiguiente->primerDia->setDate(
+                $mesSiguiente->primerDia->format('Y'),
+                $mesSiguiente->primerDia->format('m'),
+                $diaCobroPrimerCuota
+            );
+        }
+        if ($diaCobroPrimerCuota > 28 && $mesSiguiente->ultimoDiaDelMes < $diaCobroPrimerCuota ) {
+            $mesSiguiente->fechaCobro = $mesSiguiente->primerDia->setDate(
+                $mesSiguiente->primerDia->format('Y'),
+                $mesSiguiente->primerDia->format('m'),
+                $mesSiguiente->ultimoDiaDelMes
+            );
+        }else{
+            $mesSiguiente->fechaCobro = $mesSiguiente->primerDia->setDate(
+                $mesSiguiente->primerDia->format('Y'),
+                $mesSiguiente->primerDia->format('m'),
+                $diaCobroPrimerCuota
+            );
+        }
+
+        return $mesSiguiente->fechaCobro;
     }
     // End //Utils
 
@@ -1185,5 +1239,4 @@ class PlaceToPayService
         ]);
     }
     //End //Objetos de ejemplo
-
 }
