@@ -27,7 +27,8 @@ class PlaceToPaySubscription extends Model
         'reference',
         'type',
         'expiration_date',
-        'transactionId'
+        'transactionId',
+        'date_to_pay',
     ];
     private static $formAttributes = [
         'id',
@@ -44,7 +45,8 @@ class PlaceToPaySubscription extends Model
         'reference',
         'type',
         'expiration_date',
-        'transactionId'
+        'transactionId',
+        'date_to_pay',
     ];
     public function transaction()
     {
