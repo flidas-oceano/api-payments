@@ -40,7 +40,7 @@ class WriteUser
             'es_vendedor' => $userDto->isSeller(),
             'es_proveedor' => $userDto->isProvider(),
             'es_extranjero' => $userDto->isForeigner(),
-        ]))->getBody()->getContents();dd($response);
+        ]))->getBody()->getContents();
 
         return json_decode($response, true);
     }

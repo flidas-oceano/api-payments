@@ -6,7 +6,6 @@ use App\Dtos\Contifico\ContificoUserDto;
 use App\Http\Controllers\Controller;
 use App\Services\Contifico\ReadUser;
 use App\Services\Contifico\WriteUser;
-use App\Services\Webhooks\CreateSubPaymentsRegistryService;
 use App\Validations\ContificoValidator;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\JsonResponse;
