@@ -137,8 +137,8 @@ class PlaceToPayService
 
                 // // crear cuotas
                 if ($requestsSubscription->quotes > 1) {
-                    // $dateParsedPaidFirstInstallment = date_parse($result['firstPaySubscription']['date']);
-                    $dateParsedPaidFirstInstallment = date_parse("2023-01-30T18:38:53.000000Z");
+                    $dateParsedPaidFirstInstallment = date_parse($result['firstPaySubscription']['date']);
+                    // $dateParsedPaidFirstInstallment = date_parse("2023-01-30T18:38:53.000000Z"); // TODO: Se puede usar esto para probar unas fecha de cobro especifica
 
                     //Obtener
                     $datesToPay = $this->getDatesToPay($dateParsedPaidFirstInstallment,$requestsSubscription->quotes);

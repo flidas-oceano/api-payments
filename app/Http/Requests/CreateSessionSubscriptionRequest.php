@@ -65,11 +65,11 @@ class CreateSessionSubscriptionRequest extends FormRequest
                     $documentType = $this->input('payer.documentType');
 
                     // Valida el número de documento según el tipo
-                    if ($documentType === 'CI' && !preg_match('/^\d{10}$/', $value)) {
+                    if ($documentType === 'CI' && !preg_match('/^\d{10}$/', $value)) {// 1234567890
                         $fail("El campo $attribute no es una CI (Cédula de Identidad) válida.");
-                    } elseif ($documentType === 'RUC' && !preg_match('/^\d{13}$/', $value)) {
+                    } elseif ($documentType === 'RUC' && !preg_match('/^\d{13}$/', $value)) {// 1234567890123
                         $fail("El campo $attribute no es un RUC (Registro Único de Contribuyentes) válido.");
-                    } elseif ($documentType === 'CC' && !preg_match('/^[1-9][0-9]{3,9}$/', $value)) {
+                    } elseif ($documentType === 'CC' && !preg_match('/^[1-9][0-9]{3,9}$/', $value)) {// 123456789
                         $fail("El campo $attribute no es una CC (Cédula de Ciudadanía) válida.");
                     }
                 },
