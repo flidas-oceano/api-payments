@@ -9,7 +9,7 @@ class PlaceToPaySubscription extends Model
 {
     use HasFactory;
     protected $table = 'placetopay_subscriptions';
-    public $timestamps = false;
+    public $timestamps = true;
     protected $primaryKey = 'id';
 
     public $fillable = [

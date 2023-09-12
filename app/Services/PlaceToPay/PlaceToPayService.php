@@ -5,6 +5,7 @@ namespace App\Services\PlaceToPay;
 use App\Models\PlaceToPaySubscription;
 use App\Models\PlaceToPayTransaction;
 use Carbon\Carbon;
+use DateTime;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use stdClass;
@@ -91,7 +92,7 @@ class PlaceToPayService
 
         $response = $this->billSubscription($data);
         // guardas registro primer cuota
-        PlaceToPaySubscription::create([
+        $firstPaySubscription = PlaceToPaySubscription::create([
             'transactionId' => $request->id,
             'nro_quote' => $nro_quote,
             'date' => $response['status']['date'],
@@ -99,6 +100,7 @@ class PlaceToPayService
             'total' => $response['request']['payment']['amount']['total'],
             'currency' => $response['request']['payment']['amount']['currency'],
             'status' => $response['status']['status'],
+            'date_to_pay' => $response['status']['date']
         ]);
         // actualizar session
         // PlaceToPayTransaction::where(['requestId'])->update([
@@ -107,6 +109,7 @@ class PlaceToPayService
 
         //Se realizo el pago exitosamente ?
         return [
+            "firstPaySubscription" => $firstPaySubscription,
             "response" => $response,
             "data" => $data,
         ];
@@ -134,7 +137,14 @@ class PlaceToPayService
 
                 // // crear cuotas
                 if ($requestsSubscription->quotes > 1) {
+                    // $dateParsedPaidFirstInstallment = date_parse($result['firstPaySubscription']['date']);
+                    $dateParsedPaidFirstInstallment = date_parse("2023-01-30T18:38:53.000000Z");
+
+                    //Obtener
+                    $datesToPay = $this->getDatesToPay($dateParsedPaidFirstInstallment,$requestsSubscription->quotes);
+
                     for ($i = 2; $i <= $requestsSubscription->quotes; $i++) {
+
                         PlaceToPaySubscription::create([
                             'transactionId' => $requestsSubscription->id,
                             'nro_quote' => $i,
@@ -142,6 +152,11 @@ class PlaceToPayService
                             // 'requestId' => $response['status']['status'],
                             'total' => $requestsSubscription->remaining_installments,
                             'currency' => $requestsSubscription->currency,
+                            'date_to_pay' => date_format($this->dateToPay(
+                                $datesToPay[$i - 2]['year'],
+                                $datesToPay[$i - 2]['month'],
+                                $dateParsedPaidFirstInstallment['day']
+                            ), 'Y-m-d H:i:s'),
                             // 'type' => 'subscription',
                         ]);
                     }
@@ -249,10 +264,32 @@ class PlaceToPayService
             throw new Exception("Payment request failed: Reason: $errorReason, Message: $errorMessage, Date: $errorDate");
         }
     }
-    // use App\Services\PlaceToPay\PlaceToPayService;
-    // $placeToPayService = new PlaceToPayService();
-    // $proximaCuota = $placeToPayService->dateToPay(2023,1,30);
+
+    public function getDatesToPay($dateParsedPaidFirstInstallment, $quotes){
+        $datesToPay = [];
+        array_push($datesToPay, $dateParsedPaidFirstInstallment);
+        for ($i = 2; $i <= $quotes; $i++) {
+            array_push(
+                $datesToPay,
+                date_parse(
+                    $this->dateToPay(
+                        $datesToPay[$i - 2]['year'],
+                        $datesToPay[$i - 2]['month'],
+                        $dateParsedPaidFirstInstallment['day']
+                    )
+                )
+            );
+        }
+        return $datesToPay;
+    }
+
     public function dateToPay($año,$mes,$diaCobroPrimerCuota){
+
+        //tinker
+        // use App\Services\PlaceToPay\PlaceToPayService;
+        // $placeToPayService = new PlaceToPayService();
+        // $proximaCuota = $placeToPayService->dateToPay(2023,1,30);
+
         // Verifica si el día es válido (entre 1 y 31)
         if ($diaCobroPrimerCuota < 1 || $diaCobroPrimerCuota > 31) {
           // Maneja un mensaje de error o toma alguna acción apropiada
@@ -292,7 +329,8 @@ class PlaceToPayService
                 $mesSiguiente->primerDia->format('m'),
                 $mesSiguiente->ultimoDiaDelMes
             );
-        }else{
+        }
+        if ($diaCobroPrimerCuota > 28 && $mesSiguiente->ultimoDiaDelMes >= $diaCobroPrimerCuota ) {
             $mesSiguiente->fechaCobro = $mesSiguiente->primerDia->setDate(
                 $mesSiguiente->primerDia->format('Y'),
                 $mesSiguiente->primerDia->format('m'),
