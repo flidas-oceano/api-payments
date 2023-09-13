@@ -23,7 +23,7 @@ class CreatePlacetopaySubscriptionsTable extends Migration
             $table->string("requestId")->nullable()->default(null);
             $table->string("contact_id")->nullable()->default(null);//buyer
             $table->string("authorization")->nullable()->default(null);
-            $table->string("total")->nullable()->default(null);
+            $table->string("total")->nullable()->default(null);//TODO: cambiar de string a valor de con coma,
             $table->string("currency")->nullable()->default(null);
             $table->integer("nro_quote")->nullable()->default(null);
             $table->string("reference")->nullable()->default(null);

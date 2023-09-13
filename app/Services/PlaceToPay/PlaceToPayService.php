@@ -7,6 +7,7 @@ use App\Models\PlaceToPayTransaction;
 use Carbon\Carbon;
 use DateTime;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use stdClass;
 
@@ -67,7 +68,7 @@ class PlaceToPayService
             // ]
         ];
         $payment = [
-            "reference" => 'Cuota ' . $nro_quote . '-' . $request['reference'],
+            "reference" => 'Cuota-' . $nro_quote . '-' . $request['reference'],
             "description" => "Prueba pago de cuota subscripcion",
             "amount" => [
                 "currency" => $request['currency'],
@@ -100,21 +101,26 @@ class PlaceToPayService
             'total' => $response['request']['payment']['amount']['total'],
             'currency' => $response['request']['payment']['amount']['currency'],
             'status' => $response['status']['status'],
-            'date_to_pay' => $response['status']['date']
-        ]);
-        // actualizar session
-        // PlaceToPayTransaction::where(['requestId'])->update([
-        //     // 'cuotaspagadas' => 1;
-        // ]);
+            'date_to_pay' => $response['status']['date'],
 
-        //Se realizo el pago exitosamente ?
+            'reason' => $response['status']['reason'],
+            'message' => $response['status']['message'],
+            'authorization' => $response['payment'][0]['authorization'] ?? null, //TODO: siempre lo veo como : 999999
+            'reference' => $response['payment'][0]['reference'] ?? null,
+            // 'type' => , //TODO: me parece que es mejor borrarlo de la tabla. O usarl para: subscription, advancedInstallment, paymentLink
+            // 'expiration_date' => , //TODO: definir cuando se espera que expire una cuota.
+
+        ]);
+        if($response['payment'][0]['status'] ?? null !== 'APPROVED'){
+            // Actualizo el transactions, campo: installments_paid
+            PlaceToPayTransaction::find($request->id)->update(['installments_paid' => DB::raw('COALESCE(installments_paid, 0) + 1')]);
+        }
+
         return [
             "firstPaySubscription" => $firstPaySubscription,
             "response" => $response,
             "data" => $data,
         ];
-
-        // return ($response['status']['status'] === 'APPROVED')? true: false;
     }
     public function payFirstQuoteCreateRestQuotesByRequestId($requestIdRequestSubscription)
     {
@@ -377,12 +383,17 @@ class PlaceToPayService
     }
     public function billSubscription($data)
     {
+        if ($data === null) {
+            throw new \InvalidArgumentException("El parámetro 'data' es obligatorio.");
+        }
+
         $url = "https://checkout-test.placetopay.ec/api/collect";
         $response = Http::withHeaders([
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
         ])->post($url, $data)->json();
 
+        $this->isResponseValid($response);
 
         return $response;
     }
@@ -799,21 +810,21 @@ class PlaceToPayService
                 "request": {
                     "locale": "es_CO",
                     "payer": {
-                    "document": "1040035020",
-                    "documentType": "CC",
-                    "name": "Corbin",
-                    "surname": "Glover",
-                    "email": "zcummerata@yahoo.com"
+                        "document": "1040035020",
+                        "documentType": "CC",
+                        "name": "Corbin",
+                        "surname": "Glover",
+                        "email": "zcummerata@yahoo.com"
                     },
                     "payment": {
-                    "reference": "TEST_20230807_180142",
-                    "description": "Rerum assumenda et modi beatae quo rem.",
-                    "amount": {
-                        "currency": "USD",
-                        "total": 1000
-                    },
-                    "allowPartial": false,
-                    "subscribe": false
+                        "reference": "TEST_20230807_180142",
+                        "description": "Rerum assumenda et modi beatae quo rem.",
+                        "amount": {
+                            "currency": "USD",
+                            "total": 1000
+                        },
+                        "allowPartial": false,
+                        "subscribe": false
                     },
                     "returnUrl": "https://checkout-test.placetopay.ec/home",
                     "ipAddress": "2604:a880:400:d0::706:1001",
@@ -837,12 +848,12 @@ class PlaceToPayService
                     "issuerName": "JPMORGAN CHASE BANK, N.A.",
                     "amount": {
                         "from": {
-                        "currency": "USD",
-                        "total": 1000
+                            "currency": "USD",
+                            "total": 1000
                         },
                         "to": {
-                        "currency": "USD",
-                        "total": 1000
+                            "currency": "USD",
+                            "total": 1000
                         },
                         "factor": 1
                     },
