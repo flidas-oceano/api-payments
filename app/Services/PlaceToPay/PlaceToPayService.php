@@ -92,6 +92,11 @@ class PlaceToPayService
         ];
 
         $response = $this->billSubscription($data);
+        if($response['payment'][0]['status'] ?? null !== 'APPROVED'){
+            // Actualizo el transactions, campo: installments_paid
+            PlaceToPayTransaction::find($request->id)->update(['installments_paid' => DB::raw('COALESCE(installments_paid, 0) + 1')]);
+        }
+
         // guardas registro primer cuota
         $firstPaySubscription = PlaceToPaySubscription::create([
             'transactionId' => $request->id,
@@ -109,12 +114,7 @@ class PlaceToPayService
             'reference' => $response['payment'][0]['reference'] ?? null,
             // 'type' => , //TODO: me parece que es mejor borrarlo de la tabla. O usarl para: subscription, advancedInstallment, paymentLink
             // 'expiration_date' => , //TODO: definir cuando se espera que expire una cuota.
-
         ]);
-        if($response['payment'][0]['status'] ?? null !== 'APPROVED'){
-            // Actualizo el transactions, campo: installments_paid
-            PlaceToPayTransaction::find($request->id)->update(['installments_paid' => DB::raw('COALESCE(installments_paid, 0) + 1')]);
-        }
 
         return [
             "firstPaySubscription" => $firstPaySubscription,
