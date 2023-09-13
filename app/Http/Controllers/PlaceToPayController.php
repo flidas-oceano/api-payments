@@ -8,6 +8,7 @@ use App\Models\Lead;
 use App\Models\PlaceToPaySubscription;
 use App\Models\PlaceToPayTransaction;
 use App\Services\PlaceToPay\PlaceToPayService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Http;
@@ -149,7 +150,7 @@ class PlaceToPayController extends Controller
                 ]);
             }
 
-            $sessionSubscription = $this->placeTopayService->getByRequestId($request['requestId']);
+            $sessionSubscription = $this->placeTopayService->getByRequestId($request['requestId']['requestId']);
 
             $updateRequestSession = PlaceToPayTransaction::updateOrCreate(
                 ['requestId' => $sessionSubscription["requestId"]],
@@ -559,6 +560,7 @@ class PlaceToPayController extends Controller
             ]);
         }
     }
+
 
 
 }

@@ -4,7 +4,10 @@ namespace App\Services\PlaceToPay;
 
 use App\Models\PlaceToPaySubscription;
 use App\Models\PlaceToPayTransaction;
+use Carbon\Carbon;
+use DateTime;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use stdClass;
 
@@ -65,7 +68,7 @@ class PlaceToPayService
             // ]
         ];
         $payment = [
-            "reference" => 'Cuota ' . $nro_quote . '-' . $request['reference'],
+            "reference" => 'Cuota-' . $nro_quote . '-' . $request['reference'],
             "description" => "Prueba pago de cuota subscripcion",
             "amount" => [
                 "currency" => $request['currency'],
@@ -90,7 +93,7 @@ class PlaceToPayService
 
         $response = $this->billSubscription($data);
         // guardas registro primer cuota
-        PlaceToPaySubscription::create([
+        $firstPaySubscription = PlaceToPaySubscription::create([
             'transactionId' => $request->id,
             'nro_quote' => $nro_quote,
             'date' => $response['status']['date'],
@@ -98,19 +101,26 @@ class PlaceToPayService
             'total' => $response['request']['payment']['amount']['total'],
             'currency' => $response['request']['payment']['amount']['currency'],
             'status' => $response['status']['status'],
-        ]);
-        // actualizar session
-        // PlaceToPayTransaction::where(['requestId'])->update([
-        //     // 'cuotaspagadas' => 1;
-        // ]);
+            'date_to_pay' => $response['status']['date'],
 
-        //Se realizo el pago exitosamente ?
+            'reason' => $response['status']['reason'],
+            'message' => $response['status']['message'],
+            'authorization' => $response['payment'][0]['authorization'] ?? null, //TODO: siempre lo veo como : 999999
+            'reference' => $response['payment'][0]['reference'] ?? null,
+            // 'type' => , //TODO: me parece que es mejor borrarlo de la tabla. O usarl para: subscription, advancedInstallment, paymentLink
+            // 'expiration_date' => , //TODO: definir cuando se espera que expire una cuota.
+
+        ]);
+        if($response['payment'][0]['status'] ?? null !== 'APPROVED'){
+            // Actualizo el transactions, campo: installments_paid
+            PlaceToPayTransaction::find($request->id)->update(['installments_paid' => DB::raw('COALESCE(installments_paid, 0) + 1')]);
+        }
+
         return [
+            "firstPaySubscription" => $firstPaySubscription,
             "response" => $response,
             "data" => $data,
         ];
-
-        // return ($response['status']['status'] === 'APPROVED')? true: false;
     }
     public function payFirstQuoteCreateRestQuotesByRequestId($requestIdRequestSubscription)
     {
@@ -133,7 +143,14 @@ class PlaceToPayService
 
                 // // crear cuotas
                 if ($requestsSubscription->quotes > 1) {
+                    $dateParsedPaidFirstInstallment = date_parse($result['firstPaySubscription']['date']);
+                    // $dateParsedPaidFirstInstallment = date_parse("2023-01-30T18:38:53.000000Z"); // TODO: Se puede usar esto para probar unas fecha de cobro especifica
+
+                    //Obtener
+                    $datesToPay = $this->getDatesToPay($dateParsedPaidFirstInstallment,$requestsSubscription->quotes);
+
                     for ($i = 2; $i <= $requestsSubscription->quotes; $i++) {
+
                         PlaceToPaySubscription::create([
                             'transactionId' => $requestsSubscription->id,
                             'nro_quote' => $i,
@@ -141,6 +158,11 @@ class PlaceToPayService
                             // 'requestId' => $response['status']['status'],
                             'total' => $requestsSubscription->remaining_installments,
                             'currency' => $requestsSubscription->currency,
+                            'date_to_pay' => date_format($this->dateToPay(
+                                $datesToPay[$i - 2]['year'],
+                                $datesToPay[$i - 2]['month'],
+                                $dateParsedPaidFirstInstallment['day']
+                            ), 'Y-m-d H:i:s'),
                             // 'type' => 'subscription',
                         ]);
                     }
@@ -248,6 +270,82 @@ class PlaceToPayService
             throw new Exception("Payment request failed: Reason: $errorReason, Message: $errorMessage, Date: $errorDate");
         }
     }
+
+    public function getDatesToPay($dateParsedPaidFirstInstallment, $quotes){
+        $datesToPay = [];
+        array_push($datesToPay, $dateParsedPaidFirstInstallment);
+        for ($i = 2; $i <= $quotes; $i++) {
+            array_push(
+                $datesToPay,
+                date_parse(
+                    $this->dateToPay(
+                        $datesToPay[$i - 2]['year'],
+                        $datesToPay[$i - 2]['month'],
+                        $dateParsedPaidFirstInstallment['day']
+                    )
+                )
+            );
+        }
+        return $datesToPay;
+    }
+
+    public function dateToPay($año,$mes,$diaCobroPrimerCuota){
+
+        //tinker
+        // use App\Services\PlaceToPay\PlaceToPayService;
+        // $placeToPayService = new PlaceToPayService();
+        // $proximaCuota = $placeToPayService->dateToPay(2023,1,30);
+
+        // Verifica si el día es válido (entre 1 y 31)
+        if ($diaCobroPrimerCuota < 1 || $diaCobroPrimerCuota > 31) {
+          // Maneja un mensaje de error o toma alguna acción apropiada
+            return "Día inválido";
+        }
+
+        $cuotaAnterior = new stdClass();
+        // Construir la fecha con el día 1 y el mes y año variables
+
+        $fecha = Carbon::create($año, $mes, 1);
+        $cuotaAnterior->fechaCobro = $fecha;
+        // Obtener el día de la fecha
+        // $cuotaAnterior->diaCobro = (int) $cuotaAnterior->fechaCobro->format('d');
+        //cuantos dias faltan para que termine el mes
+        $cuotaAnterior->ultimoDiaDelMes = (int) $cuotaAnterior->fechaCobro->format('t');
+        //dias que faltan para que termine el mes
+        $cuotaAnterior->diasRestantes = $cuotaAnterior->ultimoDiaDelMes - (int) $cuotaAnterior->fechaCobro->format('j');
+        //Conseguir el mes siguiente.
+        // Suma los días restantes + 1 a la fecha actual
+        $cuotaAnterior->diasRestantes++;
+
+        $mesSiguiente = new stdClass();
+        $mesSiguiente->primerDia = $cuotaAnterior->fechaCobro->modify("+{$cuotaAnterior->diasRestantes} days");
+        $mesSiguiente->ultimoDiaDelMes = (int) $mesSiguiente->primerDia->format('t');
+
+        if ($diaCobroPrimerCuota <= 28) {
+            // Modificar el día a "x"
+            $mesSiguiente->fechaCobro = $mesSiguiente->primerDia->setDate(
+                $mesSiguiente->primerDia->format('Y'),
+                $mesSiguiente->primerDia->format('m'),
+                $diaCobroPrimerCuota
+            );
+        }
+        if ($diaCobroPrimerCuota > 28 && $mesSiguiente->ultimoDiaDelMes < $diaCobroPrimerCuota ) {
+            $mesSiguiente->fechaCobro = $mesSiguiente->primerDia->setDate(
+                $mesSiguiente->primerDia->format('Y'),
+                $mesSiguiente->primerDia->format('m'),
+                $mesSiguiente->ultimoDiaDelMes
+            );
+        }
+        if ($diaCobroPrimerCuota > 28 && $mesSiguiente->ultimoDiaDelMes >= $diaCobroPrimerCuota ) {
+            $mesSiguiente->fechaCobro = $mesSiguiente->primerDia->setDate(
+                $mesSiguiente->primerDia->format('Y'),
+                $mesSiguiente->primerDia->format('m'),
+                $diaCobroPrimerCuota
+            );
+        }
+
+        return $mesSiguiente->fechaCobro;
+    }
     // End //Utils
 
     // URLS
@@ -285,12 +383,17 @@ class PlaceToPayService
     }
     public function billSubscription($data)
     {
+        if ($data === null) {
+            throw new \InvalidArgumentException("El parámetro 'data' es obligatorio.");
+        }
+
         $url = "https://checkout-test.placetopay.ec/api/collect";
         $response = Http::withHeaders([
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
         ])->post($url, $data)->json();
 
+        $this->isResponseValid($response);
 
         return $response;
     }
@@ -707,21 +810,21 @@ class PlaceToPayService
                 "request": {
                     "locale": "es_CO",
                     "payer": {
-                    "document": "1040035020",
-                    "documentType": "CC",
-                    "name": "Corbin",
-                    "surname": "Glover",
-                    "email": "zcummerata@yahoo.com"
+                        "document": "1040035020",
+                        "documentType": "CC",
+                        "name": "Corbin",
+                        "surname": "Glover",
+                        "email": "zcummerata@yahoo.com"
                     },
                     "payment": {
-                    "reference": "TEST_20230807_180142",
-                    "description": "Rerum assumenda et modi beatae quo rem.",
-                    "amount": {
-                        "currency": "USD",
-                        "total": 1000
-                    },
-                    "allowPartial": false,
-                    "subscribe": false
+                        "reference": "TEST_20230807_180142",
+                        "description": "Rerum assumenda et modi beatae quo rem.",
+                        "amount": {
+                            "currency": "USD",
+                            "total": 1000
+                        },
+                        "allowPartial": false,
+                        "subscribe": false
                     },
                     "returnUrl": "https://checkout-test.placetopay.ec/home",
                     "ipAddress": "2604:a880:400:d0::706:1001",
@@ -745,12 +848,12 @@ class PlaceToPayService
                     "issuerName": "JPMORGAN CHASE BANK, N.A.",
                     "amount": {
                         "from": {
-                        "currency": "USD",
-                        "total": 1000
+                            "currency": "USD",
+                            "total": 1000
                         },
                         "to": {
-                        "currency": "USD",
-                        "total": 1000
+                            "currency": "USD",
+                            "total": 1000
                         },
                         "factor": 1
                     },
@@ -1185,5 +1288,4 @@ class PlaceToPayService
         ]);
     }
     //End //Objetos de ejemplo
-
 }
