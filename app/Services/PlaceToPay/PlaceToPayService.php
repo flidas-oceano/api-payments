@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use stdClass;
 
+    //     $placeToPayService = new PlaceToPayService(); // Instancia el servicio
+    //     $placeToPayService->payInstallments(); // Llama al método que deseas ejecutar
 class PlaceToPayService
 {
     private $login_pu;
@@ -112,7 +114,7 @@ class PlaceToPayService
             'message' => $response['status']['message'],
             'authorization' => $response['payment'][0]['authorization'] ?? null, //TODO: siempre lo veo como : 999999
             'reference' => $response['payment'][0]['reference'] ?? null,
-            // 'type' => , //TODO: me parece que es mejor borrarlo de la tabla. O usarl para: subscription, advancedInstallment, paymentLink
+            // 'type' => , //TODO: me parece que es mejor borrarlo de la tabla. O usarl para: subscription, advancedInstallment
             // 'expiration_date' => , //TODO: definir cuando se espera que expire una cuota.
         ]);
 
@@ -173,60 +175,7 @@ class PlaceToPayService
     }
 
     //Utils
-    public function createInstallments()
-    {
-        $requestsSubscription = PlaceToPayTransaction::where(['type' => 'requestSubscription', 'status' => 'APPROVED'])->get();
-        foreach ($requestsSubscription as $request) {
 
-            //ver si ya se crearon las cuotas
-            if (!(count($request->subscriptions) === $request->quotes)) {
-                //No estan creadas todas las cuotas de la suscripcion
-
-                //empiezo pagando la primer cuota
-
-                $success = false;
-                //es anticipo ?
-                if ($request->first_installment !== null)
-                    $success = $this->pagarCuotaSuscripcionAnticipo($request);
-                else
-                    $success = $this->pagarCuotaSuscripcion($request, 1);
-
-                // creas todas las cuotas restantes, si hay
-                if ($success) {
-                    // pagar cuotas
-                    if ($request->quotes > 1) {
-                        for ($i = 2; $i <= $request->quotes; $i++) {
-                            PlaceToPaySubscription::create([
-                                'transactionId' => $request->id,
-                                'nro_quote' => $i,
-                                // 'date' => $response['status']['date'],
-                                // 'requestId' => $response['status']['status'],
-                                'total' => $request->remaining_installments,
-                                'currency' => $request->currency,
-                                // 'type' => 'subscription',
-                            ]);
-                        }
-                    }
-                }
-
-                // pagar cuotas
-
-            }
-
-            // pagar cuotas
-            // for ($i = 1; $i <= $request->quotes; $i++) {
-            //     PlaceToPaySubscription::create([
-            //         'requestIdFather' => $request->requestId,
-            //         // 'requestId' => ,
-            //         // 'total' => ,
-            //         // 'currency' => ,
-            //         // 'suscription' => ,
-            //         // 'suscription' => ,
-            //         // 'payment date' => ,
-            //     ]);
-            // }
-        }
-    }
     public function reduceUrl($url)
     {
         // $url = "https://checkout-test.placetopay.ec/spa/session/674726/64b7bae0b1abda60fc3d0b29d30493e8";
@@ -270,7 +219,6 @@ class PlaceToPayService
             throw new Exception("Payment request failed: Reason: $errorReason, Message: $errorMessage, Date: $errorDate");
         }
     }
-
     public function getDatesToPay($dateParsedPaidFirstInstallment, $quotes){
         $datesToPay = [];
         array_push($datesToPay, $dateParsedPaidFirstInstallment);
@@ -288,7 +236,6 @@ class PlaceToPayService
         }
         return $datesToPay;
     }
-
     public function dateToPay($año,$mes,$diaCobroPrimerCuota){
 
         //tinker
@@ -398,6 +345,177 @@ class PlaceToPayService
         return $response;
     }
     ///End URLS
+
+    // Cronologia de cobro
+
+    public function createInstallments()
+    {
+        $requestsSubscription = PlaceToPayTransaction::where(['type' => 'requestSubscription', 'status' => 'APPROVED'])->get();
+        foreach ($requestsSubscription as $request) {
+
+            //ver si ya se crearon las cuotas
+            if (!(count($request->subscriptions) === $request->quotes)) {
+                //No estan creadas todas las cuotas de la suscripcion
+
+                //empiezo pagando la primer cuota
+
+                $success = false;
+                //es anticipo ?
+                if ($request->first_installment !== null)
+                    $success = $this->pagarCuotaSuscripcionAnticipo($request);
+                else
+                    $success = $this->pagarCuotaSuscripcion($request, 1);
+
+                // creas todas las cuotas restantes, si hay
+                if ($success) {
+                    // pagar cuotas
+                    if ($request->quotes > 1) {
+                        for ($i = 2; $i <= $request->quotes; $i++) {
+                            PlaceToPaySubscription::create([
+                                'transactionId' => $request->id,
+                                'nro_quote' => $i,
+                                // 'date' => $response['status']['date'],
+                                // 'requestId' => $response['status']['status'],
+                                'total' => $request->remaining_installments,
+                                'currency' => $request->currency,
+                                // 'type' => 'subscription',
+                            ]);
+                        }
+                    }
+                }
+
+                // pagar cuotas
+
+            }
+
+            // pagar cuotas
+            // for ($i = 1; $i <= $request->quotes; $i++) {
+            //     PlaceToPaySubscription::create([
+            //         'requestIdFather' => $request->requestId,
+            //         // 'requestId' => ,
+            //         // 'total' => ,
+            //         // 'currency' => ,
+            //         // 'suscription' => ,
+            //         // 'suscription' => ,
+            //         // 'payment date' => ,
+            //     ]);
+            // }
+        }
+    }
+
+
+
+    public function payInstallments(){
+        // $subscriptions = PlaceToPaySubscription::where('status', '!=', 'APPROVED')->orWhereNull('status')->get();
+        $subscriptions = PlaceToPaySubscription::where('status' , null)->get();
+
+        $today = Carbon::now();
+        foreach ($subscriptions as $subscription) {
+            // $subscription = $subscriptions->first()
+            // $dateToPay = Carbon::parse($subscription->date_to_pay);
+            $dateToPay = Carbon::parse($subscription->date_to_pay); // Convierte la fecha_to_pay a objeto Carbon
+            if ($dateToPay->isSameDay($today)) {
+                // La fecha_to_pay es igual al día de hoy
+                // Realiza la acción que deseas para esta subscripción
+                // Por ejemplo, imprime los detalles de la subscripción
+
+                //es anticipo ?
+                if ($subscription->transaction->first_installment !== null)
+                    $result = $this->pagarCuotaSuscripcionAnticipo($subscription->transaction);
+                else{
+                    // $result = $this->pagarCuotaSuscripcion($subscription->transaction, $subscription->nro_quote);
+
+                    $request = $subscription->transaction;
+                    $nro_quote = $subscription->nro_quote;
+
+                    $requestSubscriptionById = $this->getByRequestId($request['requestId']);
+                    // pagar primer cuota de subscripcion normal, no anticipo
+                    $payer = [
+                        "name" => $requestSubscriptionById['request']['payer']['name'],
+                        //$request->lead->name
+                        "surname" => $requestSubscriptionById['request']['payer']['surname'],
+                        //$request->lead->username
+                        "email" => $requestSubscriptionById['request']['payer']['email'],
+                        //$request->lead->email
+                        "document" => $requestSubscriptionById['request']['payer']['document'],
+                        //contact->dni,rut,rfc,mui
+                        "documentType" => $requestSubscriptionById['request']['payer']['documentType'],
+                        "mobile" => $requestSubscriptionById['request']['payer']['mobile'],
+                        // "address" => [ //domicilio
+                        //     // "country" => $request['country'],
+                        //     // "state" => $request['state'],
+                        //     // "city" => $request['city'],
+                        //     // "postalCode" => $request['postalCode'],
+                        //     "street" => $requestSubscriptionById['request']['payer']['address']['street'],
+                        //     // "phone" => $request['phone'],//+573214445566
+                        // ]
+                    ];
+                    $payment = [
+                        "reference" => 'Cuota-' . $nro_quote . '-' . $request['reference'],
+                        "description" => "Prueba pago de cuota subscripcion",
+                        "amount" => [
+                            "currency" => $request['currency'],
+                            "total" => $request['remaining_installments']
+                        ]
+                    ];
+                    $data = [
+                        "auth" => $this->generateAuthentication(),
+                        "locale" => "es_CO",
+                        "payer" => $payer,
+                        "payment" => $payment,
+                        "instrument" => [
+                            "token" => [
+                                "token" => $request['token_collect_para_el_pago']
+                            ]
+                        ],
+                        "expiration" => $this->getDateExpiration(),
+                        "returnUrl" => "https://dnetix.co/p2p/client",
+                        // "ipAddress" => $request->ip(), // Usar la dirección IP del cliente
+                        // "userAgent" => $request->header('User-Agent')
+                    ];
+
+                    $response = $this->billSubscription($data);
+
+                    if($response['payment'][0]['status'] ?? null !== 'APPROVED'){
+                        // Actualizo el transactions, campo: installments_paid
+                        PlaceToPayTransaction::find($request->id)->update(['installments_paid' => DB::raw('COALESCE(installments_paid, 0) + 1')]);
+                    }
+
+                    // guardas registro primer cuota
+                    $paidaySubscription = PlaceToPaySubscription::find($subscription->id)->update([
+                        // 'transactionId' => $request->id,
+                        'status' => $response['status']['status'],
+                        'reason' => $response['status']['reason'],
+                        'message' => $response['status']['message'],
+                        'date' => $response['status']['date'],
+                        'requestId' => $response['requestId'],
+
+                        'authorization' => $response['payment'][0]['authorization'] ?? null, //TODO: siempre lo veo como : 999999
+                        // 'total' => $response['request']['payment']['amount']['total'],
+                        // 'currency' => $response['request']['payment']['amount']['currency'],
+                        'nro_quote' => $nro_quote,
+                        'reference' => $response['payment'][0]['reference'] ?? null,
+                        // 'type' => , //TODO: me parece que es mejor borrarlo de la tabla. O usarl para: subscription, advancedInstallment
+                        // 'expiration_date' => , //TODO: definir cuando se espera que expire una cuota.
+                        'date_to_pay' => $response['status']['date'],
+                    ]);
+
+                }
+
+                // $this->pagarCuotaSuscripcion(['requestId' => $subscription->transaction->requestId], 2);
+
+                // $result = $placeToPayService->pagarCuotaSuscripcion($subscription->transaction, $subscription->nro_quote);
+
+            }
+        }
+
+        // $query = PlaceToPaySubscription::where('status', '!=', 'APPROVED');
+        // $sql = $query->toSql();
+
+    }
+
+    // END // Cronologia de cobro
+
 
     // //Objetos de ejemplo
     public function pasounocreatesession()
