@@ -108,12 +108,12 @@ Route::prefix("/webhook")->group(function () {
     Route::post('/stripe', [StripePaymentController::class, 'handleWebhook']);
 });
 
-Route::prefix("/payments_msk")->group(function () {
+Route::middleware('api-api')->prefix("/payments_msk")->group(function () {
     Route::post('/create', [\App\Http\Controllers\PaymentsMsk\CreatePaymentMskController::class, 'create']);
     Route::get('/list', [\App\Http\Controllers\PaymentsMsk\ReadPaymentMskController::class, 'list']);
 });
 
-Route::prefix("/contifico")->group(function () {
+Route::middleware('api-api')->prefix("/contifico")->group(function () {
     Route::post('/user/create', [\App\Http\Controllers\Contifico\ContificoController::class, 'createUser']);
     Route::get('/user/get/{uuid}', [\App\Http\Controllers\Contifico\ContificoController::class, 'getUser']);
 });

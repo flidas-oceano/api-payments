@@ -29,6 +29,7 @@ class ContificoController extends Controller
     {
         try {
             $requested = $request->all();
+            \Log::info("ContificoController", ['createUser', $requested]);
             ContificoValidator::createUser($requested);
             $response = $this->readUser->findBy($requested);
             if (sizeof($response) == 1) {
