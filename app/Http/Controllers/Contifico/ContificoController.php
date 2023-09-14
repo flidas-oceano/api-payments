@@ -41,8 +41,13 @@ class ContificoController extends Controller
                 "data" => $data
             ]);
         } catch (\Exception | GuzzleException $e) {
+            $message = $e->getMessage();
+            $decoded = json_decode($message);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $message = $decoded;
+            }
             return response()->json([
-                "error" => $e->getMessage()
+                "error" => $message
             ], 400);
         }
     }
