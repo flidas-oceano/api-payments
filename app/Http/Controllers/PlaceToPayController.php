@@ -144,7 +144,7 @@ class PlaceToPayController extends Controller
         try {
 
             $requestsTransaction = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();
-            if (count($requestsTransaction->subscriptions) > 0) {
+            if (count($requestsTransaction->subscriptions) > 0) {//Las subscripciones se crean solo si se aprobo el primer pago.
                 return response()->json([
                     "result" => "Ya se ha realizado el pago de la primera cuota."
                 ]);
@@ -201,9 +201,10 @@ class PlaceToPayController extends Controller
     public function getSessionByRequestId($requestId)
     {
         try {
-            return response()->json(
-                $this->placeTopayService->getByRequestId($requestId)
-            );
+            return response()->json([
+                'sessionPTP' => $this->placeTopayService->getByRequestId($requestId),
+                'sessionDB' => PlaceToPayTransaction::where([ 'requestId' => $requestId ])->get()->first()
+            ]);
         } catch (\Exception $e) {
             // Manejo de errores si ocurre alguno durante la solicitud
 
