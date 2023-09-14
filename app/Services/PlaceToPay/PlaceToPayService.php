@@ -9,6 +9,7 @@ use DateTime;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use stdClass;
 
     //     $placeToPayService = new PlaceToPayService(); // Instancia el servicio
@@ -207,7 +208,7 @@ class PlaceToPayService
             "seed" => $seed,
         ];
     }
-    public function isResponseValid($response)
+    public function isResponseValid($response,$data = null, $cron = false)
     {
         // Verificar si la respuesta indica un fallo
         if (isset($response['status']['status']) && $response['status']['status'] === 'FAILED') {
@@ -215,8 +216,13 @@ class PlaceToPayService
             $errorMessage = $response['status']['message'];
             $errorDate = $response['status']['date'];
 
-            // Aquí lanzamos una excepción personalizada
-            throw new Exception("Payment request failed: Reason: $errorReason, Message: $errorMessage, Date: $errorDate");
+            if($cron && $data != null){//Esto esta porque la regla diaria de los pagos necesita que no rompa, pero si logear que hubo un error en el intento de pago
+                $dataAsString = json_encode($data);
+                Log::channel('placetopay')->info("Payment request failed: Reason: $errorReason, Message: $errorMessage, Date: $errorDate, Data: $dataAsString");
+            }
+            if(!$cron){
+                throw new Exception("Payment request failed: Reason: $errorReason, Message: $errorMessage, Date: $errorDate");
+            }
         }
     }
     public function getDatesToPay($dateParsedPaidFirstInstallment, $quotes){
@@ -328,7 +334,7 @@ class PlaceToPayService
 
         return $response;
     }
-    public function billSubscription($data)
+    public function billSubscription($data,$cron = null)
     {
         if ($data === null) {
             throw new \InvalidArgumentException("El parámetro 'data' es obligatorio.");
@@ -340,7 +346,7 @@ class PlaceToPayService
             'Content-Type' => 'application/json',
         ])->post($url, $data)->json();
 
-        $this->isResponseValid($response);
+        $this->isResponseValid($response,$data,$cron);
 
         return $response;
     }
@@ -403,9 +409,8 @@ class PlaceToPayService
         }
     }
 
-
-
     public function payInstallments(){
+        Log::channel('placetopay')->info('Se ejecuta la regla de payInstallments.');
         // $subscriptions = PlaceToPaySubscription::where('status', '!=', 'APPROVED')->orWhereNull('status')->get();
         $subscriptions = PlaceToPaySubscription::where('status' , null)->get();
 
@@ -474,31 +479,43 @@ class PlaceToPayService
                         // "userAgent" => $request->header('User-Agent')
                     ];
 
-                    $response = $this->billSubscription($data);
+                    $response = $this->billSubscription($data,$cron = true);
 
                     if($response['payment'][0]['status'] ?? null !== 'APPROVED'){
                         // Actualizo el transactions, campo: installments_paid
                         PlaceToPayTransaction::find($request->id)->update(['installments_paid' => DB::raw('COALESCE(installments_paid, 0) + 1')]);
                     }
 
-                    // guardas registro primer cuota
-                    $paidaySubscription = PlaceToPaySubscription::find($subscription->id)->update([
-                        // 'transactionId' => $request->id,
-                        'status' => $response['status']['status'],
-                        'reason' => $response['status']['reason'],
-                        'message' => $response['status']['message'],
-                        'date' => $response['status']['date'],
-                        'requestId' => $response['requestId'],
+                    if(($response['status']['status'] ?? null) === 'FAILED'){
+                        $paidaySubscription = PlaceToPaySubscription::find($subscription->id)->update([
+                            // 'transactionId' => $request->id,
+                            'status' => $response['status']['status'],
+                            'reason' => $response['status']['reason'],
+                            'message' => $response['status']['message'],
+                            'date' => $response['status']['date'],
+                        ]);
+                    }else{
+                        // guardas registro primer cuota
+                        $paidaySubscription = PlaceToPaySubscription::find($subscription->id)->update([
+                            // 'transactionId' => $request->id,
+                            'status' => $response['status']['status'],
+                            'reason' => $response['status']['reason'],
+                            'message' => $response['status']['message'],
+                            'date' => $response['status']['date'],
+                            'requestId' => $response['requestId'],
 
-                        'authorization' => $response['payment'][0]['authorization'] ?? null, //TODO: siempre lo veo como : 999999
-                        // 'total' => $response['request']['payment']['amount']['total'],
-                        // 'currency' => $response['request']['payment']['amount']['currency'],
-                        'nro_quote' => $nro_quote,
-                        'reference' => $response['payment'][0]['reference'] ?? null,
-                        // 'type' => , //TODO: me parece que es mejor borrarlo de la tabla. O usarl para: subscription, advancedInstallment
-                        // 'expiration_date' => , //TODO: definir cuando se espera que expire una cuota.
-                        'date_to_pay' => $response['status']['date'],
-                    ]);
+                            'authorization' => $response['payment'][0]['authorization'] ?? null, //TODO: siempre lo veo como : 999999
+                            // 'total' => $response['request']['payment']['amount']['total'],
+                            // 'currency' => $response['request']['payment']['amount']['currency'],
+                            'nro_quote' => $nro_quote,
+                            'reference' => $response['payment'][0]['reference'] ?? null,
+                            // 'type' => , //TODO: me parece que es mejor borrarlo de la tabla. O usarl para: subscription, advancedInstallment
+                            // 'expiration_date' => , //TODO: definir cuando se espera que expire una cuota.
+                            'date_to_pay' => $response['status']['date'],
+                        ]);
+
+                        Log::channel('placetopay')->info('Se intento realizar el pago de este id: .'.$paidaySubscription->id);
+                    }
 
                 }
 
