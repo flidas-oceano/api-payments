@@ -218,7 +218,7 @@ class PlaceToPayService
 
             if($cron && $data != null){//Esto esta porque la regla diaria de los pagos necesita que no rompa, pero si logear que hubo un error en el intento de pago
                 $dataAsString = json_encode($data);
-                Log::channel('placetopay')->info("Payment request failed: Reason: $errorReason, Message: $errorMessage, Date: $errorDate, Data: $dataAsString");
+                // Log::channel('placetopay')->info("Payment request failed: Reason: $errorReason, Message: $errorMessage, Date: $errorDate, Data: $dataAsString");
             }
             if(!$cron){
                 throw new Exception("Payment request failed: Reason: $errorReason, Message: $errorMessage, Date: $errorDate");
@@ -410,7 +410,7 @@ class PlaceToPayService
     }
 
     public function payInstallments(){
-        Log::channel('placetopay')->info('Se ejecuta la regla de payInstallments.');
+        // Log::channel('placetopay')->info('Se ejecuta la regla de payInstallments.');
         // $subscriptions = PlaceToPaySubscription::where('status', '!=', 'APPROVED')->orWhereNull('status')->get();
         $subscriptions = PlaceToPaySubscription::where('status' , null)->get();
 
@@ -514,7 +514,7 @@ class PlaceToPayService
                             'date_to_pay' => $response['status']['date'],
                         ]);
 
-                        Log::channel('placetopay')->info('Se intento realizar el pago de este id: .'.$paidaySubscription->id);
+                        // Log::channel('placetopay')->info('Se intento realizar el pago de este id: .'.$paidaySubscription->id);
                     }
 
                 }
