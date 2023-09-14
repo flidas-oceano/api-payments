@@ -72,6 +72,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'api-login' => ApiLogin::class,
         'cors' => \App\Http\Middleware\Cors::class,
-        'api' => \App\Http\Middleware\ApiMiddleware::class
+        'api-api' => \App\Http\Middleware\ApiMiddleware::class
     ];
 }
