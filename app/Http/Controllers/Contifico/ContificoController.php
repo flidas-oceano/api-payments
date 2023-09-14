@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Contifico;
 
 use App\Dtos\Contifico\ContificoUserDto;
+use App\Helpers\Responser;
 use App\Http\Controllers\Controller;
 use App\Services\Contifico\ReadUser;
 use App\Services\Contifico\WriteUser;
@@ -37,18 +38,20 @@ class ContificoController extends Controller
                 $data = $this->writeUser->save($contificoDto);
             }
 
-            return response()->json([
-                "data" => $data
-            ]);
+            return Responser::success($data);
         } catch (\Exception | GuzzleException $e) {
-            $message = $e->getMessage();
-            $decoded = json_decode($message);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                $message = $decoded;
-            }
-            return response()->json([
-                "error" => $message
-            ], 400);
+            return Responser::error($e);
+        }
+    }
+
+    public function getUser($userId): JsonResponse
+    {
+        try {
+            $response = $this->readUser->findById($userId);
+
+            return Responser::success($response);
+        } catch (\Exception | GuzzleException $e) {
+            return Responser::error($e);
         }
     }
 }

@@ -9,35 +9,37 @@ use GuzzleHttp\Exception\GuzzleException;
 class ReadUser implements IRead
 {
     private \GuzzleHttp\Client $request;
+    private ContificoClient $client;
 
     public function __construct(ContificoClient $client)
     {
+        $this->client = $client;
         $this->request = $client->getClient();
     }
 
     /**
      * @throws GuzzleException
+     * @throws \Exception
      */
     public function findById($id, $country = "")
     {
-        $response = ($this->request->get('/v2/payments/'.$id))->getBody()->getContents();
+        $response = ($this->client->get('/sistema/api/v1/persona/'.$id))->getBody()->getContents();
 
         return json_decode($response, true);
     }
 
     /**
      * @throws GuzzleException
+     * @throws \Exception
      */
     public function findBy($data)
     {
-        //$limit = $data['limit'] ?? 100;
-        //$page = $data['page'] ?? 1;
         $query = "";
         if (isset($data['identification'])) {
             $query .= "&identificacion=".$data['identification'];
         }
-        $response = ($this->request->get("/sistema/api/v1/persona?1=1".$query))->getBody()->getContents();
+        $response = $this->client->get('/sistema/api/v1/persona', $query);
 
-        return json_decode($response, true);
+        return json_decode($response->getBody()->getContents(), true);
     }
 }

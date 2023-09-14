@@ -55,4 +55,27 @@ class ContificoClient implements IClient
             throw new \Exception($resp);
         }
     }
+
+    /**
+     * @throws \Exception
+     */
+    public function get($uri, $query = "")
+    {
+        try {
+            $request = new Request(
+                'GET',
+                self::URL . $uri . '/?pos='.env('CONTIFICO_APIT').$query,
+                $this->getHeaders(),
+            );
+            $client = new Client();
+
+            return $client->sendAsync($request)->wait();
+        } catch (\Exception $e) {
+            $posA = strpos($e->getMessage(), '{');
+            $posB = strpos($e->getMessage(), '}');
+            $resp = substr($e->getMessage(), $posA, $posB);
+
+            throw new \Exception($resp);
+        }
+    }
 }

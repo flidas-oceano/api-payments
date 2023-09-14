@@ -115,6 +115,7 @@ Route::prefix("/payments_msk")->group(function () {
 
 Route::prefix("/contifico")->group(function () {
     Route::post('/user/create', [\App\Http\Controllers\Contifico\ContificoController::class, 'createUser']);
+    Route::get('/user/get/{uuid}', [\App\Http\Controllers\Contifico\ContificoController::class, 'getUser']);
 });
 
 Route::get("/mp/searchPaymentApprove/{so}", [MercadoPagoPaymentController::class, 'searchPaymentApprove']);

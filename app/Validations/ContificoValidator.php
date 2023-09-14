@@ -14,7 +14,6 @@ class ContificoValidator
     {
         $rules = [
             'identification' => 'required',
-            'document' => 'required',
             'email' => 'required',
         ];
         $validator = Validator::make($data, $rules);

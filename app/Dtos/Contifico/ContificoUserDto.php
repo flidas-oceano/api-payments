@@ -8,8 +8,8 @@ class ContificoUserDto
     protected ?string $type;
     protected ?string $tradeName;
     protected ?string $phones;
-    protected ?string $document;
-    protected ?string $document2;
+    protected ?string $identificationCard;
+    protected ?string $ruc;
     protected ?string $businessName;
     protected ?string $address;
     protected ?string $email;
@@ -29,8 +29,8 @@ class ContificoUserDto
         $this->type = $data['type'] ?? null;
         $this->tradeName = $data['trade_name'] ?? null;
         $this->phones = $data['phones'] ?? null;
-        $this->document = $data['document'] ?? null;
-        $this->document2 = $data['document2'] ?? null;
+        $this->identificationCard = $data['identification_card'] ?? null;
+        $this->ruc = $data['ruc'] ?? null;
         $this->businessName = $data['business_name'] ?? null;
         $this->address = $data['address'] ?? null;
         $this->email = $data['email'] ?? null;
@@ -80,17 +80,17 @@ class ContificoUserDto
     /**
      * @return string|null
      */
-    public function getDocument(): ?string
+    public function getIdentificationCard(): ?string
     {
-        return $this->document;
+        return $this->identificationCard;
     }
 
     /**
      * @return string|null
      */
-    public function getDocument2(): ?string
+    public function getRuc(): ?string
     {
-        return $this->document2;
+        return $this->ruc;
     }
 
     /**
