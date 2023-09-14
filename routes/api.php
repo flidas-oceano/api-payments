@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\{ExcelController, PassportAuthController, RebillController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController, PlaceToPayController, PlaceToPayPaymentLinkController};
-use App\Http\Controllers\MercadoPagoController;
+use App\Http\Controllers\MercadopagoController;
 use App\Http\Controllers\PaymentLinkController;
 use App\Http\Controllers\Webhooks\WebhookGatewayController;
 use App\Http\Controllers\Webhooks\CrmOrderSalesStep5ChargeDetailsController;
@@ -113,7 +113,12 @@ Route::prefix("/payments_msk")->group(function () {
     Route::get('/list', [\App\Http\Controllers\PaymentsMsk\ReadPaymentMskController::class, 'list']);
 });
 
-Route::get("/mp/searchPaymentApprove/{so}", [MercadoPagoPaymentController::class, 'searchPaymentApprove']);
+Route::prefix("/contifico")->group(function () {
+    Route::post('/user/create', [\App\Http\Controllers\Contifico\ContificoController::class, 'createUser']);
+    Route::get('/user/get/{uuid}', [\App\Http\Controllers\Contifico\ContificoController::class, 'getUser']);
+});
+
+Route::get("/mp/searchPaymentApprove/{so}", [\App\Http\Controllers\MercadoPagoPaymentController::class, 'searchPaymentApprove']);
 
 Route::get('/getPaymentsStatusDistintContratoEfectivo', [PaymentLinkController::class, 'getPaymentsStatusDistintContratoEfectivo']);
 
