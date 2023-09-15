@@ -24,6 +24,14 @@ class PlaceToPayController extends Controller
     public $placeTopayService = null;
     public $zohoController = null;
 
+    public $message = [
+        'FAILED' => 'Hubo un error con el pago de la sesion, cree otra.',
+        'APPROVED' => 'Ya se ha realizado el pago de la primera cuota.',
+        'REJECTED' => 'La tarjeta fue rechazada, cree otra session e ingrese denuevo los datos de la tarjeta.',
+        'PENDING' => 'El estado de la peticion de la tarjeta estan pendientes.',
+        'DESCONOCIDO' => 'Se desconoce el error. Mire los logs o consulte en PTP.',
+    ];
+
     public function __construct(PlaceToPayService $placeTopayService, ZohoController $zohoController)
     {
         $this->zohoController = $zohoController;
@@ -143,11 +151,45 @@ class PlaceToPayController extends Controller
 
         try {
 
-            $requestsTransaction = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();
+            $requestsTransaction = PlaceToPayTransaction::where(['requestId' => $request['requestId']['requestId']])->get()->first();
             if (count($requestsTransaction->subscriptions) > 0) {//Las subscripciones se crean solo si se aprobo el primer pago.
-                return response()->json([
-                    "result" => "Ya se ha realizado el pago de la primera cuota."
-                ]);
+
+                $firstSubscription = $requestsTransaction->subscriptions->first();
+                if( $firstSubscription->status==='APPROVED'){
+                    return response()->json([
+                        "result" => $this->message[$firstSubscription->status],
+                    ]);
+                }
+
+                $sessionSubscription = $this->placeTopayService->getByRequestId($firstSubscription->requestId);
+
+                if( ($sessionSubscription['status']['status'] ?? 'DESCONOCIDO') === 'PENDING')
+                    $statusPayment = $sessionSubscription['status']['status'];
+
+                if( isset( $sessionSubscription['payment'][0]['status']['status'] ) )
+                    $statusPayment =  $sessionSubscription['payment'][0]['status']['status'] ?? 'DESCONOCIDO' ;
+
+
+                if($statusPayment!=='APPROVED'){
+                    //Actualizar estado
+                    PlaceToPaySubscription::where(['id' => $firstSubscription->id ])->update([
+                        'date' => $sessionSubscription['status']['date'],
+                        'status' => $sessionSubscription['status']['status'],
+                        'reason' => $sessionSubscription['status']['reason'],
+                        'message' => $sessionSubscription['status']['message'],
+                        'authorization' => $sessionSubscription['payment'][0]['authorization'] ?? null, //TODO: siempre lo veo como : 999999
+                        'reference' => $response['payment'][0]['reference'] ?? null,
+                    ]);
+
+                    if($statusPayment==='REJECTED'){
+                        //borrar subscripcion y transaccion.
+                    }
+
+                    return response()->json([
+                        "result" => $this->message[$statusPayment],
+                    ]);
+                }
+
             }
 
             $sessionSubscription = $this->placeTopayService->getByRequestId($request['requestId']['requestId']);
@@ -174,9 +216,18 @@ class PlaceToPayController extends Controller
                             );
                             // realizar primer pago de subscripcion
                             $result = $this->placeTopayService->payFirstQuoteCreateRestQuotesByRequestId($sessionSubscription["requestId"]);
+
+                            if( ($result['response']['status']['status'] ?? 'DESCONOCIDO') === 'PENDING')
+                                $statusPayment = $result['response']['status']['status'];
+
+                            if( isset( $result['response']['payment'][0]['status']['status'] ) )
+                                $statusPayment =  $result['response']['payment'][0]['status']['status'] ?? 'DESCONOCIDO' ;
+
+                            $this->message['APPROVED'] = 'Se ha realizado el pago con exito.';
                             return response()->json([
                                 "updateRequestSession" => $updateRequestSession,
-                                "result" => "Se pago con exito la primer cuota"
+                                "result" => $this->message[$statusPayment],
+                                "statusPayment" => $statusPayment,
                             ]);
                         }
                     }
