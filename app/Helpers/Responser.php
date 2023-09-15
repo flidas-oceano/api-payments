@@ -16,10 +16,10 @@ class Responser
         ], 400);
     }
 
-    public static function success($data): \Illuminate\Http\JsonResponse
+    public static function success($data, $code = 200): \Illuminate\Http\JsonResponse
     {
         return response()->json([
             "data" => $data
-        ]);
+        ], $code);
     }
 }

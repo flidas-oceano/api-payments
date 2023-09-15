@@ -17,8 +17,11 @@ class ApiMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        \Log::info("URI REQUESTED", [$request->url()]);
+        \Log::info("URI REQUESTED:", [$request->url()]);
 
-        return $next($request);
+        $nRequest = $next($request);
+        \Log::info("URI RESPONSE REQUESTED:", [$nRequest]);
+
+        return $nRequest;
     }
 }

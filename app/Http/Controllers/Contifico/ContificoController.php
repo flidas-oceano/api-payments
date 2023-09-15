@@ -34,12 +34,14 @@ class ContificoController extends Controller
             $response = $this->readUser->findBy($requested);
             if (sizeof($response) == 1) {
                 $data = $response;
+                $code = 200;
             } else {
                 $contificoDto = new ContificoUserDto($requested);
                 $data = $this->writeUser->save($contificoDto);
+                $code = 201;
             }
 
-            return Responser::success($data);
+            return Responser::success($data, $code);
         } catch (\Exception | GuzzleException $e) {
             return Responser::error($e);
         }
