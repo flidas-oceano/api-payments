@@ -328,6 +328,7 @@ class PlaceToPayController extends Controller
                     'currency' => 'USD',
                     'quotes' => $request['payment']['quotes'],
                     'remaining_installments' => $request['payment']['remaining_installments'],
+                    'first_installment' => ($request['payment']['first_installment'] ?? null),
 
                     // 'contact_id' => ,
                     // 'authorization' => ,

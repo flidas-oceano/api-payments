@@ -49,6 +49,10 @@ class PlaceToPayService
     public function pagarCuotaSuscripcion($request, $nro_quote)
     {
         $requestSubscriptionById = $this->getByRequestId($request['requestId']);
+
+        $transaccion = PlaceToPayTransaction::find($request->id);
+        // $transaccion = PlaceToPayTransaction::find(41);
+
         // pagar primer cuota de subscripcion normal, no anticipo
         $payer = [
             "name" => $requestSubscriptionById['request']['payer']['name'],
@@ -75,7 +79,7 @@ class PlaceToPayService
             "description" => "Prueba pago de cuota subscripcion",
             "amount" => [
                 "currency" => $request['currency'],
-                "total" => $request['remaining_installments']
+                "total" => $transaccion->first_installment ?? $request['remaining_installments']
             ]
         ];
         $data = [
@@ -98,6 +102,7 @@ class PlaceToPayService
             // Actualizo el transactions, campo: installments_paid
             PlaceToPayTransaction::find($request->id)->update(['installments_paid' => DB::raw('COALESCE(installments_paid, 0) + 1')]);
         }
+
         $newsubscription = [
             'transactionId' => $request->id,
             'nro_quote' => $nro_quote,
@@ -134,12 +139,6 @@ class PlaceToPayService
             $subscriptionByRequestId = $this->getByRequestId($subscription->requestId);
             if ( ($subscriptionByRequestId['payment'][0]['status']['status']??null) === 'APPROVED' ) {
 
-                //empiezo pagando la primer cuota
-                $success = false;
-                //es anticipo ?
-                if ($requestsSubscription->first_installment !== null)
-                    $result = $this->pagarCuotaSuscripcionAnticipo($requestsSubscription);
-                else{
                     // $result = $this->pagarCuotaSuscripcion($requestsSubscription, 1);
                     $requestSubscriptionById = $this->getByRequestId($requestsSubscription['requestId']);
 
@@ -159,7 +158,7 @@ class PlaceToPayService
                         // 'expiration_date' => , //TODO: definir cuando se espera que expire una cuota.
                     ];
                     $firstPaySubscription = PlaceToPaySubscription::where(['id' => $subscription->id])
-                    ->update($newsubscription);
+                        ->update($newsubscription);
                     $newsubscription = PlaceToPaySubscription::find($subscription->id);
                     // guardas registro primer cuota
 
@@ -171,38 +170,11 @@ class PlaceToPayService
 
                     // creas todas las cuotas restantes, si hay
                     if (($result['response']['status']['status']??null) === 'APPROVED') {
-
                         // $responseUpdateZohoPlaceToPay = $this->zohoController->updateZohoPlaceToPay($result,$requestIdRequestSubscription);
-
-                        // // crear cuotas
-                        if ($requestsSubscription->quotes > 1) {
-                            $dateParsedPaidFirstInstallment = date_parse($result['firstPaySubscription']['date']);
-                            // $dateParsedPaidFirstInstallment = date_parse("2023-01-30T18:38:53.000000Z"); // TODO: Se puede usar esto para probar unas fecha de cobro especifica
-
-                            //Obtener
-                            $datesToPay = $this->getDatesToPay($dateParsedPaidFirstInstallment,$requestsSubscription->quotes);
-
-                            for ($i = 2; $i <= $requestsSubscription->quotes; $i++) {
-
-                                PlaceToPaySubscription::create([
-                                    'transactionId' => $requestsSubscription->id,
-                                    'nro_quote' => $i,
-                                    // 'date' => $response['status']['date'],
-                                    // 'requestId' => $response['status']['status'],
-                                    'total' => $requestsSubscription->remaining_installments,
-                                    'currency' => $requestsSubscription->currency,
-                                    'date_to_pay' => date_format($this->dateToPay(
-                                        $datesToPay[$i - 2]['year'],
-                                        $datesToPay[$i - 2]['month'],
-                                        $dateParsedPaidFirstInstallment['day']
-                                    ), 'Y-m-d H:i:s'),
-                                    // 'type' => 'subscription',
-                                ]);
-                            }
-                        }
+                        $this->createRemainingInstallments($result,$requestsSubscription);
                     }
+
                     return $result;
-                }
             }
         }else{
             // Crear la primer cuota directametne
@@ -210,50 +182,47 @@ class PlaceToPayService
                 //No estan creadas todas las cuotas de la suscripcion
 
                 //empiezo pagando la primer cuota
-                $success = false;
-                //es anticipo ?
-                if ($requestsSubscription->first_installment !== null)
-                    $result = $this->pagarCuotaSuscripcionAnticipo($requestsSubscription);
-                else
-                    $result = $this->pagarCuotaSuscripcion($requestsSubscription, 1);
+                $result = $this->pagarCuotaSuscripcion($requestsSubscription, 1);
 
                 // creas todas las cuotas restantes, si hay
                 if (($result['response']['status']['status']??null) === 'APPROVED') {
-
                     // $responseUpdateZohoPlaceToPay = $this->zohoController->updateZohoPlaceToPay($result,$requestIdRequestSubscription);
-
-                    // // crear cuotas
-                    if ($requestsSubscription->quotes > 1) {
-                        $dateParsedPaidFirstInstallment = date_parse($result['firstPaySubscription']['date']);
-                        // $dateParsedPaidFirstInstallment = date_parse("2023-01-30T18:38:53.000000Z"); // TODO: Se puede usar esto para probar unas fecha de cobro especifica
-
-                        //Obtener
-                        $datesToPay = $this->getDatesToPay($dateParsedPaidFirstInstallment,$requestsSubscription->quotes);
-
-                        for ($i = 2; $i <= $requestsSubscription->quotes; $i++) {
-
-                            PlaceToPaySubscription::create([
-                                'transactionId' => $requestsSubscription->id,
-                                'nro_quote' => $i,
-                                // 'date' => $response['status']['date'],
-                                // 'requestId' => $response['status']['status'],
-                                'total' => $requestsSubscription->remaining_installments,
-                                'currency' => $requestsSubscription->currency,
-                                'date_to_pay' => date_format($this->dateToPay(
-                                    $datesToPay[$i - 2]['year'],
-                                    $datesToPay[$i - 2]['month'],
-                                    $dateParsedPaidFirstInstallment['day']
-                                ), 'Y-m-d H:i:s'),
-                                // 'type' => 'subscription',
-                            ]);
-                        }
-                    }
+                    $this->createRemainingInstallments($result,$requestsSubscription);
                 }
                 return $result;
             }
         }
     }
 
+    public function createRemainingInstallments($result,$requestsSubscription){
+
+        // // crear cuotas
+        if ($requestsSubscription->quotes > 1) {
+            $dateParsedPaidFirstInstallment = date_parse($result['firstPaySubscription']['date']);
+            // $dateParsedPaidFirstInstallment = date_parse("2023-01-30T18:38:53.000000Z"); // TODO: Se puede usar esto para probar unas fecha de cobro especifica
+
+            //Obtener
+            $datesToPay = $this->getDatesToPay($dateParsedPaidFirstInstallment,$requestsSubscription->quotes);
+
+            for ($i = 2; $i <= $requestsSubscription->quotes; $i++) {
+
+                PlaceToPaySubscription::create([
+                    'transactionId' => $requestsSubscription->id,
+                    'nro_quote' => $i,
+                    // 'date' => $response['status']['date'],
+                    // 'requestId' => $response['status']['status'],
+                    'total' => $requestsSubscription->remaining_installments,
+                    'currency' => $requestsSubscription->currency,
+                    'date_to_pay' => date_format($this->dateToPay(
+                        $datesToPay[$i - 2]['year'],
+                        $datesToPay[$i - 2]['month'],
+                        $dateParsedPaidFirstInstallment['day']
+                    ), 'Y-m-d H:i:s'),
+                    // 'type' => 'subscription',
+                ]);
+            }
+        }
+    }
     //Utils
 
     public function reduceUrl($url)
