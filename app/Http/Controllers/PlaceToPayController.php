@@ -158,7 +158,7 @@ class PlaceToPayController extends Controller
                 if( $firstSubscription->status==='APPROVED'){
                     return response()->json([
                         "result" => $this->message[$firstSubscription->status],
-                    ]);
+                    ], 400);
                 }
 
                 $sessionSubscription = $this->placeTopayService->getByRequestId($firstSubscription->requestId);
@@ -187,7 +187,7 @@ class PlaceToPayController extends Controller
 
                     return response()->json([
                         "result" => $this->message[$statusPayment],
-                    ]);
+                    ], 400);
                 }
 
             }
