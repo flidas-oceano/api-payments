@@ -114,7 +114,7 @@ Route::middleware('api-api')->prefix("/payments_msk")->group(function () {
 });
 
 Route::middleware('api-api')->prefix("/contifico")->group(function () {
-    Route::post('/user/create', [\App\Http\Controllers\Contifico\ContificoController::class, 'createUser']);
+    Route::post('/user', [\App\Http\Controllers\Contifico\ContificoController::class, 'createUser']);
     Route::get('/user/get/{uuid}', [\App\Http\Controllers\Contifico\ContificoController::class, 'getUser']);
 });
 
