@@ -25,7 +25,7 @@ class ContificoController extends Controller
         $this->writeUser = $writeUser;
     }
 
-    public function createUser(Request $request): JsonResponse
+    public function store(Request $request): JsonResponse
     {
         try {
             $requested = $request->all();
