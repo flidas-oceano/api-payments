@@ -158,7 +158,7 @@ class PlaceToPayController extends Controller
                 if( $firstSubscription->status==='APPROVED'){
                     return response()->json([
                         "result" => $this->message[$firstSubscription->status],
-                    ]);
+                    ], 400);
                 }
 
                 $sessionSubscription = $this->placeTopayService->getByRequestId($firstSubscription->requestId);
@@ -187,7 +187,7 @@ class PlaceToPayController extends Controller
 
                     return response()->json([
                         "result" => $this->message[$statusPayment],
-                    ]);
+                    ], 400);
                 }
 
             }
@@ -328,6 +328,7 @@ class PlaceToPayController extends Controller
                     'currency' => 'USD',
                     'quotes' => $request['payment']['quotes'],
                     'remaining_installments' => $request['payment']['remaining_installments'],
+                    'first_installment' => ($request['payment']['first_installment'] ?? null),
 
                     // 'contact_id' => ,
                     // 'authorization' => ,

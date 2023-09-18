@@ -41,6 +41,8 @@ class CreateSessionSubscriptionRequest extends FormRequest
             'payment.remaining_installments.numeric' => 'El campo Cuotas restantes debe ser un número válido.',
             'payment.type.required' => 'El campo Tipo de pago es obligatorio.',
             'payment.type.in' => 'El campo Tipo de pago debe ser Suscripción o Parcialidad.',
+            'payment.first_installment.required_if' => 'El campo Primera Cuota es obligatorio',
+            'payment.first_installment.decimal' => 'El campo Primera Cuota es obligatorio.',
         ];
     }
     /**
@@ -78,6 +80,7 @@ class CreateSessionSubscriptionRequest extends FormRequest
             'payer.address.street' => 'required|string',
             'payment.total' => 'required|numeric',
             'payment.quotes' => 'required|integer',
+            'payment.first_installment' => 'required_if:payment.type,Parcialidad|numeric',
             'payment.remaining_installments' => 'required|numeric',
             'payment.type' => 'required|string|in:Suscripción,Parcialidad',
         ];
