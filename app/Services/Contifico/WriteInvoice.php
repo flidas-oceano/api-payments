@@ -29,7 +29,19 @@ class WriteInvoice
     public function save(ContificoInvoiceDto $invoiceDto)
     {
         $body = [
-            'id' => null,
+            'id' => $invoiceDto->getId(),
+            'fecha_emision' => $invoiceDto->getInvoiceDate(),
+            "tipo_documento" => "FAC",
+            "documento" => $invoiceDto->getInvoiceNumber(),
+            "estado" => "P",
+            "descripcion" => "FACTURA ".$invoiceDto->getInvoiceNumber(),
+            "detalles"  => $invoiceDto->getProducts(),
+            "subtotal_0" => $invoiceDto->getSubTotal(),
+            "servicio" => $invoiceDto->getAdjust(),
+            "iva" => $invoiceDto->getIva(),
+            "ice" => $invoiceDto->getShipping(),
+            "total" => $invoiceDto->getTotal(),
+
         ];
         $response = $this->client->post('/sistema/api/v1/documento', $body);
 
