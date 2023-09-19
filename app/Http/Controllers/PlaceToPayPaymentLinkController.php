@@ -153,8 +153,7 @@ class PlaceToPayPaymentLinkController extends Controller
             // mandame la informacion de datos personalescuando crees la susbscripcion. No se puede actualizar datos
 
             //obtener datos personales
-            $paymentLinkPTP = PlaceToPayPaymentLink::where('contract_entity_id', $request['requestId'] ?? null)->first();
-            $objetoStdClass = $this->placeToPayService->getByRequestId($paymentLinkPTP->transaction->requestId);
+            $objetoStdClass = $this->placeToPayService->getByRequestId($request['requestId']);
             // $objetoStdClass = $placeToPayService->getByRequestId(677217);
             // Convertir el objeto stdClass en un objeto PHP
             $transactionByRequestId = json_decode(json_encode($objetoStdClass), false);
@@ -168,12 +167,13 @@ class PlaceToPayPaymentLinkController extends Controller
                 ["status", "!=", "Contrato Efectivo"]
             ])->get();
 
-            if($paymentLinks->count() > 0){
+            if ($paymentLinks->count() > 0) {
                 $paymentLinks->first()->update($paymentLinkData);
                 $paymentLink = PlaceToPayPaymentLink::where(
-                    "contract_so" , $paymentLinkData["contract_so"]
+                    "contract_so",
+                    $paymentLinkData["contract_so"]
                 )->get()->first();
-            }else{
+            } else {
                 $paymentLink = PlaceToPayPaymentLink::create($paymentLinkData);
             }
 
@@ -196,7 +196,7 @@ class PlaceToPayPaymentLinkController extends Controller
 
     public function getPaymentLink(Request $request, $saleId)
     {
-        try{
+        try {
             $paymentLinkPTP = PlaceToPayPaymentLink::where('contract_entity_id', $saleId)->first();
             $objetoStdClass = $this->placeToPayService->getByRequestId($paymentLinkPTP->transaction->requestId);
             // $objetoStdClass = $placeToPayService->getByRequestId(677217);
