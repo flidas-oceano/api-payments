@@ -14,10 +14,12 @@ class ContificoInvoiceDto
     protected ?string $methodOfPayment;
 
     protected ?float $subTotal;
+    protected ?float $subTotalIva;
     protected ?float $shipping;
     protected ?float $iva;
     protected ?float $adjust;
     protected ?float $total;
+    protected ?string $authorization;
 
     public function __construct($data)
     {
@@ -27,6 +29,7 @@ class ContificoInvoiceDto
         $this->invoiceDate = $data['invoice_date'] ?? null;
         $this->methodOfPayment = $data['method_payment'] ?? null;
         $this->subTotal = $data['sub_total'] ?? 0;
+        $this->subTotalIva = $data['sub_total_iva'] ?? 0;
         $this->shipping = $data['shipping'] ?? 0;
         $this->iva = $data['iva'] ?? 0;
         $this->adjust = $data['adjust'] ?? 0;
@@ -35,6 +38,8 @@ class ContificoInvoiceDto
         $this->products = $products ? $this->constructProducts($products) : [];
         $customer = $data['customer'] ?? [];
         $this->customer = $customer? new ContificoUserDto($customer) : null;
+        $this->status = $data['status'] ?? null;
+        $this->authorization = $data['authorization'] ?? null;
     }
 
     public function constructProducts($products): array
@@ -113,5 +118,15 @@ class ContificoInvoiceDto
     public function getStatus(): ?string
     {
         return $this->status;
+    }
+
+    public function getSubTotalIva(): ?float
+    {
+        return $this->subTotalIva;
+    }
+
+    public function getAuthorization(): ?string
+    {
+        return $this->authorization;
     }
 }

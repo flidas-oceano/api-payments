@@ -15,6 +15,7 @@ class ContificoInvoiceValidator
         $rules = [
             'invoice_number' => 'required',
             'invoice_date' => 'required',
+            'authorization' => 'required',
         ];
         $validator = Validator::make($data, $rules);
         if ($validator->fails()) {

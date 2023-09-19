@@ -38,6 +38,8 @@ class WriteInvoice
             "descripcion" => "FACTURA ".$invoiceDto->getInvoiceNumber(),
             "detalles"  => $this->getDetails($invoiceDto->getProducts()),
             "subtotal_0" => $invoiceDto->getSubTotal(),
+            "subtotal_12" => $invoiceDto->getSubTotalIva(),
+            "autorizacion" => $invoiceDto->getAuthorization(),
             "servicio" => $invoiceDto->getAdjust(),
             "iva" => $invoiceDto->getIva(),
             "ice" => $invoiceDto->getShipping(),
@@ -52,7 +54,8 @@ class WriteInvoice
                 "email"=> $invoiceDto->getCustomer()->getEmail(),
                 "es_extranjero"=> false
             ],
-        ];dd($body);
+            'pos' => env('CONTIFICO_APIT'),
+        ];
         $response = $this->client->post('/sistema/api/v1/documento', $body);
 
         return json_decode($response, true);

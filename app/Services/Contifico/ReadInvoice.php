@@ -35,8 +35,11 @@ class ReadInvoice implements IRead
     public function findBy($data)
     {
         $query = "&tipo_registro=CLI&tipo=FAC";
-        if (isset($data['identification'])) {
-            $query .= "&identificacion=".$data['identification'];
+        if (isset($data['invoice_date'])) {
+            $query .= "&fecha_emision=".$data['invoice_date'];
+        }
+        if (isset($data['invoice_number'])) {
+            $query .= "&documento=".$data['invoice_number'];
         }
         $response = $this->client->get('/sistema/api/v1/documento', $query);
 
