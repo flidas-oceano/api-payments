@@ -6,10 +6,13 @@ class ContificoInvoiceDetailsDto
 {
     protected ?string $productId;
     protected ?string $quantity;
-    protected ?string $price;
+    protected ?float $price;
     protected ?int $percentageIva;
-    protected ?float $percentageDiscount;
-    protected ?string $recordableBase;
+    protected ?int $percentageDiscount;
+    protected ?float $recordableBase;
+    protected ?float $nonRecordableBase;
+    protected ?float $zeroBase;
+
 
     public function __construct($data)
     {
@@ -19,6 +22,8 @@ class ContificoInvoiceDetailsDto
         $this->percentageIva = $data['percentage_iva'] ?? null;
         $this->percentageDiscount = $data['percentage_discount'] ?? null;
         $this->recordableBase = $data['recordable_base'] ?? null;
+        $this->nonRecordableBase = $data['non_recordable_base'] ?? null;
+        $this->zeroBase = $data['zero_base'] ?? null;
     }
 
     public function getProductId(): ?string
@@ -49,5 +54,15 @@ class ContificoInvoiceDetailsDto
     public function getRecordableBase(): ?string
     {
         return $this->recordableBase;
+    }
+
+    public function getNonRecordableBase(): ?float
+    {
+        return $this->nonRecordableBase;
+    }
+
+    public function getZeroBase(): ?float
+    {
+        return $this->zeroBase;
     }
 }

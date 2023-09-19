@@ -5,7 +5,7 @@ namespace App\Dtos\Contifico;
 class ContificoInvoiceDto
 {
     protected ?string $id;
-    protected ?array $customer;
+    protected ?ContificoUserDto $customer;
     protected ?array $products;
     protected ?string $invoiceNumber;
     protected ?string $status; //P:pendiente, C:cobrado, G:pagado, A:anulado, E:generado, F:facturado
@@ -22,25 +22,29 @@ class ContificoInvoiceDto
     public function __construct($data)
     {
         $this->id = $data['id'] ?? null;
-        $this->invoiceNumber = $data['invoiceNumber'] ?? null;
-        $this->orderNumber = $data['orderNumber'] ?? null;
-        $this->invoiceDate = $data['invoiceDate'] ?? null;
-        $this->methodOfPayment = $data['methodOfPayment'] ?? null;
-        $this->subTotal = $data['subTotal'] ?? 0;
+        $this->invoiceNumber = $data['invoice_number'] ?? null;
+        $this->orderNumber = $data['order_number'] ?? null;
+        $this->invoiceDate = $data['invoice_date'] ?? null;
+        $this->methodOfPayment = $data['method_payment'] ?? null;
+        $this->subTotal = $data['sub_total'] ?? 0;
         $this->shipping = $data['shipping'] ?? 0;
         $this->iva = $data['iva'] ?? 0;
         $this->adjust = $data['adjust'] ?? 0;
         $this->total = $data['total'] ?? 0;
         $products = $data['products'] ?? [];
-        $this->products = $products ? function($products) {
-            $response = [];
-            foreach ($products as $product) {
-                $response[] = new ContificoInvoiceDetailsDto($product);
-            }
-            return $response;
-        } : [];
+        $this->products = $products ? $this->constructProducts($products) : [];
         $customer = $data['customer'] ?? [];
-        $this->customer = $customer? new ContificoUserDto($customer) : [];
+        $this->customer = $customer? new ContificoUserDto($customer) : null;
+    }
+
+    public function constructProducts($products): array
+    {
+        $response = [];
+        foreach ($products as $product) {
+            $response[] = new ContificoInvoiceDetailsDto($product);
+        }
+
+        return $response;
     }
 
     public function getId(): ?string
@@ -67,6 +71,7 @@ class ContificoInvoiceDto
     {
         return $this->methodOfPayment;
     }
+
 
     public function getProducts(): ?array
     {
@@ -96,5 +101,17 @@ class ContificoInvoiceDto
     public function getTotal(): ?float
     {
         return $this->total;
+    }
+    /**
+     * @return ContificoUserDto
+     */
+    public function getCustomer(): ?ContificoUserDto
+    {
+        return $this->customer;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
     }
 }

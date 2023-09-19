@@ -13,8 +13,8 @@ class ContificoInvoiceValidator
     public static function create($data)
     {
         $rules = [
-            'identification' => 'required',
-            'email' => 'required',
+            'invoice_number' => 'required',
+            'invoice_date' => 'required',
         ];
         $validator = Validator::make($data, $rules);
         if ($validator->fails()) {
