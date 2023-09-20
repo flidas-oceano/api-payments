@@ -38,13 +38,15 @@ class ContificoClient implements IClient
     public function post($uri, $body)
     {
         try {
+            $url = self::URL . $uri . '/?pos='.env('CONTIFICO_APIT');
             $request = new Request(
                 'POST',
-                    self::URL . $uri . '/?pos='.env('CONTIFICO_APIT'),
+                $url,
                 $this->getHeaders(),
                 json_encode($body)
             );
             $client = new Client();
+            \Log::info("ACCESSING WS CONTIFICO -> POST", [$url]);
 
             return $client->sendAsync($request)->wait();
         } catch (\Exception $e) {
@@ -62,9 +64,11 @@ class ContificoClient implements IClient
     public function get($uri, $query = "")
     {
         try {
+            $uri = self::URL . $uri . '/?pos='.env('CONTIFICO_APIT').$query;
+            \Log::info("ACCESSING WS CONTIFICO -> GET", [$uri]);
             $request = new Request(
                 'GET',
-                self::URL . $uri . '/?pos='.env('CONTIFICO_APIT').$query,
+                $uri,
                 $this->getHeaders(),
             );
             $client = new Client();

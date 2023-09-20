@@ -19,9 +19,6 @@ class ApiMiddleware
     {
         \Log::info("URI REQUESTED:", [$request->url()]);
 
-        $nRequest = $next($request);
-        \Log::info("URI RESPONSE REQUESTED:", [$nRequest]);
-
-        return $nRequest;
+        return $next($request);
     }
 }

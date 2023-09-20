@@ -630,15 +630,15 @@ class PlaceToPayService
             }');
 
         $responseCreateRequest = json_decode('{
-                "status": {
-                    "status": "OK",
-                    "reason": "PC",
-                    "message": "La petición se ha procesado correctamente",
-                    "date": "2023-08-07T17:41:48-05:00"
-                },
-                "requestId": "669292",
-                "processUrl": "https://checkout-test.placetopay.ec/spa/session/669292/36f326c478555ec0dbe2fb4dc9683f81"
-            }');
+            "status": {
+                "status": "OK",
+                "reason": "PC",
+                "message": "La petición se ha procesado correctamente",
+                "date": "2023-08-07T17:41:48-05:00"
+            },
+            "requestId": "669292",
+            "processUrl": "https://checkout-test.placetopay.ec/spa/session/669292/36f326c478555ec0dbe2fb4dc9683f81"
+        }');
 
         //crear una suscripcion es:
         //Guardar las transacciones ok. Que todavia estan sin pagar.
@@ -653,12 +653,12 @@ class PlaceToPayService
         //requestId: 669292
         $getRequestInformation = json_decode('{
                 "auth": {
-                    "login": "fcba839f74386227ed54fea97404b099",
-                    "tranKey": "vxBYop+GDsCBBzzAND5GGbhaeEc=",
-                    "nonce": "WldWak9HSmxNRFUyWkRobVlXUXdObUk0TkRNNFl6SmxaR0poWTJZMFptST0=",
-                    "seed": "2023-08-07T17:42:15-05:00"
-                }
-            }');
+                "login": "fcba839f74386227ed54fea97404b099",
+                "tranKey": "vxBYop+GDsCBBzzAND5GGbhaeEc=",
+                "nonce": "WldWak9HSmxNRFUyWkRobVlXUXdObUk0TkRNNFl6SmxaR0poWTJZMFptST0=",
+                "seed": "2023-08-07T17:42:15-05:00"
+            }
+        }');
         //VISA 4716375184092180 12/29 111 PENDING
         $responsePendingGetRequestInformation = json_decode('{
                 "requestId": "669292",
