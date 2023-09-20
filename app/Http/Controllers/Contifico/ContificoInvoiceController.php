@@ -30,17 +30,10 @@ class ContificoInvoiceController extends Controller
         try {
             $requested = $request->all();
             ContificoInvoiceValidator::create($requested);
-            $response = $this->readInvoice->findBy($requested);
-            if (sizeof($response) == 1) {
-                $data = $response;
-                $code = 200;
-            } else {
-                $contificoDto = new ContificoInvoiceDto($requested);
-                $data = $this->writeInvoice->save($contificoDto);
-                $code = 201;
-            }
+            $contificoDto = new ContificoInvoiceDto($requested);
+            $data = $this->writeInvoice->save($contificoDto);
 
-            return Responser::success($data, $code);
+            return Responser::success($data, 201);
         } catch (\Exception | GuzzleException $e) {
             return Responser::error($e);
         }

@@ -10,6 +10,7 @@ use App\Interfaces\IRead;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\RequestOptions;
 
 class WriteInvoice
@@ -56,9 +57,10 @@ class WriteInvoice
             ],
             'pos' => env('CONTIFICO_APIT'),
         ];
+        /** @var  Response $response */
         $response = $this->client->post('/sistema/api/v1/documento', $body);
 
-        return json_decode($response, true);
+        return json_decode($response->getBody()->getContents(), true);
     }
 
     /**

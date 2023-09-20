@@ -38,9 +38,7 @@ class ReadInvoice implements IRead
         if (isset($data['invoice_date'])) {
             $query .= "&fecha_emision=".$data['invoice_date'];
         }
-        if (isset($data['invoice_number'])) {
-            $query .= "&documento=".$data['invoice_number'];
-        }
+
         $response = $this->client->get('/sistema/api/v1/documento', $query);
 
         return json_decode($response->getBody()->getContents(), true);
