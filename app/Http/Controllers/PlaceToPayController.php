@@ -41,6 +41,28 @@ class PlaceToPayController extends Controller
         $this->login_su = env("REACT_APP_PTP_LOGIN_SU");
         $this->secret_su = env("REACT_APP_PTP_SECRECT_SU");
     }
+    public function revokeTokenSession($requestIdSession){
+        try {
+
+            return response()->json([
+                'result' => $this->placeTopayService->revokeTokenSession($requestIdSession)
+            ]);
+        } catch (\Exception $e) {
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString()
+            ];
+
+            Log::error("Error en pruebaregladepago: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ]);
+        }
+    }
+
     public function pruebaregladepago()
     {
         try {
@@ -61,6 +83,7 @@ class PlaceToPayController extends Controller
             ]);
         }
     }
+
     public function billSubscription(Request $request, $requestId)
     {
         try {
@@ -169,7 +192,6 @@ class PlaceToPayController extends Controller
                 if( isset( $sessionSubscription['payment'][0]['status']['status'] ) )
                     $statusPayment =  $sessionSubscription['payment'][0]['status']['status'] ?? 'DESCONOCIDO' ;
 
-
                 if($statusPayment!=='APPROVED'){
                     //Actualizar estado
                     PlaceToPaySubscription::where(['id' => $firstSubscription->id ])->update([
@@ -204,6 +226,7 @@ class PlaceToPayController extends Controller
                     'requestId' => $sessionSubscription["requestId"],
                 ]
             );
+
             if ($sessionSubscription['status']['status'] === "APPROVED") {
                 if (isset($sessionSubscription['subscription'])) {
                     foreach ($sessionSubscription['subscription']['instrument'] as $instrument) {
@@ -232,6 +255,19 @@ class PlaceToPayController extends Controller
                         }
                     }
                 }
+            }
+
+            $status = $sessionSubscription['status']['status'] ?? 'DESCONOCIDO';
+            $message = $sessionSubscription['status']['message'] ?? 'DESCONOCIDO';
+            if($status === 'REJECTED')
+                $message = $message . '. Cree una nueva session.';
+
+            if ($status !== "APPROVED") {
+                return response()->json([
+                    "result" => $message,
+                    "statusSession" => $status,
+                    "sessionPTP" => $sessionSubscription,
+                ], 400);
             }
         } catch (\Exception $e) {
             $err = [
@@ -297,7 +333,8 @@ class PlaceToPayController extends Controller
             // ]
         ];
         $subscription = [
-            "reference" => $request['so'],
+            "reference" => $this->placeTopayService->getNameReferenceSession($request['so']),
+            // "reference" => $request['so'],
             "description" => "Prueba suscripcion contrato de OceanoMedicina"
         ];
         $data = [
@@ -333,7 +370,7 @@ class PlaceToPayController extends Controller
                     // 'contact_id' => ,
                     // 'authorization' => ,
 
-                    'reference' => $request['so'],
+                    'reference' => $subscription['reference'],
                     'type' => "requestSubscription",
                     // 'token_collect_para_el_pago' => ,
                     'expiration_date' => $data['expiration'],
@@ -402,7 +439,9 @@ class PlaceToPayController extends Controller
                 ]
             ];
             $payment = [
-                "reference" => $request['so'],
+
+                "reference" => $this->placeTopayService->getNameReferenceSession($request['so']),
+                // "reference" => $request['so'],
                 "description" => "Prueba contrato de OceanoMedicina",
                 "amount" => [
                     "currency" => "USD",
@@ -613,7 +652,5 @@ class PlaceToPayController extends Controller
             ]);
         }
     }
-
-
 
 }

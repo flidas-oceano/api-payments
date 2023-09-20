@@ -218,4 +218,77 @@ class PlaceToPayPaymentLinkController extends Controller
             ]);
         }
     }
+
+
+
+    public function updatePaymentLinkStatus(Request $request, $saleId)
+    {
+        try {
+            // $paymentLinkPTP = PlaceToPayPaymentLink::where('contract_entity_id', $saleId)->first();
+            $paymentLink = PlaceToPayPaymentLink::find( $request['paymentLink']['id'] )->update(['']);
+            $requestSubscriptionById = $this->getByRequestId($paymentLink->transaction->requestId);
+            if(($requestSubscriptionById->status->status ?? null) === 'REJECTED'){
+                //acutalizo el payment link registo
+                PlaceToPayPaymentLink::find($paymentLink->id)->update(['status' => $requestSubscriptionById->status->status]);
+                //acutalizo el transaction a rechazado
+                $paymentLink->transaction->update([
+                    'status' => $requestSubscriptionById['status']['status'],
+                    'reason' => $requestSubscriptionById['status']['reason'],
+                    'message' => $requestSubscriptionById['status']['message'],
+                ]);
+
+                    //creo creo un nuevo registro paymentlink //duplicando el registro.
+                    // //creo una nueva transaccion. con el r_{numero de intento}
+                    // tener en cuenta que el reference va a ser asi:
+                    // 2000339000617515005 -> REJECTED
+                    // 2000339000617515005_R_1 -> REJECTED
+                    // 2000339000617515005_R_2 -> APROVEED
+
+                    //asociarlos
+
+
+                // $result = $this->placeTopayService->create($data);
+
+                // if (isset($result['status']['status'])) {
+                //     $placeToPayTransaction = PlaceToPayTransaction::create([
+                //         'status' => $result['status']['status'],
+                //         'reason' => $result['status']['reason'],
+                //         'message' => $result['status']['message'],
+                //         'date' => $result['status']['date'],
+                //         'requestId' => $result['requestId'],
+                //         'processUrl' => $this->placeTopayService->reduceUrl($result['processUrl']),
+                //         // 'contact_id' =>         $lead->contact_id,
+                //         // 'lead_id' =>            $lead->id,
+                //         // 'authorization' => ,
+                //         'total' => $data['payment']['amount']['total'],
+                //         'currency' => $data['payment']['amount']['currency'],
+                //         'reference' => $data['payment']['reference'],
+                //         'type' => "payment",
+                //         // 'token_collect_para_el_pago' => ,
+                //         'expiration_date' => $data['expiration'],
+                //     ]);
+                //     $getById = $this->placeTopayService->getByRequestId($result['requestId']);
+                //     $placeToPayTransaction = PlaceToPayTransaction::where(["requestId" => $result['requestId']])
+                //         ->update([
+                //             'status' => $getById['status']['status'],
+                //             'reason' => $getById['status']['reason'],
+                //             'message' => $getById['status']['message'],
+                //         ]);
+                // }
+            }
+        } catch (\Exception $e) {
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString(),
+            ];
+
+            Log::error("Error en PlaceToPayPaymentLinkController-getPaymentLink: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ]);
+        }
+    }
 }

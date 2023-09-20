@@ -75,4 +75,8 @@ class PlaceToPayTransaction extends Model
     {
         return $this->belongsTo(Lead::class, 'lead_id');
     }
+    public function paymentLinks()
+    {
+        return $this->hasMany(PlaceToPayPaymentLink::class, 'transactionId');
+    }
 }

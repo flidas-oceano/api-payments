@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use stdClass;
 
-    //     $placeToPayService = new PlaceToPayService(); // Instancia el servicio
-    //     $placeToPayService->payInstallments(); // Llama al método que deseas ejecutar
+
+    // use App\Services\PlaceToPay\PlaceToPayService; $placeToPayService = new PlaceToPayService();
 class PlaceToPayService
 {
     private $login_pu;
@@ -74,9 +74,11 @@ class PlaceToPayService
             //     // "phone" => $request['phone'],//+573214445566
             // ]
         ];
+        // $requestsTransaction = PlaceToPayTransaction::where(['requestId' => $request['requestId']['requestId']])->get()->first();
+
         $payment = [
-            "reference" => 'Cuota-' . $nro_quote . '-' . $request['reference'],
-            "description" => "Prueba pago de cuota subscripcion",
+            "reference" => $this->getNameReferenceSubscription(1,$requestSubscriptionById['requestId'],$request['reference']),
+            "description" => "",
             "amount" => [
                 "currency" => $request['currency'],
                 "total" => $transaccion->first_installment ?? $request['remaining_installments']
@@ -347,9 +349,70 @@ class PlaceToPayService
 
         return $mesSiguiente->fechaCobro;
     }
+
+    // 680002
+    // 2000339000617515006
+    // 1
+
+    // $placeToPayService->getNameReferenceSubscription(1,680007,'2000339000617515006'); // Llama al método que deseas ejecutar
+    // $placeToPayService->getNameReferenceSubscription(1,680002,'2000339000617515006'); // Llama al método que deseas ejecutar
+    public function getNameReferenceSubscription($nroQuote,$requestIdSession,$contractId){
+
+        // $requestsSession = PlaceToPayTransaction::where(['requestId' => 680002])->get()->first();
+        $requestsSession = PlaceToPayTransaction::where(['requestId' => $requestIdSession])->get()->first();
+
+        // $sessionsRejected = $requestsSession->subscriptions()->where(['status' => 'REJECTED', 'nro_quote' => 1])->get();
+        $sessionsRejected = $requestsSession->subscriptions()->where(['status' => 'REJECTED', 'nro_quote' => $nroQuote])->get();
+
+        if(count($sessionsRejected) === 0){
+            return $nroQuote.'_'.$contractId;
+        }
+        if(count($sessionsRejected) > 0){
+            return $nroQuote.'_'.$contractId.'_R_'.count($sessionsRejected);
+        }
+    }
+
+    // $placeToPayService->getNameReferenceSession('2000339000617515006'); // Llama al método que deseas ejecutar
+    public function getNameReferenceSession($contractId){
+
+        // $requestsSessionByContractId = PlaceToPayTransaction::where('reference', 'LIKE', '%' . '2000339000617515006' . '%')->get();
+        $requestsSessionByContractId = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $contractId . '%')->get();
+
+        if( count($requestsSessionByContractId) === 0){
+            return $contractId;
+        }
+        if( count($requestsSessionByContractId) > 0){
+            return $contractId.'_R_'.count($requestsSessionByContractId);
+        }
+    }
     // End //Utils
 
     // URLS
+    public function revokeTokenSession($requestIdSession){
+
+        $requestSession = PlaceToPayTransaction::where(['requestId' => $requestIdSession])->get()->first();
+
+        $data =[
+            "auth"=> $this->generateAuthentication(),
+            "locale" => "es_CO",
+            "instrument"=> [
+                "token"=> [
+                    "token"=> $requestSession->token_collect_para_el_pago
+                ]
+            ]
+        ];
+        $url = "https://checkout-test.placetopay.ec/api/instrument/invalidate";
+        $response = Http::withHeaders([
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        ])->post($url, $data)->json();
+
+        $this->isResponseValid($response);
+
+        return $response;
+
+    }
+
     public function create($data)
     {
         $url = "https://checkout-test.placetopay.ec/api/session";
@@ -518,7 +581,7 @@ class PlaceToPayService
                         // ]
                     ];
                     $payment = [
-                        "reference" => 'Cuota-' . $nro_quote . '-' . $request['reference'],
+                        "reference" => $nro_quote . '_' . $request['reference'],
                         "description" => "Prueba pago de cuota subscripcion",
                         "amount" => [
                             "currency" => $request['currency'],
