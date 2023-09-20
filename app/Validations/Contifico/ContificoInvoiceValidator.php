@@ -1,20 +1,21 @@
 <?php
 
-namespace App\Validations;
+namespace App\Validations\Contifico;
 
 use Illuminate\Support\Facades\Validator;
 
-class ContificoValidator
+class ContificoInvoiceValidator
 {
 
     /**
      * @throws \Exception
      */
-    public static function createUser($data)
+    public static function create($data)
     {
         $rules = [
-            'identification' => 'required',
-            'email' => 'required',
+            'invoice_number' => 'required',
+            'invoice_date' => 'required',
+            'authorization' => 'required',
         ];
         $validator = Validator::make($data, $rules);
         if ($validator->fails()) {

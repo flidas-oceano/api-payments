@@ -7,12 +7,12 @@ use App\Helpers\Responser;
 use App\Http\Controllers\Controller;
 use App\Services\Contifico\ReadUser;
 use App\Services\Contifico\WriteUser;
-use App\Validations\ContificoValidator;
+use App\Validations\Contifico\ContificoUserValidator;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class ContificoController extends Controller
+class ContificoUserController extends Controller
 {
     private ReadUser $readUser;
     private WriteUser $writeUser;
@@ -29,8 +29,8 @@ class ContificoController extends Controller
     {
         try {
             $requested = $request->all();
-            \Log::info("ContificoController", ['createUser', $requested]);
-            ContificoValidator::createUser($requested);
+            \Log::info("ContificoUserController", ['createUser', $requested]);
+            ContificoUserValidator::createUser($requested);
             $response = $this->readUser->findBy($requested);
             if (sizeof($response) == 1) {
                 $data = $response;

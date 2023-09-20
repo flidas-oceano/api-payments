@@ -60,6 +60,7 @@ Route::get('/stripe/customer/search/{email}', [StripePaymentController::class, '
 
 
 Route::post('/updateZohoCTCZohoCRM', [ZohoController::class, 'updateZohoCTC']);
+Route::post('/saveCardZohoCTC', [ZohoController::class, 'saveCardZohoCTC']);
 Route::post('/updateZohoStripeZohoCRM', [ZohoController::class, 'updateZohoStripe']);
 Route::post('/updateZohoMPZohoCRM', [ZohoController::class, 'updateZohoMP']);
 Route::post('/updateZohoPTP', [ZohoController::class, 'updateZohoPTP']);
@@ -114,8 +115,12 @@ Route::middleware('api-api')->prefix("/payments_msk")->group(function () {
 });
 
 Route::middleware('api-api')->prefix("/contifico")->group(function () {
-    Route::post('/user', [\App\Http\Controllers\Contifico\ContificoController::class, 'store']);
-    Route::get('/user/get/{uuid}', [\App\Http\Controllers\Contifico\ContificoController::class, 'getUser']);
+    //user
+    Route::post('/user', [\App\Http\Controllers\Contifico\ContificoUserController::class, 'store']);
+    Route::get('/user/{uuid}', [\App\Http\Controllers\Contifico\ContificoUserController::class, 'getUser']);
+    //invoice
+    Route::get('/invoice/{uuid}', [\App\Http\Controllers\Contifico\ContificoInvoiceController::class, 'getInvoice']);
+    Route::post('/invoice', [\App\Http\Controllers\Contifico\ContificoInvoiceController::class, 'store']);
 });
 
 Route::get("/mp/searchPaymentApprove/{so}", [\App\Http\Controllers\MercadoPagoPaymentController::class, 'searchPaymentApprove']);
@@ -154,4 +159,3 @@ Route::prefix("/placetopay")->group(function () {
     Route::get('/updatePaymentLinkStatus/{saleId}', [PlaceToPayPaymentLinkController::class, 'updatePaymentLinkStatus']);
 
 });
-
