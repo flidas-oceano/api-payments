@@ -361,6 +361,19 @@ class ZohoController extends Controller
         else
             return response()->json($updateContract);
     }
+
+    public function saveCardZohoCTC(Request $request)
+    {
+        $data = $request->only(['card', 'card_v']);
+        $updateContract = $this->updateRecord('Sales_Orders', ['tarjeta' => $data['card'], 'vencimiento' => $data['card_v']], $request->contractId, true);
+
+        if ($updateContract['result'] == 'error') {
+            return response()->json($updateContract, 500);
+        }
+
+        return response()->json($updateContract);
+    }
+
     public function updateZohoPTP(Request $request)
     {
         $requestsSubscription = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();

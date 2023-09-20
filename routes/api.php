@@ -60,6 +60,7 @@ Route::get('/stripe/customer/search/{email}', [StripePaymentController::class, '
 
 
 Route::post('/updateZohoCTCZohoCRM', [ZohoController::class, 'updateZohoCTC']);
+Route::post('/saveCardZohoCTC', [ZohoController::class, 'saveCardZohoCTC']);
 Route::post('/updateZohoStripeZohoCRM', [ZohoController::class, 'updateZohoStripe']);
 Route::post('/updateZohoMPZohoCRM', [ZohoController::class, 'updateZohoMP']);
 Route::post('/updateZohoPTP', [ZohoController::class, 'updateZohoPTP']);
