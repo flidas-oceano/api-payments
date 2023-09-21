@@ -283,7 +283,7 @@ class PlaceToPayController extends Controller
                 // 'trace' => $e->getTraceAsString()
             ];
 
-            Log::error("Error en savePaymentSuscription: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            Log::error("Error en savePaymentSubscription: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
             return response()->json([
                 $err
             ]);
@@ -318,6 +318,25 @@ class PlaceToPayController extends Controller
     {
         try {
 
+            $lastRequestSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . 'sadasd' . '%')->orderBy('created_at', 'desc')->first();
+            //Actualizar Estado ed la session en DB
+            // $lastRequestSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $request['SO'] . '%')
+            //     ->orderBy('created_at', 'desc')
+            //     ->first();
+            if($lastRequestSessionDB !== null){
+                $sessionByRequestId =  $this->placeTopayService->getByRequestId($lastRequestSessionDB->requestId);
+                if (isset($sessionByRequestId['status']['status'])) {
+                    $placeToPayTransaction = PlaceToPayTransaction::where([ 'requestId' => $sessionByRequestId['requestId'] ])
+                        ->update([
+                            'status' => $sessionByRequestId['status']['status'],
+                            'reason' => $sessionByRequestId['status']['reason'],
+                            'message' => $sessionByRequestId['status']['message'],
+                            'date' => $sessionByRequestId['status']['date'],
+                        ]);
+                }
+            }
+
+
             //Validar si hay registros con ese SO.
             // if($this->placeTopayService->isCancelledSession($request['SO'])){
             //     // crear
@@ -325,6 +344,7 @@ class PlaceToPayController extends Controller
             //     //no crear
             // }
 
+            //Crear nueva Session
             //pagador - el que paga
             $payer = [
                 "name" => $request['payer']['name'],

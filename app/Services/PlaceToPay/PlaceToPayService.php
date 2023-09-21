@@ -186,6 +186,14 @@ class PlaceToPayService
                 //empiezo pagando la primer cuota
                 $result = $this->pagarCuotaSuscripcion($requestsSubscription, 1);
 
+                if (($result['response']['status']['status']??null) === 'REJECTED') {
+                        if(!$this->isRejectedTokenTransaction($requestsSubscription)){
+                            // Marca como invalido el token
+                            $requestsSubscription->update([
+                                'token_collect_para_el_pago' => 'CARD_REJECTED_'.$requestsSubscription->token_collect_para_el_pago
+                            ]);
+                        }
+                }
                 // creas todas las cuotas restantes, si hay
                 if (($result['response']['status']['status']??null) === 'APPROVED') {
                     // $responseUpdateZohoPlaceToPay = $this->zohoController->updateZohoPlaceToPay($result,$requestIdRequestSubscription);
@@ -376,7 +384,7 @@ class PlaceToPayService
             return $contractId;
         }
         if( count($requestsSessionByContractId) > 0){
-            return $contractId.'_R_'.count($requestsSessionByContractId);
+            return $contractId.'_RT_'.count($requestsSessionByContractId);
         }
     }
 
@@ -388,9 +396,26 @@ class PlaceToPayService
 
     public function isCancelledSession($so){
 
-        $requestsSessionByContractId = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $so . '%')->get();
+        // $placeToPayService->getNameReferenceSubscription(1,680007,'2000339000617515006');
+        // $requestsSessionByContractId = PlaceToPayTransaction::where('reference', 'LIKE', '%' . '2000339000617515005' . '%')->get();
+        $requestsSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $so . '%')->get();
 
-        $sessionSubscriptionGetById = $this->getByRequestId($requestsSessionByContractId['requestId']);
+
+        //VER SI SI TIENE TRANSACCIONES CANCELADAS.
+        foreach($requestsSessionDB as $sessionDB){
+            if($sessionDB->status === 'REJECTED'){
+
+            }
+        }
+        if(false){ // si todas estan canceladas
+            return [
+                'isCancelledSession' => false,
+            ];
+        }
+
+
+
+        $sessionSubscriptionGetById = $this->getByRequestId($requestsSessionDB['requestId']);
         $status = $sessionSubscriptionGetById['status']['status'];
 
         if($status == 'APPROVED'){
