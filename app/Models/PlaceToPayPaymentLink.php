@@ -15,7 +15,7 @@ class PlaceToPayPaymentLink extends Model
         'transactionId',
         'contract_so',
         'status',
-        'rebill_customer_id',
+        'contract_entity_id',
         'country',
         'quotes'
     ];

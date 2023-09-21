@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Manage;
+use App\Http\Requests\CreateGenerateLinkRequest;
 use App\Models\PaymentLink;
 use App\Models\PlaceToPayPaymentLink;
 use App\Models\PlaceToPayTransaction;
@@ -106,46 +108,12 @@ class PlaceToPayPaymentLinkController extends Controller
         } catch (\Exception $e) {
             // Manejo de errores si ocurre alguno durante la solicitud
 
-            $err = [
-                'message' => $e->getMessage(),
-                'exception' => get_class($e),
-                'line' => $e->getLine(),
-                'file' => $e->getFile(),
-                // 'trace' => $e->getTraceAsString(),
-            ];
-
-            Log::error("Error en createSessionSuscription: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
-            return response()->json([
-                $err
-            ], 500);
+            Manage::error($e);
         }
     }
 
-    public function create(Request $request)
+    public function create(CreateGenerateLinkRequest $request)
     {
-        $rules = [
-            'requestId' => 'required',
-            'gateway' => 'required',
-            'type' => 'required',
-            'contract_entity_id' => 'required',
-            'contract_so' => 'required',
-            'status' => 'required',
-            'quotes' => 'required',
-            'country' => 'required',
-        ];
-
-        $messages = [
-            'requestId.required' => 'El campo requestId es obligatorio.',
-            'gateway.required' => 'El campo gateway es obligatorio.',
-            'type.required' => 'El campo type es obligatorio.',
-            'contract_entity_id.required' => 'El campo contract_entity_id es obligatorio.',
-            'contract_so.required' => 'El campo contract_so es obligatorio.',
-            'status.required' => 'El campo status es obligatorio.',
-            'quotes.required' => 'El campo quotes es obligatorio.',
-            'country.required' => 'El campo country es obligatorio.',
-        ];
-
-        $this->validate($request, $rules, $messages);
 
         try {
 
@@ -153,6 +121,7 @@ class PlaceToPayPaymentLinkController extends Controller
             // mandame la informacion de datos personalescuando crees la susbscripcion. No se puede actualizar datos
 
             //obtener datos personales
+            $ptpTransaction = PlaceToPayTransaction::where('requestId', $request['requestId'])->first();
             $objetoStdClass = $this->placeToPayService->getByRequestId($request['requestId']);
             // $objetoStdClass = $placeToPayService->getByRequestId(677217);
             // Convertir el objeto stdClass en un objeto PHP
@@ -160,7 +129,7 @@ class PlaceToPayPaymentLinkController extends Controller
 
             //paymentLink data
             $paymentLinkData = $request->only(['gateway', 'type', 'contract_entity_id', 'contract_so', 'status', 'quotes', 'country']);
-            $paymentLinkData['transactionId'] = $transactionByRequestId->id;
+            $paymentLinkData['transactionId'] = $ptpTransaction->id;
 
             $paymentLinks = PlaceToPayPaymentLink::where([
                 ["contract_so", $paymentLinkData["contract_so"]],
@@ -177,20 +146,14 @@ class PlaceToPayPaymentLinkController extends Controller
                 $paymentLink = PlaceToPayPaymentLink::create($paymentLinkData);
             }
 
-            return response()->json(["transactionByRequestId" => $transactionByRequestId, "payment" => $paymentLink, "type" => "paymentLink"]);
-        } catch (\Exception $e) {
-            $err = [
-                'message' => $e->getMessage(),
-                'exception' => get_class($e),
-                'line' => $e->getLine(),
-                'file' => $e->getFile(),
-                // 'trace' => $e->getTraceAsString()
-            ];
-
-            Log::error("Error en PlaceToPayPaymentLinkController-create: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
             return response()->json([
-                $err
+                "transactionByRequestId" => $transactionByRequestId,
+                "payment" => $paymentLink,
+                "processURL" => $ptpTransaction->processUrl,
+                "type" => "paymentLink"
             ]);
+        } catch (\Exception $e) {
+            Manage::error($e);
         }
     }
 
