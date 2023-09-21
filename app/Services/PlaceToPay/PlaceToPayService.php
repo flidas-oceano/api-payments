@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use stdClass;
 
-    //     $placeToPayService = new PlaceToPayService(); // Instancia el servicio
-    //     $placeToPayService->payInstallments(); // Llama al método que deseas ejecutar
+
+    // use App\Services\PlaceToPay\PlaceToPayService; $placeToPayService = new PlaceToPayService();
 class PlaceToPayService
 {
     private $login_pu;
@@ -74,9 +74,11 @@ class PlaceToPayService
             //     // "phone" => $request['phone'],//+573214445566
             // ]
         ];
+        // $requestsTransaction = PlaceToPayTransaction::where(['requestId' => $request['requestId']['requestId']])->get()->first();
+
         $payment = [
-            "reference" => 'Cuota-' . $nro_quote . '-' . $request['reference'],
-            "description" => "Prueba pago de cuota subscripcion",
+            "reference" => $this->getNameReferenceSubscription(1,$requestSubscriptionById['requestId'],$request['reference']),
+            "description" => "",
             "amount" => [
                 "currency" => $request['currency'],
                 "total" => $transaccion->first_installment ?? $request['remaining_installments']
@@ -184,6 +186,14 @@ class PlaceToPayService
                 //empiezo pagando la primer cuota
                 $result = $this->pagarCuotaSuscripcion($requestsSubscription, 1);
 
+                if (($result['response']['status']['status']??null) === 'REJECTED') {
+                        if(!$this->isRejectedTokenTransaction($requestsSubscription)){
+                            // Marca como invalido el token
+                            $requestsSubscription->update([
+                                'token_collect_para_el_pago' => 'CARD_REJECTED_'.$requestsSubscription->token_collect_para_el_pago
+                            ]);
+                        }
+                }
                 // creas todas las cuotas restantes, si hay
                 if (($result['response']['status']['status']??null) === 'APPROVED') {
                     // $responseUpdateZohoPlaceToPay = $this->zohoController->updateZohoPlaceToPay($result,$requestIdRequestSubscription);
@@ -193,7 +203,6 @@ class PlaceToPayService
             }
         }
     }
-
     public function createRemainingInstallments($result,$requestsSubscription){
 
         // // crear cuotas
@@ -347,9 +356,120 @@ class PlaceToPayService
 
         return $mesSiguiente->fechaCobro;
     }
+
+    // $placeToPayService->getNameReferenceSubscription(1,680007,'2000339000617515006'); // Llama al método que deseas ejecutar
+    // $placeToPayService->getNameReferenceSubscription(1,680002,'2000339000617515006'); // Llama al método que deseas ejecutar
+    public function getNameReferenceSubscription($nroQuote,$requestIdSession,$contractId){
+
+        // $requestsSession = PlaceToPayTransaction::where(['requestId' => 680002])->get()->first();
+        $requestsSession = PlaceToPayTransaction::where(['requestId' => $requestIdSession])->get()->first();
+
+        // $sessionsRejected = $requestsSession->subscriptions()->where(['status' => 'REJECTED', 'nro_quote' => 1])->get();
+        $sessionsRejected = $requestsSession->subscriptions()->where(['status' => 'REJECTED', 'nro_quote' => $nroQuote])->get();
+
+        if(count($sessionsRejected) === 0){
+            return $nroQuote.'_'.$contractId;
+        }
+        if(count($sessionsRejected) > 0){
+            return $nroQuote.'_'.$contractId.'_R_'.count($sessionsRejected);
+        }
+    }
+    // $placeToPayService->getNameReferenceSession('2000339000617515006'); // Llama al método que deseas ejecutar
+    public function getNameReferenceSession($contractId){
+
+        // $requestsSessionByContractId = PlaceToPayTransaction::where('reference', 'LIKE', '%' . '2000339000617515006' . '%')->get();
+        $requestsSessionByContractId = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $contractId . '%')->get();
+
+        if( count($requestsSessionByContractId) === 0){
+            return $contractId;
+        }
+        if( count($requestsSessionByContractId) > 0){
+            return $contractId.'_RT_'.count($requestsSessionByContractId);
+        }
+    }
+
+    public function isRejectedTokenTransaction($requestsTransaction){
+        $cardToken = $requestsTransaction->token_collect_para_el_pago;
+        $textoBuscado = 'CARD_REJECTED_';
+        return str_contains($cardToken, $textoBuscado);
+    }
+
+    public function isCancelledSession($so){
+
+        // $placeToPayService->getNameReferenceSubscription(1,680007,'2000339000617515006');
+        // $requestsSessionByContractId = PlaceToPayTransaction::where('reference', 'LIKE', '%' . '2000339000617515005' . '%')->get();
+        $requestsSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $so . '%')->get();
+
+
+        //VER SI SI TIENE TRANSACCIONES CANCELADAS.
+        foreach($requestsSessionDB as $sessionDB){
+            if($sessionDB->status === 'REJECTED'){
+
+            }
+        }
+        if(false){ // si todas estan canceladas
+            return [
+                'isCancelledSession' => false,
+            ];
+        }
+
+
+
+        $sessionSubscriptionGetById = $this->getByRequestId($requestsSessionDB['requestId']);
+        $status = $sessionSubscriptionGetById['status']['status'];
+
+        if($status == 'APPROVED'){
+            $requestsTransaction = PlaceToPayTransaction::where(
+                ['requestId' => $sessionSubscriptionGetById->requetId]
+            )->get()->first();
+
+            //En caso de transaccion APPROVED y suscripcion REJECTED
+            if(count($requestsTransaction->subscriptions) > 0){
+                $firstSubscription = $requestsTransaction->subscriptions->first();
+                if($firstSubscription->status === 'REJECTED'){
+                    if(!$this->isRejectedTokenTransaction($requestsTransaction)){
+                        $requestsTransaction->update([
+                            'token_collect_para_el_pago' => 'CARD_REJECTED_'.$requestsTransaction->token_collect_para_el_pago
+                        ]);
+                    }
+                    // return response()->json([
+                    //     "result" => 'La el primer pago fallo, se rechazo la tarjeta. Cree una nueva suscripcion e ingrese otra tarjeta.',
+                    // ], 400);
+                }
+            }
+        }
+
+        return [
+            'isCancelledSession' => false,
+        ];
+    }
     // End //Utils
 
     // URLS
+    public function revokeTokenSession($requestIdSession){
+
+        $requestSession = PlaceToPayTransaction::where(['requestId' => $requestIdSession])->get()->first();
+
+        $data =[
+            "auth"=> $this->generateAuthentication(),
+            "locale" => "es_CO",
+            "instrument"=> [
+                "token"=> [
+                    "token"=> $requestSession->token_collect_para_el_pago
+                ]
+            ]
+        ];
+        $url = "https://checkout-test.placetopay.ec/api/instrument/invalidate";
+        $response = Http::withHeaders([
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        ])->post($url, $data)->json();
+
+        $this->isResponseValid($response);
+
+        return $response;
+
+    }
     public function create($data)
     {
         $url = "https://checkout-test.placetopay.ec/api/session";
@@ -401,7 +521,6 @@ class PlaceToPayService
     ///End URLS
 
     // Cronologia de cobro
-
     public function createInstallments()
     {
         $requestsSubscription = PlaceToPayTransaction::where(['type' => 'requestSubscription', 'status' => 'APPROVED'])->get();
@@ -518,7 +637,7 @@ class PlaceToPayService
                         // ]
                     ];
                     $payment = [
-                        "reference" => 'Cuota-' . $nro_quote . '-' . $request['reference'],
+                        "reference" => $nro_quote . '_' . $request['reference'],
                         "description" => "Prueba pago de cuota subscripcion",
                         "amount" => [
                             "currency" => $request['currency'],
@@ -592,9 +711,7 @@ class PlaceToPayService
         // $sql = $query->toSql();
 
     }
-
     // END // Cronologia de cobro
-
 
     // //Objetos de ejemplo
     public function pasounocreatesession()
