@@ -318,11 +318,11 @@ class PlaceToPayController extends Controller
     {
         try {
 
-            $lastRequestSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . 'sadasd' . '%')->orderBy('created_at', 'desc')->first();
+            // $lastRequestSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . 'sadasd' . '%')->orderBy('created_at', 'desc')->first();
             //Actualizar Estado ed la session en DB
-            // $lastRequestSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $request['SO'] . '%')
-            //     ->orderBy('created_at', 'desc')
-            //     ->first();
+            $lastRequestSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $request['SO'] . '%')
+                ->orderBy('created_at', 'desc')
+                ->first();
             if($lastRequestSessionDB !== null){
                 $sessionByRequestId =  $this->placeTopayService->getByRequestId($lastRequestSessionDB->requestId);
                 if (isset($sessionByRequestId['status']['status'])) {
