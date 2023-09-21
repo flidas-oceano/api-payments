@@ -195,7 +195,6 @@ class PlaceToPayService
             }
         }
     }
-
     public function createRemainingInstallments($result,$requestsSubscription){
 
         // // crear cuotas
@@ -350,10 +349,6 @@ class PlaceToPayService
         return $mesSiguiente->fechaCobro;
     }
 
-    // 680002
-    // 2000339000617515006
-    // 1
-
     // $placeToPayService->getNameReferenceSubscription(1,680007,'2000339000617515006'); // Llama al método que deseas ejecutar
     // $placeToPayService->getNameReferenceSubscription(1,680002,'2000339000617515006'); // Llama al método que deseas ejecutar
     public function getNameReferenceSubscription($nroQuote,$requestIdSession,$contractId){
@@ -371,7 +366,6 @@ class PlaceToPayService
             return $nroQuote.'_'.$contractId.'_R_'.count($sessionsRejected);
         }
     }
-
     // $placeToPayService->getNameReferenceSession('2000339000617515006'); // Llama al método que deseas ejecutar
     public function getNameReferenceSession($contractId){
 
@@ -384,6 +378,45 @@ class PlaceToPayService
         if( count($requestsSessionByContractId) > 0){
             return $contractId.'_R_'.count($requestsSessionByContractId);
         }
+    }
+
+    public function isRejectedTokenTransaction($requestsTransaction){
+        $cardToken = $requestsTransaction->token_collect_para_el_pago;
+        $textoBuscado = 'CARD_REJECTED_';
+        return str_contains($cardToken, $textoBuscado);
+    }
+
+    public function isCancelledSession($so){
+
+        $requestsSessionByContractId = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $so . '%')->get();
+
+        $sessionSubscriptionGetById = $this->getByRequestId($requestsSessionByContractId['requestId']);
+        $status = $sessionSubscriptionGetById['status']['status'];
+
+        if($status == 'APPROVED'){
+            $requestsTransaction = PlaceToPayTransaction::where(
+                ['requestId' => $sessionSubscriptionGetById->requetId]
+            )->get()->first();
+
+            //En caso de transaccion APPROVED y suscripcion REJECTED
+            if(count($requestsTransaction->subscriptions) > 0){
+                $firstSubscription = $requestsTransaction->subscriptions->first();
+                if($firstSubscription->status === 'REJECTED'){
+                    if(!$this->isRejectedTokenTransaction($requestsTransaction)){
+                        $requestsTransaction->update([
+                            'token_collect_para_el_pago' => 'CARD_REJECTED_'.$requestsTransaction->token_collect_para_el_pago
+                        ]);
+                    }
+                    // return response()->json([
+                    //     "result" => 'La el primer pago fallo, se rechazo la tarjeta. Cree una nueva suscripcion e ingrese otra tarjeta.',
+                    // ], 400);
+                }
+            }
+        }
+
+        return [
+            'isCancelledSession' => false,
+        ];
     }
     // End //Utils
 
@@ -412,7 +445,6 @@ class PlaceToPayService
         return $response;
 
     }
-
     public function create($data)
     {
         $url = "https://checkout-test.placetopay.ec/api/session";
@@ -464,7 +496,6 @@ class PlaceToPayService
     ///End URLS
 
     // Cronologia de cobro
-
     public function createInstallments()
     {
         $requestsSubscription = PlaceToPayTransaction::where(['type' => 'requestSubscription', 'status' => 'APPROVED'])->get();
@@ -655,9 +686,7 @@ class PlaceToPayService
         // $sql = $query->toSql();
 
     }
-
     // END // Cronologia de cobro
-
 
     // //Objetos de ejemplo
     public function pasounocreatesession()

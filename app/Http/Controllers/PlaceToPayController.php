@@ -205,6 +205,11 @@ class PlaceToPayController extends Controller
 
                     if($statusPayment==='REJECTED'){
                         //borrar subscripcion y transaccion.
+                        if( !$this->placeTopayService->isRejectedTokenTransaction($requestsTransaction) ){
+                            $requestsTransaction->update([
+                                'token_collect_para_el_pago' => 'CARD_REJECTED_'.$requestsTransaction->token_collect_para_el_pago
+                            ]);
+                        }
                     }
 
                     return response()->json([
@@ -311,45 +316,49 @@ class PlaceToPayController extends Controller
     }
     public function createSessionSubscription(CreateSessionSubscriptionRequest $request)
     {
-        //comprador - el que recibe el curso
-        $buyer = [
-
-        ];
-        //pagador - el que paga
-        $payer = [
-            "name" => $request['payer']['name'],
-            "surname" => $request['payer']['surname'],
-            "email" => $request['payer']['email'],
-            "document" => $request['payer']['document'],
-            "documentType" => $request['payer']['documentType'],
-            "mobile" => $request['payer']['mobile'],
-            // "address" => [ //domicilio
-            //     // "country" => $request['country'],
-            //     // "state" => $request['state'],
-            //     // "city" => $request['city'],
-            //     // "postalCode" => $request['postalCode'],
-            //     "street" => $request['payer']['address']['street'],
-            //     // "phone" => $request['phone'],//+573214445566
-            // ]
-        ];
-        $subscription = [
-            "reference" => $this->placeTopayService->getNameReferenceSession($request['so']),
-            // "reference" => $request['so'],
-            "description" => "Prueba suscripcion contrato de OceanoMedicina"
-        ];
-        $data = [
-            "auth" => $this->placeTopayService->generateAuthentication(),
-            "locale" => "es_CO",
-            "payer" => $payer,
-            "subscription" => $subscription,
-            "expiration" => $this->placeTopayService->getDateExpiration(),
-            "returnUrl" => "https://dnetix.co/p2p/client",
-            "ipAddress" => $request->ip(),
-            // Usar la dirección IP del cliente
-            "userAgent" => $request->header('User-Agent')
-        ];
-
         try {
+
+            //Validar si hay registros con ese SO.
+            // if($this->placeTopayService->isCancelledSession($request['SO'])){
+            //     // crear
+            // }else{
+            //     //no crear
+            // }
+
+            //pagador - el que paga
+            $payer = [
+                "name" => $request['payer']['name'],
+                "surname" => $request['payer']['surname'],
+                "email" => $request['payer']['email'],
+                "document" => $request['payer']['document'],
+                "documentType" => $request['payer']['documentType'],
+                "mobile" => $request['payer']['mobile'],
+                // "address" => [ //domicilio
+                //     // "country" => $request['country'],
+                //     // "state" => $request['state'],
+                //     // "city" => $request['city'],
+                //     // "postalCode" => $request['postalCode'],
+                //     "street" => $request['payer']['address']['street'],
+                //     // "phone" => $request['phone'],//+573214445566
+                // ]
+            ];
+            $subscription = [
+                "reference" => $this->placeTopayService->getNameReferenceSession($request['so']),
+                // "reference" => $request['so'],
+                "description" => "Prueba suscripcion contrato de OceanoMedicina"
+            ];
+            $data = [
+                "auth" => $this->placeTopayService->generateAuthentication(),
+                "locale" => "es_CO",
+                "payer" => $payer,
+                "subscription" => $subscription,
+                "expiration" => $this->placeTopayService->getDateExpiration(),
+                "returnUrl" => "https://dnetix.co/p2p/client",
+                "ipAddress" => $request->ip(),
+                // Usar la dirección IP del cliente
+                "userAgent" => $request->header('User-Agent')
+            ];
+
             $result = $this->placeTopayService->create($data);
 
             if (isset($result['status']['status'])) {
@@ -360,16 +369,13 @@ class PlaceToPayController extends Controller
                     'date' => $result['status']['date'],
                     'requestId' => $result['requestId'],
                     'processUrl' => $this->placeTopayService->reduceUrl($result['processUrl']),
-
                     'total' => $request['payment']['total'],
                     'currency' => 'USD',
                     'quotes' => $request['payment']['quotes'],
                     'remaining_installments' => $request['payment']['remaining_installments'],
                     'first_installment' => ($request['payment']['first_installment'] ?? null),
-
                     // 'contact_id' => ,
                     // 'authorization' => ,
-
                     'reference' => $subscription['reference'],
                     'type' => "requestSubscription",
                     // 'token_collect_para_el_pago' => ,
