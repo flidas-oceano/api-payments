@@ -221,6 +221,8 @@ class PlaceToPayController extends Controller
 
                     return response()->json([
                         "result" => $this->message[$statusPayment],
+                        "statusPayment" => $statusPayment,
+
                     ], 400);
                 }
 
@@ -266,7 +268,7 @@ class PlaceToPayController extends Controller
                                 "updateRequestSession" => $updateRequestSession,
                                 "result" => $this->message[$statusPayment],
                                 "statusPayment" => $statusPayment,
-                            ],$status);
+                            ], $status);
                         }
                     }
                 }
