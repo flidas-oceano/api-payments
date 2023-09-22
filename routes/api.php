@@ -120,6 +120,7 @@ Route::middleware('api-api')->prefix("/contifico")->group(function () {
     //invoice
     Route::get('/invoice/{uuid}', [\App\Http\Controllers\Contifico\ContificoInvoiceController::class, 'getInvoice']);
     Route::post('/invoice', [\App\Http\Controllers\Contifico\ContificoInvoiceController::class, 'store']);
+    Route::post('/charge', [\App\Http\Controllers\Contifico\ContificoChargeController::class, 'store']);
 });
 
 Route::get("/mp/searchPaymentApprove/{so}", [\App\Http\Controllers\MercadoPagoPaymentController::class, 'searchPaymentApprove']);

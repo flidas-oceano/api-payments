@@ -12,7 +12,7 @@ class Responser
             $message = $decoded;
         }
         return response()->json([
-            "error" => $message." : ".$exception->getLine()
+            "error" => $message
         ], 400);
     }
 
