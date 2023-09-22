@@ -151,8 +151,10 @@ class PlaceToPayService
                     if(($subscriptionByRequestId['payment'][0]['status']['status'] ?? null) === 'APPROVED'){
                         // Actualizo el transactions, campo: installments_paid
                         PlaceToPayTransaction::find($requestsSubscription->id)->update(['installments_paid' => DB::raw('COALESCE(installments_paid, 0) + 1')]);
-
-
+                        $session = PlaceToPayTransaction::find($requestsSubscription->id); //
+                        if($session->paymentLinks()->first() !== null){
+                            $session->paymentLinks()->first()->update(['status' => 'Contrato Efectivo']);
+                        }
                     }
                     $newsubscription = [
                         'transactionId' => $requestsSubscription->id,
