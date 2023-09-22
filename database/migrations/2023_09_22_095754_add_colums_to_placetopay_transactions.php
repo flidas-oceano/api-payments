@@ -14,7 +14,8 @@ class AddColumsToPlacetopayTransactions extends Migration
     public function up()
     {
         Schema::table('placetopay_transactions', function (Blueprint $table) {
-            $table->string("paymentData")->nullable()->default(null);
+            $table->json('paymentData')->nullable()->default(null);
+
         });
     }
 
@@ -25,8 +26,8 @@ class AddColumsToPlacetopayTransactions extends Migration
      */
     public function down()
     {
-        Schema::table('paymentData', function (Blueprint $table) {
-            //
+        Schema::table('placetopay_transactions', function (Blueprint $table) {
+            $table->json('paymentData')->nullable()->default(null);
         });
     }
 }

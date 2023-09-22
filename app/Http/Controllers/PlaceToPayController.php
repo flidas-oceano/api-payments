@@ -371,7 +371,6 @@ class PlaceToPayController extends Controller
 
             // Convertir el arreglo $payer en formato JSON
 
-
             if (isset($result['status']['status'])) {
                 $placeToPayTransaction = PlaceToPayTransaction::create([
                     'status' => $result['status']['status'],
@@ -391,7 +390,7 @@ class PlaceToPayController extends Controller
                     'type' => "requestSubscription",
                     // 'token_collect_para_el_pago' => ,
                     'expiration_date' => $data['expiration'],
-                    'paymentData' => json_encode($payer),
+                    'paymentData' => $jsonData = json_encode($payer, JSON_UNESCAPED_SLASHES)
 
                 ]);
                 $getById = $this->placeTopayService->getByRequestId($result['requestId']);

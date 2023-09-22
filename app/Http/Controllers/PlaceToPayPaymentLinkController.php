@@ -149,6 +149,7 @@ class PlaceToPayPaymentLinkController extends Controller
             return response()->json([
                 "transactionByRequestId" => $transactionByRequestId,
                 "payment" => $paymentLink,
+                'session' => $$paymentLink->transaction,
                 "processURL" => $ptpTransaction->processUrl,
                 "type" => "paymentLink"
             ]);
@@ -161,11 +162,13 @@ class PlaceToPayPaymentLinkController extends Controller
     {
         try {
             $paymentLinkPTP = PlaceToPayPaymentLink::where('contract_entity_id', $saleId)->first();
-            $objetoStdClass = $this->placeToPayService->getByRequestId($paymentLinkPTP->transaction->requestId);
-            // $objetoStdClass = $placeToPayService->getByRequestId(677217);
-            // Convertir el objeto stdClass en un objeto PHP
-            $transaction = json_decode(json_encode($objetoStdClass), false);
-            return response()->json(["payer" => $transaction->request->payer, "checkout" => $paymentLinkPTP]);
+
+            // $objetoStdClass = $this->placeToPayService->getByRequestId($paymentLinkPTP->transaction->requestId);
+            // // $objetoStdClass = $placeToPayService->getByRequestId(677217);
+            // // Convertir el objeto stdClass en un objeto PHP
+            // $transaction = json_decode(json_encode($objetoStdClass), false);
+
+            return response()->json(["payer" => $paymentLinkPTP->transaction->paymentData, "checkout" => $paymentLinkPTP]);
         } catch (\Exception $e) {
             $err = [
                 'message' => $e->getMessage(),
