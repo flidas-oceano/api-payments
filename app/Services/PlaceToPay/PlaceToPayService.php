@@ -630,7 +630,13 @@ class PlaceToPayService
     public function payInstallments(){
         // Log::channel('placetopay')->info('Se ejecuta la regla de payInstallments.');
         // $subscriptions = PlaceToPaySubscription::where('status', '!=', 'APPROVED')->orWhereNull('status')->get();
+
+
+
         $subscriptions = PlaceToPaySubscription::where('status' , null)->get();
+
+        //Si tengo las cuotas al dia, puedo realizar el pago
+
 
         $today = Carbon::now();
         foreach ($subscriptions as $subscription) {
