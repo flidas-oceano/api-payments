@@ -378,34 +378,41 @@ class ZohoController extends Controller
     {
         try {
 
-            $subscription = PlaceToPaySubscription::where(['requestId' => $request['requestId']])->get()->first();
+            $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();
+            if($session == null){
+                return response()->json('No se encontro la session en la DB.'. 500);
+            }
 
-            $requestsSubscription = PlaceToPayTransaction::where(['id' => $subscription->transaction->id])->get()->first();
-            $resultTransaction = $this->placeToPayService->getByRequestId($requestsSubscription->requestId);
-            $resultsubscription = $this->placeToPayService->getByRequestId($request['requestId']);
+            $subscription = $session->subscriptions()->where(['nro_quote' => 1])->get()->first();
+            if($subscription == null){
+                return response()->json('No se encontraron subcripciones de cuota 1 pagadas en la DB.'. 500);
+            }
+
+            $resultTransaction = $this->placeToPayService->getByRequestId($session->requestId);
+            $resultSubscription = $this->placeToPayService->getByRequestId($subscription->requestId);
 
             $dataUpdate = [
-                'Email' => $resultsubscription['request']['payer']['email'],
+                'Email' => $resultSubscription['request']['payer']['email'],
                 //si tiene que ir el email del comprador hay que crear el payment con buyer aparte del payer
-                'Anticipo' => $requestsSubscription->first_installment,
-                'Saldo' => $resultsubscription['request']['payment']['amount']['total'],
-                'Cantidad' => $requestsSubscription->quotes,
+                'Anticipo' => $session->first_installment,
+                'Saldo' => $resultSubscription['request']['payment']['amount']['total'],
+                'Cantidad' => $session->quotes,
                 //     //Nro de cuotas
-                'Monto_de_cuotas_restantes' => $requestsSubscription->remaining_installments,
+                'Monto_de_cuotas_restantes' => $session->remaining_installments,
                 //     //Costo de cada cuota
-                'Cuotas_restantes_sin_anticipo' => $requestsSubscription->isAdvancedSubscription() ? $requestsSubscription->quotes - 1 : null,
-                'DNI' => $resultsubscription['request']['payer']['document'],
+                'Cuotas_restantes_sin_anticipo' => $session->isAdvancedSubscription() ? $session->quotes - 1 : null,
+                'DNI' => $resultSubscription['request']['payer']['document'],
                 'Fecha_de_Vto' => date('Y-m-d'),
                 'Status' => 'Contrato Efectivo',
                 'Modalidad_de_pago_del_Anticipo' => 'Placetopay',
                 'Medio_de_Pago' => 'Placetopay',
-                'Es_Suscri' => $requestsSubscription->isSubscription(),
-                'Suscripcion_con_Parcialidad' => $requestsSubscription->isAdvancedSubscription(),
-                'L_nea_nica_6' => $resultsubscription['request']['payer']['name'] . " " . $resultsubscription['request']['payer']['surname'],
+                'Es_Suscri' => $session->isSubscription(),
+                'Suscripcion_con_Parcialidad' => $session->isAdvancedSubscription(),
+                'L_nea_nica_6' => $resultSubscription['request']['payer']['name'] . " " . $resultSubscription['request']['payer']['surname'],
                 // 'Billing_Street' => $result['request']['payer']['address']['street'],
                 'Billing_Street' => $request['street'],
-                'L_nea_nica_3' => $resultsubscription['request']['payer']['document'],
-                'Tel_fono_Facturacion' => $resultsubscription['request']['payer']['mobile'],
+                'L_nea_nica_3' => $resultSubscription['request']['payer']['document'],
+                'Tel_fono_Facturacion' => $resultSubscription['request']['payer']['mobile'],
                 'Discount' => abs($request['adjustment'])
             ];
 
@@ -415,6 +422,8 @@ class ZohoController extends Controller
                 return response()->json($updateContract, 500);
             else
                 return response()->json($updateContract);
+
+
 
         } catch (\Exception $e) {
             $err = [
