@@ -24,6 +24,13 @@ class PlaceToPayController extends Controller
     public $placeTopayService = null;
     public $zohoController = null;
 
+    public $status= [
+        'FAILED' => 400,
+        'APPROVED' => 200,
+        'REJECTED' => 400,
+        'PENDING' => 400,
+        'DESCONOCIDO' => 400,
+    ];
     public $message = [
         'FAILED' => 'Hubo un error con el pago de la sesion, cree otra.',
         'APPROVED' => 'Ya se ha realizado el pago de la primera cuota.',
@@ -252,11 +259,14 @@ class PlaceToPayController extends Controller
                                 $statusPayment =  $result['response']['payment'][0]['status']['status'] ?? 'DESCONOCIDO' ;
 
                             $this->message['APPROVED'] = 'Se ha realizado el pago con exito.';
+
+                            $status = $this->status[$statusPayment] ?? 200;
+
                             return response()->json([
                                 "updateRequestSession" => $updateRequestSession,
                                 "result" => $this->message[$statusPayment],
                                 "statusPayment" => $statusPayment,
-                            ]);
+                            ],$status);
                         }
                     }
                 }
@@ -268,11 +278,14 @@ class PlaceToPayController extends Controller
                 $message = $message . '. Cree una nueva session.';
 
             if ($status !== "APPROVED") {
+
+                $status = $this->status[$statusPayment] ?? 200;
+
                 return response()->json([
                     "result" => $message,
                     "statusSession" => $status,
                     "sessionPTP" => $sessionSubscription,
-                ], 400);
+                ], $status);
             }
         } catch (\Exception $e) {
             $err = [
