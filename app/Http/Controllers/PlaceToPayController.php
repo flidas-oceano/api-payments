@@ -41,6 +41,28 @@ class PlaceToPayController extends Controller
         $this->login_su = env("REACT_APP_PTP_LOGIN_SU");
         $this->secret_su = env("REACT_APP_PTP_SECRECT_SU");
     }
+    public function revokeTokenSession($requestIdSession){
+        try {
+
+            return response()->json([
+                'result' => $this->placeTopayService->revokeTokenSession($requestIdSession)
+            ]);
+        } catch (\Exception $e) {
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString()
+            ];
+
+            Log::error("Error en pruebaregladepago: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ]);
+        }
+    }
+
     public function pruebaregladepago()
     {
         try {
@@ -61,6 +83,7 @@ class PlaceToPayController extends Controller
             ]);
         }
     }
+
     public function billSubscription(Request $request, $requestId)
     {
         try {
@@ -169,7 +192,6 @@ class PlaceToPayController extends Controller
                 if( isset( $sessionSubscription['payment'][0]['status']['status'] ) )
                     $statusPayment =  $sessionSubscription['payment'][0]['status']['status'] ?? 'DESCONOCIDO' ;
 
-
                 if($statusPayment!=='APPROVED'){
                     //Actualizar estado
                     PlaceToPaySubscription::where(['id' => $firstSubscription->id ])->update([
@@ -183,6 +205,11 @@ class PlaceToPayController extends Controller
 
                     if($statusPayment==='REJECTED'){
                         //borrar subscripcion y transaccion.
+                        if( !$this->placeTopayService->isRejectedTokenTransaction($requestsTransaction) ){
+                            $requestsTransaction->update([
+                                'token_collect_para_el_pago' => 'CARD_REJECTED_'.$requestsTransaction->token_collect_para_el_pago
+                            ]);
+                        }
                     }
 
                     return response()->json([
@@ -204,6 +231,7 @@ class PlaceToPayController extends Controller
                     'requestId' => $sessionSubscription["requestId"],
                 ]
             );
+
             if ($sessionSubscription['status']['status'] === "APPROVED") {
                 if (isset($sessionSubscription['subscription'])) {
                     foreach ($sessionSubscription['subscription']['instrument'] as $instrument) {
@@ -233,6 +261,19 @@ class PlaceToPayController extends Controller
                     }
                 }
             }
+
+            $status = $sessionSubscription['status']['status'] ?? 'DESCONOCIDO';
+            $message = $sessionSubscription['status']['message'] ?? 'DESCONOCIDO';
+            if($status === 'REJECTED')
+                $message = $message . '. Cree una nueva session.';
+
+            if ($status !== "APPROVED") {
+                return response()->json([
+                    "result" => $message,
+                    "statusSession" => $status,
+                    "sessionPTP" => $sessionSubscription,
+                ], 400);
+            }
         } catch (\Exception $e) {
             $err = [
                 'message' => $e->getMessage(),
@@ -242,7 +283,7 @@ class PlaceToPayController extends Controller
                 // 'trace' => $e->getTraceAsString()
             ];
 
-            Log::error("Error en savePaymentSuscription: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            Log::error("Error en savePaymentSubscription: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
             return response()->json([
                 $err
             ]);
@@ -275,44 +316,57 @@ class PlaceToPayController extends Controller
     }
     public function createSessionSubscription(CreateSessionSubscriptionRequest $request)
     {
-        //comprador - el que recibe el curso
-        $buyer = [
-
-        ];
-        //pagador - el que paga
-        $payer = [
-            "name" => $request['payer']['name'],
-            "surname" => $request['payer']['surname'],
-            "email" => $request['payer']['email'],
-            "document" => $request['payer']['document'],
-            "documentType" => $request['payer']['documentType'],
-            "mobile" => $request['payer']['mobile'],
-            // "address" => [ //domicilio
-            //     // "country" => $request['country'],
-            //     // "state" => $request['state'],
-            //     // "city" => $request['city'],
-            //     // "postalCode" => $request['postalCode'],
-            //     "street" => $request['payer']['address']['street'],
-            //     // "phone" => $request['phone'],//+573214445566
-            // ]
-        ];
-        $subscription = [
-            "reference" => $request['so'],
-            "description" => "Prueba suscripcion contrato de OceanoMedicina"
-        ];
-        $data = [
-            "auth" => $this->placeTopayService->generateAuthentication(),
-            "locale" => "es_CO",
-            "payer" => $payer,
-            "subscription" => $subscription,
-            "expiration" => $this->placeTopayService->getDateExpiration(),
-            "returnUrl" => "https://dnetix.co/p2p/client",
-            "ipAddress" => $request->ip(),
-            // Usar la dirección IP del cliente
-            "userAgent" => $request->header('User-Agent')
-        ];
-
         try {
+
+            //Actualizar Estado ed la session en DB
+            $this->placeTopayService->updateStatusSessionSubscription($request['SO']);
+
+            $lastRequestSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $request['SO'] . '%')
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            //Validar si hay registros con ese SO.
+            // if($this->placeTopayService->canCreateSession($request['SO'])['canCreateSession']){
+            //     // crear
+            // }else{
+            //     //no crear
+            // }
+
+            //Crear nueva Session
+            //pagador - el que paga
+            $payer = [
+                "name" => $request['payer']['name'],
+                "surname" => $request['payer']['surname'],
+                "email" => $request['payer']['email'],
+                "document" => $request['payer']['document'],
+                "documentType" => $request['payer']['documentType'],
+                "mobile" => $request['payer']['mobile'],
+                // "address" => [ //domicilio
+                //     // "country" => $request['country'],
+                //     // "state" => $request['state'],
+                //     // "city" => $request['city'],
+                //     // "postalCode" => $request['postalCode'],
+                //     "street" => $request['payer']['address']['street'],
+                //     // "phone" => $request['phone'],//+573214445566
+                // ]
+            ];
+            $subscription = [
+                "reference" => $this->placeTopayService->getNameReferenceSession($request['so']),
+                // "reference" => $request['so'],
+                "description" => "Prueba suscripcion contrato de OceanoMedicina"
+            ];
+            $data = [
+                "auth" => $this->placeTopayService->generateAuthentication(),
+                "locale" => "es_CO",
+                "payer" => $payer,
+                "subscription" => $subscription,
+                "expiration" => $this->placeTopayService->getDateExpiration(),
+                "returnUrl" => "https://dnetix.co/p2p/client",
+                "ipAddress" => $request->ip(),
+                // Usar la dirección IP del cliente
+                "userAgent" => $request->header('User-Agent')
+            ];
+
             $result = $this->placeTopayService->create($data);
 
             if (isset($result['status']['status'])) {
@@ -323,22 +377,22 @@ class PlaceToPayController extends Controller
                     'date' => $result['status']['date'],
                     'requestId' => $result['requestId'],
                     'processUrl' => $this->placeTopayService->reduceUrl($result['processUrl']),
-
                     'total' => $request['payment']['total'],
                     'currency' => 'USD',
                     'quotes' => $request['payment']['quotes'],
                     'remaining_installments' => $request['payment']['remaining_installments'],
                     'first_installment' => ($request['payment']['first_installment'] ?? null),
-
                     // 'contact_id' => ,
                     // 'authorization' => ,
-
-                    'reference' => $request['so'],
+                    'reference' => $subscription['reference'],
                     'type' => "requestSubscription",
                     // 'token_collect_para_el_pago' => ,
                     'expiration_date' => $data['expiration'],
                 ]);
                 $getById = $this->placeTopayService->getByRequestId($result['requestId']);
+                if ($result['status']['status'] === 'OK') {
+                    $this->placeTopayService->updateStatusSessionSubscription($request['SO']);
+                }
             }
 
             // Aquí puedes procesar la respuesta como desees
@@ -402,7 +456,9 @@ class PlaceToPayController extends Controller
                 ]
             ];
             $payment = [
-                "reference" => $request['so'],
+
+                "reference" => $this->placeTopayService->getNameReferenceSession($request['so']),
+                // "reference" => $request['so'],
                 "description" => "Prueba contrato de OceanoMedicina",
                 "amount" => [
                     "currency" => "USD",
@@ -613,7 +669,5 @@ class PlaceToPayController extends Controller
             ]);
         }
     }
-
-
 
 }
