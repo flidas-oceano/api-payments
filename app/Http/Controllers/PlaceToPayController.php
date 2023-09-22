@@ -318,27 +318,15 @@ class PlaceToPayController extends Controller
     {
         try {
 
-            // $lastRequestSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . 'sadasd' . '%')->orderBy('created_at', 'desc')->first();
             //Actualizar Estado ed la session en DB
+            $this->placeTopayService->updateStatusSessionSubscription($request['SO']);
+
             $lastRequestSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $request['SO'] . '%')
                 ->orderBy('created_at', 'desc')
                 ->first();
-            if($lastRequestSessionDB !== null){
-                $sessionByRequestId =  $this->placeTopayService->getByRequestId($lastRequestSessionDB->requestId);
-                if (isset($sessionByRequestId['status']['status'])) {
-                    $placeToPayTransaction = PlaceToPayTransaction::where([ 'requestId' => $sessionByRequestId['requestId'] ])
-                        ->update([
-                            'status' => $sessionByRequestId['status']['status'],
-                            'reason' => $sessionByRequestId['status']['reason'],
-                            'message' => $sessionByRequestId['status']['message'],
-                            'date' => $sessionByRequestId['status']['date'],
-                        ]);
-                }
-            }
-
 
             //Validar si hay registros con ese SO.
-            // if($this->placeTopayService->isCancelledSession($request['SO'])){
+            // if($this->placeTopayService->canCreateSession($request['SO'])['canCreateSession']){
             //     // crear
             // }else{
             //     //no crear
@@ -402,6 +390,9 @@ class PlaceToPayController extends Controller
                     'expiration_date' => $data['expiration'],
                 ]);
                 $getById = $this->placeTopayService->getByRequestId($result['requestId']);
+                if ($result['status']['status'] === 'OK') {
+                    $this->placeTopayService->updateStatusSessionSubscription($request['SO']);
+                }
             }
 
             // Aquí puedes procesar la respuesta como desees

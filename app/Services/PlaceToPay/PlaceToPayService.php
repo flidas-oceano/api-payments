@@ -187,12 +187,12 @@ class PlaceToPayService
                 $result = $this->pagarCuotaSuscripcion($requestsSubscription, 1);
 
                 if (($result['response']['status']['status']??null) === 'REJECTED') {
-                        if(!$this->isRejectedTokenTransaction($requestsSubscription)){
-                            // Marca como invalido el token
-                            $requestsSubscription->update([
-                                'token_collect_para_el_pago' => 'CARD_REJECTED_'.$requestsSubscription->token_collect_para_el_pago
-                            ]);
-                        }
+                    if( !$this->isRejectedTokenTransaction($requestsSubscription) ){
+                        // Marca como invalido el token
+                        $requestsSubscription->update([
+                            'token_collect_para_el_pago' => 'CARD_REJECTED_'.$requestsSubscription->token_collect_para_el_pago
+                        ]);
+                    }
                 }
                 // creas todas las cuotas restantes, si hay
                 if (($result['response']['status']['status']??null) === 'APPROVED') {
@@ -229,6 +229,24 @@ class PlaceToPayService
                     ), 'Y-m-d H:i:s'),
                     // 'type' => 'subscription',
                 ]);
+            }
+        }
+    }
+    public function updateStatusSessionSubscription($SO){
+        // $lastRequestSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . 'sadasd' . '%')->orderBy('created_at', 'desc')->first();
+        $lastRequestSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $SO . '%')
+                ->orderBy('created_at', 'desc')
+                ->first();
+        if($lastRequestSessionDB !== null){
+            $sessionByRequestId =  $this->getByRequestId($lastRequestSessionDB->requestId);
+            if (isset($sessionByRequestId['status']['status'])) {
+                $placeToPayTransaction = PlaceToPayTransaction::where([ 'requestId' => $sessionByRequestId['requestId'] ])
+                    ->update([
+                        'status' => $sessionByRequestId['status']['status'],
+                        'reason' => $sessionByRequestId['status']['reason'],
+                        'message' => $sessionByRequestId['status']['message'],
+                        'date' => $sessionByRequestId['status']['date'],
+                    ]);
             }
         }
     }
@@ -394,53 +412,86 @@ class PlaceToPayService
         return str_contains($cardToken, $textoBuscado);
     }
 
-    public function isCancelledSession($so){
+    public function canCreateSession($SO){//Se puede crear una nueva session ?
 
         // $placeToPayService->getNameReferenceSubscription(1,680007,'2000339000617515006');
-        // $requestsSessionByContractId = PlaceToPayTransaction::where('reference', 'LIKE', '%' . '2000339000617515005' . '%')->get();
-        $requestsSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $so . '%')->get();
+        // $requestsSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . '2000339000617515005' . '%')->get();
+        // $requestsSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $SO . '%')->get();
 
+        // $lastRequestSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $SO . '%')->orderBy('created_at', 'desc')->first();
 
-        //VER SI SI TIENE TRANSACCIONES CANCELADAS.
-        foreach($requestsSessionDB as $sessionDB){
-            if($sessionDB->status === 'REJECTED'){
+        // $lastRequestSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . '2000339000617515006' . '%')->orderBy('created_at', 'desc')->first();
+        $lastRequestSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $SO . '%')
+                ->orderBy('created_at', 'desc')
+                ->first();
 
+        if($lastRequestSessionDB !== null){
+            //Tengo registros con ese SO
+
+            //VER SI TIENE EN PENDING LA SESSION ANTERIOR.
+            if($lastRequestSessionDB->status === 'PENDING'){
+                return [
+                    'canCreateSession' => false,
+                ];
             }
-        }
-        if(false){ // si todas estan canceladas
-            return [
-                'isCancelledSession' => false,
-            ];
-        }
 
+            //VER SI TIENE EN PENDIENTE EL PAGO LA SESSION ANTERIOR.
+            if($lastRequestSessionDB->status === 'APPROVED'){
+                $subscription = $lastRequestSessionDB->subscriptions()->where(['nro_quote' => 1])->orderBy('created_at', 'desc')->get()->first();
+                if($subscription->status == 'PENDING'){
+                    return [
+                        'canCreateSession' => false,
+                    ];
+                }
 
-
-        $sessionSubscriptionGetById = $this->getByRequestId($requestsSessionDB['requestId']);
-        $status = $sessionSubscriptionGetById['status']['status'];
-
-        if($status == 'APPROVED'){
-            $requestsTransaction = PlaceToPayTransaction::where(
-                ['requestId' => $sessionSubscriptionGetById->requetId]
-            )->get()->first();
-
-            //En caso de transaccion APPROVED y suscripcion REJECTED
-            if(count($requestsTransaction->subscriptions) > 0){
-                $firstSubscription = $requestsTransaction->subscriptions->first();
-                if($firstSubscription->status === 'REJECTED'){
-                    if(!$this->isRejectedTokenTransaction($requestsTransaction)){
-                        $requestsTransaction->update([
-                            'token_collect_para_el_pago' => 'CARD_REJECTED_'.$requestsTransaction->token_collect_para_el_pago
-                        ]);
-                    }
-                    // return response()->json([
-                    //     "result" => 'La el primer pago fallo, se rechazo la tarjeta. Cree una nueva suscripcion e ingrese otra tarjeta.',
-                    // ], 400);
+                //SI LA PRIMER CUOTA ESTA PAGADA EXITOSAMENTE NO CREAR UNA NUEVA SESSION.
+                if($subscription->status == 'APPROVED'){
+                    return [
+                        'canCreateSession' => false,
+                    ];
                 }
             }
+
+            //VER SI TIENE EL CARD TOKEN REJECTED.
+            if($lastRequestSessionDB->status === 'APPROVED'){
+                $subscription = $lastRequestSessionDB->subscriptions()->where(['nro_quote' => 1])->orderBy('created_at', 'desc')->get()->first();
+                if($subscription->status == 'REJECTED'){
+                    if( !$this->isRejectedTokenTransaction($lastRequestSessionDB) ){
+                        return [
+                            'canCreateSession' => false,
+                        ];
+                    }
+                }
+
+            }
+
+            // $sessionSubscriptionGetById = $this->getByRequestId($requestsSessionDB['requestId']);
+            // $status = $sessionSubscriptionGetById['status']['status'];
+
+            // if($status == 'APPROVED'){
+            //     $requestsTransaction = PlaceToPayTransaction::where(
+            //         ['requestId' => $sessionSubscriptionGetById->requetId]
+            //     )->get()->first();
+
+            //     //En caso de transaccion APPROVED y suscripcion REJECTED
+            //     if(count($requestsTransaction->subscriptions) > 0){
+            //         $firstSubscription = $requestsTransaction->subscriptions->first();
+            //         if($firstSubscription->status === 'REJECTED'){
+            //             if(!$this->isRejectedTokenTransaction($requestsTransaction)){
+            //                 $requestsTransaction->update([
+            //                     'token_collect_para_el_pago' => 'CARD_REJECTED_'.$requestsTransaction->token_collect_para_el_pago
+            //                 ]);
+            //             }
+            //             // return response()->json([
+            //             //     "result" => 'La el primer pago fallo, se rechazo la tarjeta. Cree una nueva suscripcion e ingrese otra tarjeta.',
+            //             // ], 400);
+            //         }
+            //     }
+            // }
         }
 
         return [
-            'isCancelledSession' => false,
+            'canCreateSession' => true,
         ];
     }
     // End //Utils
