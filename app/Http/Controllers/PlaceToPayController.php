@@ -341,14 +341,14 @@ class PlaceToPayController extends Controller
                 "document" => $request['payer']['document'],
                 "documentType" => $request['payer']['documentType'],
                 "mobile" => $request['payer']['mobile'],
-                // "address" => [ //domicilio
-                //     // "country" => $request['country'],
+                "address" => [ //domicilio
+                    "country" => $request['country'],
                 //     // "state" => $request['state'],
                 //     // "city" => $request['city'],
                 //     // "postalCode" => $request['postalCode'],
-                //     "street" => $request['payer']['address']['street'],
+                    "street" => $request['payer']['address']['street'],
                 //     // "phone" => $request['phone'],//+573214445566
-                // ]
+                ]
             ];
             $subscription = [
                 "reference" => $this->placeTopayService->getNameReferenceSession($request['so']),
@@ -369,6 +369,9 @@ class PlaceToPayController extends Controller
 
             $result = $this->placeTopayService->create($data);
 
+            // Convertir el arreglo $payer en formato JSON
+
+
             if (isset($result['status']['status'])) {
                 $placeToPayTransaction = PlaceToPayTransaction::create([
                     'status' => $result['status']['status'],
@@ -388,6 +391,8 @@ class PlaceToPayController extends Controller
                     'type' => "requestSubscription",
                     // 'token_collect_para_el_pago' => ,
                     'expiration_date' => $data['expiration'],
+                    'paymentData' => json_encode($payer),
+
                 ]);
                 $getById = $this->placeTopayService->getByRequestId($result['requestId']);
                 if ($result['status']['status'] === 'OK') {
