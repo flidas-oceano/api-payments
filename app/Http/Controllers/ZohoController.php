@@ -244,6 +244,44 @@ class ZohoController extends Controller
 
         return ($answer);
     }
+    //actualiza un record, le pasas el id separado
+    public function updateRecordNewVersion($type, $data, $id, $workflow = true)
+    {
+        $answer = array();
+
+        $answer['result'] = '';
+        $answer['id'] = '';
+        // $answer['detail'] = '';
+        $answer['detail'] = 'error';
+
+        try {
+            $zcrmRecordIns = ZCRMRecord::getInstance($type, $id);
+
+            foreach ($data as $k => $v)
+                $zcrmRecordIns->setFieldValue($k, $v);
+
+            //workflow?
+            if ($workflow)
+                $apiResponse = $zcrmRecordIns->update();
+            else
+                $apiResponse = $zcrmRecordIns->update(array());
+
+            if ($apiResponse->getCode() == 'SUCCESS') {
+                $answer['result'] = 'Se actualizo la entidad.';
+                $answer['id'] = $id;
+                $answer['detail'] = 'ok';
+            }
+        } catch (ZCRMException $e) {
+            Log::error($e);
+
+            if (!empty($e->getExceptionDetails()))
+                $answer['result'] = $e->getExceptionDetails();
+            else
+                $answer['result'] = $e->getMessage();
+        }
+
+        return ($answer);
+    }
 
     public function updateZohoStripe(UpdateContractZohoRequest $request)
     {
@@ -416,7 +454,7 @@ class ZohoController extends Controller
                 'Discount' => abs($request['adjustment'])
             ];
 
-            $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
+            $updateContract = $this->updateRecordNewVersion('Sales_Orders', $dataUpdate, $request->contractId, true);
 
             if ($updateContract['result'] == 'error')
                 return response()->json($updateContract, 500);
