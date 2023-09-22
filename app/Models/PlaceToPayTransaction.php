@@ -34,6 +34,7 @@ class PlaceToPayTransaction extends Model
         'first_installment',
         'quotes',
         'installments_paid',
+        'paymentData',
 
     ];
     private static $formAttributes = [
@@ -56,6 +57,7 @@ class PlaceToPayTransaction extends Model
         'first_installment',
         'quotes',
         'installments_paid',
+        'paymentData',
     ];
     function isSubscription() {
         return ($this->type === 'requestSubscription') ? true: false;
