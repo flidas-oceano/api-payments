@@ -51,7 +51,6 @@ class PlaceToPayService
         $requestSubscriptionById = $this->getByRequestId($request['requestId']);
 
         $transaccion = PlaceToPayTransaction::find($request->id);
-        // $transaccion = PlaceToPayTransaction::find(41);
 
         // pagar primer cuota de subscripcion normal, no anticipo
         $payer = [
@@ -99,7 +98,7 @@ class PlaceToPayService
             // "ipAddress" => $request->ip(), // Usar la dirección IP del cliente
             // "userAgent" => $request->header('User-Agent')
         ];
-        $response = $this->billSubscription($data);
+        $response = $this->billSubscription($data, $cron = false);
         if(($response['payment'][0]['status']['status'] ?? null) === 'APPROVED'){
             // Actualizo el transactions, campo: installments_paid
             PlaceToPayTransaction::find($request->id)->update(['installments_paid' => DB::raw('COALESCE(installments_paid, 0) + 1')]);
@@ -639,8 +638,6 @@ class PlaceToPayService
         // Log::channel('placetopay')->info('Se ejecuta la regla de payInstallments.');
         // $subscriptions = PlaceToPaySubscription::where('status', '!=', 'APPROVED')->orWhereNull('status')->get();
 
-
-
         $subscriptions = PlaceToPaySubscription::where('status' , null)->get();
 
         //Si tengo las cuotas al dia, puedo realizar el pago
@@ -775,6 +772,97 @@ class PlaceToPayService
         // $query = PlaceToPaySubscription::where('status', '!=', 'APPROVED');
         // $sql = $query->toSql();
 
+    }
+
+    public function payIndividualPayment($subscriptionToPay)
+    {
+        $session = PlaceToPayTransaction::find($subscriptionToPay->transaction->id);
+        $paymentData = json_decode($session->paymentData);
+        $payment = [
+            "reference" => $this->getNameReferenceSubscription($subscriptionToPay->nro_quote,$session->requestId,$session->reference),
+            "description" => "",
+            "amount" => [
+                "currency" => $subscriptionToPay->currency,
+                "total" => $subscriptionToPay->total
+            ]
+        ];
+        $data = [
+            "auth" => $this->generateAuthentication(),
+            "locale" => "es_CO",
+            "payer" => $paymentData,
+            "payment" => $payment,
+            "instrument" => [
+                "token" => [
+                    "token" => $session->token_collect_para_el_pago
+                ]
+            ],
+            "expiration" => $this->getDateExpiration(),
+            "returnUrl" => "https://dnetix.co/p2p/client",
+        ];
+        $response = $this->billSubscription($data, $cron = true);
+        if(($response['payment'][0]['status']['status'] ?? null) === 'APPROVED'){
+            // Actualizo el transactions, campo: installments_paid
+            PlaceToPayTransaction::find($session->id)->update(['installments_paid' => DB::raw('COALESCE(installments_paid, 0) + 1')]);
+        }
+        PlaceToPaySubscription::find($subscriptionToPay->id)->update([
+            'status' =>         $response['status']['status'],
+            'message' =>        $response['status']['message'],
+            'reason' =>         $response['status']['reason'],
+            'date' =>           $response['status']['date'],
+            'reference' =>      $response['payment'][0]['reference'] ?? null,
+            'authorization' =>  $response['payment'][0]['authorization'] ?? null, //TODO: siempre lo veo como : 999999
+            'requestId' =>      $response['requestId'],
+
+            'currency' =>       $payment['amount']['currency'],
+            'total' =>          $payment['amount']['total'],
+            // 'type' => , //TODO: me parece que es mejor borrarlo de la tabla. O usarla para diferenciar: subscription, advancedInstallment
+        ]);
+        $updateSubscription = PlaceToPaySubscription::find($subscriptionToPay->id);
+
+        return [
+            "updateSubscription" => $updateSubscription,
+            "response" => $response,
+            "data" => $data,
+        ];
+    }
+    //Cobros que se realizan a tiempo, sin interrupciones.
+    public function stageOne(){
+
+        // $d = Carbon\Carbon::create(2023, 9, 22);$date = $d->copy()->addMonth();
+
+        $today = Carbon::now()->startOfDay();
+        $date = $today->copy()->addMonth();
+
+        //Tomar las Cuotas de hoy, segun un criterio:
+        $subscriptionsToPay = PlaceToPaySubscription::whereDate('date_to_pay', '=', $date)
+            ->where(['status'=> null])
+            ->get();
+
+        foreach($subscriptionsToPay as $subscriptionToPay){
+            $subsSession = $subscriptionToPay->transaction->subscriptions;
+
+            $pay = false;//Bandera para saber si tengo que pagar
+            foreach($subsSession as $subsc){
+                //Explicacion: Si no tiene las cuotas anteriores APPROVED NO SE PAGA
+
+                if($subsc->date_to_pay < $date){//Es una cuota anterior a mi fecha de cobro ?
+                    if($subsc->status === 'APPROVED'){
+                        $pay = true;
+                        continue;
+                    }else{
+                        $pay = false;
+                        break;
+                    }
+                }else{//es poterior a mi fecha de cobro
+                    break;
+                }
+            }
+
+            if($pay){
+                //Pagar
+                $result = $this->payIndividualPayment($subsc);
+            }
+        }
     }
     // END // Cronologia de cobro
 
