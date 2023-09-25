@@ -385,8 +385,6 @@ class PlaceToPayController extends Controller
 
             $result = $this->placeTopayService->create($data);
 
-            // Convertir el arreglo $payer en formato JSON
-
             if (isset($result['status']['status'])) {
                 $placeToPayTransaction = PlaceToPayTransaction::create([
                     'status' => $result['status']['status'],
@@ -415,12 +413,8 @@ class PlaceToPayController extends Controller
                 }
             }
 
-            // Aquí puedes procesar la respuesta como desees
-            // Por ejemplo, devolverla como una respuesta JSON
             return response()->json([$result, $getById]);
         } catch (\Exception $e) {
-            // Manejo de errores si ocurre alguno durante la solicitud
-
             $err = [
                 'message' => $e->getMessage(),
                 'exception' => get_class($e),
