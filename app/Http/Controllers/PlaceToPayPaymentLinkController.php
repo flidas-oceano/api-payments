@@ -112,6 +112,17 @@ class PlaceToPayPaymentLinkController extends Controller
         }
     }
 
+    public function notificationsUpdate(Request $request){
+
+        $sessions = PlaceToPayTransaction::where([ 'requestId' => $request['requestId'] ])->get()->first();
+
+        return response()->json([
+            'requestPTP' => $request,
+            'sessions' => $sessions
+        ]);
+
+    }
+
     public function create(CreateGenerateLinkRequest $request)
     {
 
