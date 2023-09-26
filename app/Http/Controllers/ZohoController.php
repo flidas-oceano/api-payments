@@ -99,7 +99,6 @@ class ZohoController extends Controller
         return ($answer);
     }
 
-
     public function getContractBySO(Request $request, $so)
     {
         $answer = 'error';
@@ -426,8 +425,8 @@ class ZohoController extends Controller
                 return response()->json('No se encontraron subcripciones de cuota 1 pagadas en la DB.'. 500);
             }
 
-            $resultTransaction = $this->placeToPayService->getByRequestId($session->requestId);
-            $resultSubscription = $this->placeToPayService->getByRequestId($subscription->requestId);
+            $resultTransaction = $this->placeToPayService->getByRequestId($session->requestId, $cron = false, $isSubscription = true);
+            $resultSubscription = $this->placeToPayService->getByRequestId($subscription->requestId, $cron = false, $isSubscription = true);
 
             $dataUpdate = [
                 'Email' => $resultSubscription['request']['payer']['email'],
@@ -777,7 +776,6 @@ class ZohoController extends Controller
         return ($answer);
     }
 
-
     public function createRecordQuote($data)
     {
         $answer = array();
@@ -981,7 +979,6 @@ class ZohoController extends Controller
 
         return ($answer);
     }
-
 
     private function processLeadData($data)
     {

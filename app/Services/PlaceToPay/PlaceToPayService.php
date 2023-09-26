@@ -12,8 +12,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use stdClass;
 
-
-    // use App\Services\PlaceToPay\PlaceToPayService; $placeToPayService = new PlaceToPayService();
+// use App\Services\PlaceToPay\PlaceToPayService; $placeToPayService = new PlaceToPayService();
 class PlaceToPayService
 {
     private $login_pu;
@@ -35,10 +34,8 @@ class PlaceToPayService
         // Sumar 30 minutos a la fecha actual
         $currentDateTime->add(new \DateInterval('PT30M'));
         // Formatear la fecha para que coincida con el formato ISO 8601
-        $seed = $currentDateTime->format('Y-m-d\TH:i:sP');
         $expirationDate = $currentDateTime->format('Y-m-d\TH:i:sP');
 
-        return $seed;
         return $expirationDate;
     }
     public function pagarCuotaSuscripcionAnticipo()
@@ -50,7 +47,7 @@ class PlaceToPayService
     }
     public function pagarCuotaSuscripcion($request, $nro_quote)
     {
-        $requestSubscriptionById = $this->getByRequestId($request['requestId']);
+        $requestSubscriptionById = $this->getByRequestId($request['requestId'], $cron = false,$isSubscription = true);
 
         $transaccion = PlaceToPayTransaction::find($request->id);
 
@@ -86,7 +83,7 @@ class PlaceToPayService
             ]
         ];
         $data = [
-            "auth" => $this->generateAuthentication(),
+            "auth" => $this->generateAuthentication($isSubscription = true),
             "locale" => "es_CO",
             "payer" => $payer,
             "payment" => $payment,
@@ -143,11 +140,11 @@ class PlaceToPayService
         $subscription = $requestsSubscription->subscriptions->first();
         if( ($subscription->status ?? null) === 'PENDING' ){
             //Actualizar la primer cuota que pasa de PENDING a APPROVED
-            $subscriptionByRequestId = $this->getByRequestId($subscription->requestId);
+            $subscriptionByRequestId = $this->getByRequestId($subscription->requestId, $cron = false,$isSubscription = true);
             if ( ($subscriptionByRequestId['payment'][0]['status']['status']??null) === 'APPROVED' ) {
 
                     // $result = $this->pagarCuotaSuscripcion($requestsSubscription, 1);
-                    $requestSubscriptionById = $this->getByRequestId($requestsSubscription['requestId']);
+                    $requestSubscriptionById = $this->getByRequestId($requestsSubscription['requestId'], $cron = false,$isSubscription = true);
 
                     if(($subscriptionByRequestId['payment'][0]['status']['status'] ?? null) === 'APPROVED'){
                         // Actualizo el transactions, campo: installments_paid
@@ -203,6 +200,7 @@ class PlaceToPayService
                         ]);
                     }
                 }
+
                 // creas todas las cuotas restantes, si hay
                 if (($result['response']['status']['status']??null) === 'APPROVED') {
                     // $responseUpdateZohoPlaceToPay = $this->zohoController->updateZohoPlaceToPay($result,$requestIdRequestSubscription);
@@ -247,7 +245,7 @@ class PlaceToPayService
                 ->orderBy('created_at', 'desc')
                 ->first();
         if($lastRequestSessionDB !== null){
-            $sessionByRequestId =  $this->getByRequestId($lastRequestSessionDB->requestId);
+            $sessionByRequestId =  $this->getByRequestId($lastRequestSessionDB->requestId, $cron = false,$isSubscription = true);
             if (isset($sessionByRequestId['status']['status'])) {
                 $placeToPayTransaction = PlaceToPayTransaction::where([ 'requestId' => $sessionByRequestId['requestId'] ])
                     ->update([
@@ -275,10 +273,16 @@ class PlaceToPayService
 
         return response()->json($auth);
     }
-    public function generateAuthentication()
+    public function generateAuthentication($isSubscription = false)
     {
-        $login = $this->login_pu;
-        $secretKey = $this->secret_pu;
+        if($isSubscription){
+            $login = $this->login_su;
+            $secretKey = $this->secret_su;
+        }else{
+            $login = $this->login_pu;
+            $secretKey = $this->secret_pu;
+        }
+
         $seed = date('c');
         $rawNonce = rand();
 
@@ -542,7 +546,8 @@ class PlaceToPayService
 
         return $response;
     }
-    public function getByRequestId($requestId, $cron = null)
+
+    public function getByRequestId($requestId, $cron = null, $isSubscription = false)
     {
         if ($requestId === null) {
             throw new \InvalidArgumentException("El parámetro 'requestId' es obligatorio.");
@@ -550,7 +555,7 @@ class PlaceToPayService
 
         $url = "https://checkout-test.placetopay.ec/api/session/" . $requestId;
         $data = [
-            "auth" => $this->generateAuthentication(),
+            "auth" => $this->generateAuthentication($isSubscription),
         ];
 
         $response = Http::withHeaders([

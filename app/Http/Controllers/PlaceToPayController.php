@@ -192,7 +192,7 @@ class PlaceToPayController extends Controller
                     ]);
                 }
 
-                $sessionSubscription = $this->placeTopayService->getByRequestId($firstSubscription->requestId);
+                $sessionSubscription = $this->placeTopayService->getByRequestId($firstSubscription->requestId, $cron = false,$isSubscription = true);
 
                 if( ($sessionSubscription['status']['status'] ?? 'DESCONOCIDO') === 'PENDING')
                     $statusPayment = $sessionSubscription['status']['status'];
@@ -200,6 +200,7 @@ class PlaceToPayController extends Controller
                 if( isset( $sessionSubscription['payment'][0]['status']['status'] ) )
                     $statusPayment =  $sessionSubscription['payment'][0]['status']['status'] ?? 'DESCONOCIDO' ;
 
+                //Respuestas de error
                 if($statusPayment!=='APPROVED'){
                     //Actualizar estado
                     PlaceToPaySubscription::where(['id' => $firstSubscription->id ])->update([
@@ -210,7 +211,6 @@ class PlaceToPayController extends Controller
                         'authorization' => $sessionSubscription['payment'][0]['authorization'] ?? null, //TODO: siempre lo veo como : 999999
                         'reference' => $response['payment'][0]['reference'] ?? null,
                     ]);
-
                     if($statusPayment==='REJECTED'){
                         //borrar subscripcion y transaccion.
                         if( !$this->placeTopayService->isRejectedTokenTransaction($requestsTransaction) ){
@@ -219,18 +219,16 @@ class PlaceToPayController extends Controller
                             ]);
                         }
                     }
-
                     return response()->json([
                         "result" => $this->message[$statusPayment],
                         "statusPayment" => $statusPayment,
-
                     ], 400);
                 }
-
             }
 
-            $sessionSubscription = $this->placeTopayService->getByRequestId($request['requestId']['requestId']);
-
+            //Consulto a ptp la session.
+            $sessionSubscription = $this->placeTopayService->getByRequestId($request['requestId']['requestId'], $cron = false,$isSubscription = true);
+            //Actualizo el estado de la session.
             $updateRequestSession = PlaceToPayTransaction::updateOrCreate(
                 ['requestId' => $sessionSubscription["requestId"]],
                 [
@@ -241,7 +239,7 @@ class PlaceToPayController extends Controller
                     'requestId' => $sessionSubscription["requestId"],
                 ]
             );
-
+            //Cuando la session esta APRROVED.
             if ($sessionSubscription['status']['status'] === "APPROVED") {
                 if (isset($sessionSubscription['subscription'])) {
                     foreach ($sessionSubscription['subscription']['instrument'] as $instrument) {
@@ -275,6 +273,7 @@ class PlaceToPayController extends Controller
                 }
             }
 
+            //Preparo las respuestas de ERROR
             $status = $sessionSubscription['status']['status'] ?? 'DESCONOCIDO';
             $message = $sessionSubscription['status']['message'] ?? 'DESCONOCIDO';
             if($status === 'REJECTED')
@@ -372,7 +371,7 @@ class PlaceToPayController extends Controller
                 "description" => "Prueba suscripcion contrato de OceanoMedicina"
             ];
             $data = [
-                "auth" => $this->placeTopayService->generateAuthentication(),
+                "auth" => $this->placeTopayService->generateAuthentication($isSubscription = true),
                 "locale" => "es_CO",
                 "payer" => $payer,
                 "subscription" => $subscription,
@@ -407,7 +406,7 @@ class PlaceToPayController extends Controller
                     'paymentData' => $jsonData = json_encode($payer, JSON_UNESCAPED_SLASHES)
 
                 ]);
-                $getById = $this->placeTopayService->getByRequestId($result['requestId']);
+                $getById = $this->placeTopayService->getByRequestId($result['requestId'], $cron = false, $isSubscription = true);
                 if ($result['status']['status'] === 'OK') {
                     $this->placeTopayService->updateStatusSessionSubscription($request['SO']);
                 }
