@@ -32,12 +32,14 @@ class PlaceToPayService
     {
         // Obtener la fecha y hora actual
         $currentDateTime = new \DateTime();
-        // Sumar 24 horas a la fecha actual
-        $currentDateTime->add(new \DateInterval('PT24H'));
+        // Sumar 30 minutos a la fecha actual
+        $currentDateTime->add(new \DateInterval('PT30M'));
         // Formatear la fecha para que coincida con el formato ISO 8601
         $seed = $currentDateTime->format('Y-m-d\TH:i:sP');
+        $expirationDate = $currentDateTime->format('Y-m-d\TH:i:sP');
 
         return $seed;
+        return $expirationDate;
     }
     public function pagarCuotaSuscripcionAnticipo()
     {
