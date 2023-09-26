@@ -138,7 +138,7 @@ Route::post('/ctc/exportExcel3OBPOCP', [ExcelController::class, 'exportExcel3OBP
 Route::post('/ctc/exportExcel4PBOCP', [ExcelController::class, 'exportExcel4PBOCP']);
 
 
-// /placetopay/notificationsUpdate
+// /placetopay/notificationUpdate
 Route::prefix("/placetopay")->group(function () {
     Route::get('/getAuth', [PlaceToPayController::class, 'getAuth']);
     Route::post('/createSession', [PlaceToPayController::class, 'createSession']);
@@ -160,7 +160,7 @@ Route::prefix("/placetopay")->group(function () {
 
     Route::get('/updatePaymentLinkStatus/{saleId}', [PlaceToPayPaymentLinkController::class, 'updatePaymentLinkStatus']);
 
-    Route::post('/notificationsUpdate', [PlaceToPayPaymentLinkController::class, 'notificationsUpdate']);
+    Route::post('/notificationUpdate', [PlaceToPayPaymentLinkController::class, 'notificationUpdate']);
 
 
 });
