@@ -128,7 +128,6 @@ Route::get("/mp/searchPaymentApprove/{so}", [\App\Http\Controllers\MercadoPagoPa
 
 Route::get('/getPaymentsStatusDistintContratoEfectivo', [PaymentLinkController::class, 'getPaymentsStatusDistintContratoEfectivo']);
 
-
 Route::post('/ctc/exportExcel', [ExcelController::class, 'exportExcel']);
 Route::get('/download-excel/{filename}', [ExcelController::class, 'downloadExcel']);
 Route::post('/ctc/exportExcelSuscription', [ExcelController::class, 'exportExcelSuscription']);
@@ -138,6 +137,8 @@ Route::post('/ctc/exportExcel2BPOCP', [ExcelController::class, 'exportExcel2BPOC
 Route::post('/ctc/exportExcel3OBPOCP', [ExcelController::class, 'exportExcel3OBPOCP']);
 Route::post('/ctc/exportExcel4PBOCP', [ExcelController::class, 'exportExcel4PBOCP']);
 
+
+// /placetopay/notificationsUpdate
 Route::prefix("/placetopay")->group(function () {
     Route::get('/getAuth', [PlaceToPayController::class, 'getAuth']);
     Route::post('/createSession', [PlaceToPayController::class, 'createSession']);
@@ -158,5 +159,8 @@ Route::prefix("/placetopay")->group(function () {
     Route::get('/getPaymentLink/{saleId}', [PlaceToPayPaymentLinkController::class, 'getPaymentLink']);
 
     Route::get('/updatePaymentLinkStatus/{saleId}', [PlaceToPayPaymentLinkController::class, 'updatePaymentLinkStatus']);
+
+    Route::post('/notificationsUpdate', [PlaceToPayPaymentLinkController::class, 'notificationsUpdate']);
+
 
 });
