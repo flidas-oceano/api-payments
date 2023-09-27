@@ -547,17 +547,17 @@ class PlaceToPayController extends Controller
                     'message' => 'Signature valido.',
                 ]);
 
-                PlaceToPayTransaction::where([ 'requestId' => $request->requestId ])
+                PlaceToPayTransaction::where([ 'requestId' => $request['requestId'] ])
                 ->update([
-                    'requestId' => $request->requestId,
-                    'status' => $request->status->status,
-                    'message' => $request->status->message,
-                    'reason' => $request->status->reason,
-                    'date' => $request->status->date,
+                    'requestId' => $request['requestId'],
+                    'status' => $request['status']['status'],
+                    'message' => $request['status']['message'],
+                    'reason' => $request['status']['reason'],
+                    'date' => $request['status']['date'],
                 ]);
 
-                $session = PlaceToPayTransaction::where([ 'requestId' => $request->requestId ])->get()->first();
-                if($request->status->status === 'APPROVED'){
+                $session = PlaceToPayTransaction::where([ 'requestId' => $request['requestId'] ])->get()->first();
+                if($request['status']['status'] === 'APPROVED'){
                     //TODO: Realizas el primer pago si es subscripcion
                 }
 
