@@ -542,11 +542,6 @@ class PlaceToPayController extends Controller
         try{
             if($this->placeTopayService->validateSignature($request)){
 
-                return response()->json([
-                    'result' => 'SUCCESS',
-                    'message' => 'Signature valido.',
-                ]);
-
                 PlaceToPayTransaction::where([ 'requestId' => $request['requestId'] ])
                 ->update([
                     'requestId' => $request['requestId'],
