@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Manage;
 use App\Http\Requests\CreateSessionSubscriptionRequest;
 use App\Models\Contact;
 use App\Models\Lead;
@@ -538,40 +539,43 @@ class PlaceToPayController extends Controller
         }
     }
     public function notificationUpdate(Request $request){
+        try{
+            if($this->placeTopayService->validateSignature($request)){
 
-        if($this->placeTopayService->validateSignature($request)){
+                return response()->json([
+                    'result' => 'SUCCESS',
+                    'message' => 'Signature valido.',
+                ]);
 
-            return response()->json([
-                'result' => 'SUCCESS',
-                'message' => 'Signature valido.',
-            ]);
+                PlaceToPayTransaction::where([ 'requestId' => $request->requestId ])
+                ->update([
+                    'requestId' => $request->requestId,
+                    'status' => $request->status->status,
+                    'message' => $request->status->message,
+                    'reason' => $request->status->reason,
+                    'date' => $request->status->date,
+                ]);
 
-            PlaceToPayTransaction::where([ 'requestId' => $request->requestId ])
-            ->update([
-                'requestId' => $request->requestId,
-                'status' => $request->status->status,
-                'message' => $request->status->message,
-                'reason' => $request->status->reason,
-                'date' => $request->status->date,
-            ]);
+                $session = PlaceToPayTransaction::where([ 'requestId' => $request->requestId ])->get()->first();
+                if($request->status->status === 'APPROVED'){
+                    //TODO: Realizas el primer pago si es subscripcion
+                }
 
-            $session = PlaceToPayTransaction::where([ 'requestId' => $request->requestId ])->get()->first();
-            if($request->status->status === 'APPROVED'){
-                //TODO: Realizas el primer pago si es subscripcion
+                return response()->json([
+                    'result' => 'SUCCESS',
+                    'message' => 'Sesion actualizada.',
+                    'notification' => $request,
+                    'session' => $session
+                ]);
             }
 
             return response()->json([
-                'result' => 'SUCCESS',
-                'message' => 'Sesion actualizada.',
-                'notification' => $request,
-                'session' => $session
+                'result' => 'FAILED',
+                'message' => 'Signature no valido.',
             ]);
+        } catch (\Exception $e) {
+            Manage::error($e);
         }
-
-        return response()->json([
-            'result' => 'FAILED',
-            'message' => 'Signature no valido.',
-        ]);
     }
     public function index()
     {
