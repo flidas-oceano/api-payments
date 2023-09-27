@@ -537,6 +537,42 @@ class PlaceToPayController extends Controller
             ], 500);
         }
     }
+    public function notificationUpdate(Request $request){
+
+        if($this->placeTopayService->validateSignature($request)){
+
+            return response()->json([
+                'result' => 'SUCCESS',
+                'message' => 'Signature valido.',
+            ]);
+
+            PlaceToPayTransaction::where([ 'requestId' => $request->requestId ])
+            ->update([
+                'requestId' => $request->requestId,
+                'status' => $request->status->status,
+                'message' => $request->status->message,
+                'reason' => $request->status->reason,
+                'date' => $request->status->date,
+            ]);
+
+            $session = PlaceToPayTransaction::where([ 'requestId' => $request->requestId ])->get()->first();
+            if($request->status->status === 'APPROVED'){
+                //TODO: Realizas el primer pago si es subscripcion
+            }
+
+            return response()->json([
+                'result' => 'SUCCESS',
+                'message' => 'Sesion actualizada.',
+                'notification' => $request,
+                'session' => $session
+            ]);
+        }
+
+        return response()->json([
+            'result' => 'FAILED',
+            'message' => 'Signature no valido.',
+        ]);
+    }
     public function index()
     {
         // Generar autenticación

@@ -160,7 +160,6 @@ Route::prefix("/placetopay")->group(function () {
 
     Route::get('/updatePaymentLinkStatus/{saleId}', [PlaceToPayPaymentLinkController::class, 'updatePaymentLinkStatus']);
 
-    Route::post('/notificationUpdate', [PlaceToPayPaymentLinkController::class, 'notificationUpdate']);
-
+    Route::post('/notificationUpdate', [PlaceToPayController::class, 'notificationUpdate']);
 
 });

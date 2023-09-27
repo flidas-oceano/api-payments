@@ -258,6 +258,30 @@ class PlaceToPayService
         }
     }
     //Utils
+    public function validateSignature($request){
+
+        $session = PlaceToPayTransaction::where( [ 'requestId' => $request->requestId ] )->get()->first();
+        $string = $session->type;
+        if (stripos($string, "Subscription") !== false) {
+            $secretKey = $this->secret_su;
+        } else {
+            $secretKey = $this->secret_pu;
+        }
+
+        //Encriptamos
+        $generatedSignature = sha1(
+            $request->requestId .
+            $request->status->status .
+            $request->status->date .
+            $secretKey
+        );
+
+        if($generatedSignature === $request->signature){
+            return true;
+        }else{
+            return false;
+        }
+    }
 
     public function reduceUrl($url)
     {

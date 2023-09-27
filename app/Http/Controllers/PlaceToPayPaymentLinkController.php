@@ -112,27 +112,6 @@ class PlaceToPayPaymentLinkController extends Controller
         }
     }
 
-    public function notificationUpdate(Request $request){
-        // {
-        //     "status": {
-        //       "status": "APPROVED",
-        //       "message": "Testing notification",
-        //       "reason": "TT",
-        //       "date": "2023-09-26T15:11:36-05:00"
-        //     },
-        //     "requestId": "681602",
-        //     "reference": null,
-        //     "signature": "67354afb502071a2d5be71bac63d89a03154a3cf"
-        //   }
-
-        // $sessions = PlaceToPayTransaction::where([ 'requestId' => $request['requestId'] ])->get()->first();
-
-        return response()->json([
-            'requestPTP' => $request,
-            'requestId' => $request->requestId
-        ]);
-
-    }
 
     public function create(CreateGenerateLinkRequest $request)
     {
