@@ -56,7 +56,18 @@ class PlaceToPayController extends Controller
                 'result' => $this->placeTopayService->revokeTokenSession($requestIdSession)
             ]);
         } catch (\Exception $e) {
-            Manage::error($e);
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString()
+            ];
+
+            Log::error("Error en pruebaregladepago: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ]);
         }
     }
 
@@ -66,7 +77,18 @@ class PlaceToPayController extends Controller
             $this->placeTopayService->createInstallments();
             // $this->payInstallmentsSubscriptions();
         } catch (\Exception $e) {
-            Manage::error($e);
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString()
+            ];
+
+            Log::error("Error en pruebaregladepago: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ]);
         }
     }
 
@@ -135,7 +157,18 @@ class PlaceToPayController extends Controller
             // Por ejemplo, devolverla como una respuesta JSON
             return response()->json($response);
         } catch (\Exception $e) {
-            Manage::error($e);
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString()
+            ];
+
+            Log::error("Error en billSubscription: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ]);
         }
     }
     public function savePaymentSubscription(Request $request)
@@ -258,7 +291,18 @@ class PlaceToPayController extends Controller
                 ], $status);
             }
         } catch (\Exception $e) {
-            Manage::error($e);
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString()
+            ];
+
+            Log::error("Error en savePaymentSubscription: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ]);
         }
     }
 
@@ -270,14 +314,27 @@ class PlaceToPayController extends Controller
                 'sessionDB' => PlaceToPayTransaction::where([ 'requestId' => $requestId ])->get()->first()
             ]);
         } catch (\Exception $e) {
-            Manage::error($e);
+            // Manejo de errores si ocurre alguno durante la solicitud
+
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'trace' => $e->getTraceAsString(),
+            ];
+
+            Log::error("Error en getSessionByRequestId: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ], 500);
         }
     }
     public function createSessionSubscription(CreateSessionSubscriptionRequest $request)
     {
         try {
 
-            //Actualizar Estado de la session en DB
+            //Actualizar Estado ed la session en DB
             $this->placeTopayService->updateStatusSessionSubscription($request['SO']);
 
             $lastRequestSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $request['SO'] . '%')
@@ -358,7 +415,18 @@ class PlaceToPayController extends Controller
 
             return response()->json([$result, $getById]);
         } catch (\Exception $e) {
-            Manage::error($e);
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString(),
+            ];
+
+            Log::error("Error en createSessionSuscription: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ], 500);
         }
     }
     public function createSession(Request $request)
@@ -456,7 +524,18 @@ class PlaceToPayController extends Controller
             // Por ejemplo, devolverla como una respuesta JSON
             return response()->json([$result, $getById]);
         } catch (\Exception $e) {
-            Manage::error($e);
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString(),
+            ];
+
+            Log::error("Error en createSession: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ], 500);
         }
     }
     public function notificationUpdate(Request $request){
@@ -574,7 +653,18 @@ class PlaceToPayController extends Controller
                 ]);
             }
         } catch (\Exception $e) {
-            Manage::error($e);
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString(),
+            ];
+
+            Log::error("Error en savePayments: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ]);
         }
     }
     //requestId() payment unico
@@ -613,7 +703,18 @@ class PlaceToPayController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Manage::error($e);
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'trace' => $e->getTraceAsString(),
+            ];
+
+            Log::error("Error en PopulateProducts: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ]);
         }
     }
 
