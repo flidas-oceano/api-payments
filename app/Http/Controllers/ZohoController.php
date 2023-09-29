@@ -281,74 +281,6 @@ class ZohoController extends Controller
         return ($answer);
     }
 
-    public function updateZohoStripeMSK(UpdateContractZohoRequest $request)
-    {
-        $identification = $this->getIdentification($request->dni, $request->country);
-
-        if( boolval($request->is_suscri) ){
-            $modoDePago = 'Cobro recurrente';
-            if( boolval($request->is_advanceSuscription) ){
-                $modoDePago = $modoDePago.' con parcialidad';
-            }
-        }else{
-            $modoDePago = 'No definido'; // TODO: como corresponde validar el Pago Unico ?
-        }
-
-        $dataUpdate = [
-            // Contrato
-            'Monto_de_parcialidad' => $request->installment_amount,
-            'Seleccione_total_de_pagos_recurrentes' => $request->installments,
-            'Monto_de_cada_pago_restantes' => $request->is_advanceSuscription ? $request->payPerMonthAdvance : $request->installment_amount,
-            'Cantidad_de_pagos_recurrentes_restantes' => $request->installments - 1,
-            'Fecha_de_primer_cobro' => date('Y-m-d'),
-            'Status' => 'Aprovado',
-            'M_todo_de_pago' => 'Stripe',
-            // 'M_todo_de_pago' => , // No se incluye 'Modalidad_de_pago_del_Anticipo
-            'Modo_de_pago' =>  $modoDePago,
-            // 'Modo_de_pago' => , // No se incluye 'Suscripcion_con_Parcialidad'
-            'stripe_subscription_id' => $request->subscriptionId,
-        ];
-        $dataUpdateContact = [
-            // Contacto
-            'Identificacion' => ($request->dni??$identification),
-            // 'Identificacion' => , // No se incluye 'DNI'
-            'Tel_fono_de_facturaci_n' => $request->phone,
-            'Raz_n_social' => $request->fullname,
-        ];
-
-        $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
-
-        // $this->get
-        // $updateContract = $this->updateRecord('Contacts', $dataUpdate, $request->contractId, true);
-
-
-        if ($updateContract['result'] == 'error')
-            return response()->json($updateContract, 500);
-        else
-            return response()->json($updateContract);
-    }
-
-    public function getContactByContract($so){
-
-        $answer = 'error';
-
-        $so = (int) $so;
-        $record = null;
-
-        $record = $this->fetchRecordWithValue('Sales_Orders', 'SO_Number', $so);
-        try {
-            if ($record != 'error') {
-                $answer = $record;
-            } else
-                $answer = '???';
-        } catch (\Exception $e) {
-            Log::error($e);
-        }
-
-        return response()->json($answer);
-    }
-
-
     public function updateZohoStripe(UpdateContractZohoRequest $request)
     {
         $identification = $this->getIdentification($request->dni, $request->country);
@@ -384,49 +316,6 @@ class ZohoController extends Controller
             return response()->json($updateContract);
     }
 
-    public function updateZohoMPMSK(UpdateContractZohoRequest $request)
-    {
-        $identification = $this->getIdentification($request->dni, $request->country);
-
-        if( boolval($request->is_suscri) ){
-            $modoDePago = 'Cobro recurrente';
-            if( boolval($request->is_advanceSuscription) ){
-                $modoDePago = $modoDePago.' con parcialidad';
-            }
-        }else{
-            $modoDePago = 'No definido'; // TODO: como corresponde validar el Pago Unico ?
-        }
-
-        $dataUpdate = [
-            // Contrato
-            'Monto_de_parcialidad' => $request->installment_amount,
-            'Seleccione_total_de_pagos_recurrentes' => $request->installments,
-            'Monto_de_cada_pago_restantes' => $request->is_advanceSuscription ? $request->payPerMonthAdvance : $request->installment_amount,
-            'Cantidad_de_pagos_recurrentes_restantes' => $request->installments - 1,
-            'Fecha_de_primer_cobro' => date('Y-m-d'),
-            'Status' => 'Aprovado',
-            'M_todo_de_pago' => 'Mercado pago',
-            // 'M_todo_de_pago' => , // No se incluye 'Modalidad_de_pago_del_Anticipo
-            'Modo_de_pago' =>  $modoDePago,
-            // 'Modo_de_pago' => , // No se incluye 'Suscripcion_con_Parcialidad'
-            'stripe_subscription_id' => $request->subscriptionId,
-        ];
-
-        $dataUpdateContact = [
-            // Contacto
-            'Identificacion' => ($request->dni??$identification),
-            // 'Identificacion' => , // No se incluye 'DNI'
-            'Tel_fono_de_facturaci_n' => $request->phone,
-            'Raz_n_social' => $request->fullname,
-        ];
-
-        $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
-
-        if ($updateContract['result'] == 'error')
-            return response()->json($updateContract, 500);
-        else
-            return response()->json($updateContract);
-    }
     public function updateZohoMP(UpdateContractZohoRequest $request)
     {
         $identification = $this->getIdentification($request->dni, $request->country);
@@ -465,58 +354,6 @@ class ZohoController extends Controller
             return response()->json($updateContract);
     }
 
-    public function updateZohoCTCMSK(UpdateContractZohoRequest $request)
-    {
-
-        $request->validate([
-            'folio_pago' => 'required'
-        ]);
-
-        $identification = $request->dni;
-
-        if( boolval($request->is_suscri) ){
-            $modoDePago = 'Cobro recurrente';
-            if( boolval($request->is_advanceSuscription) ){
-                $modoDePago = $modoDePago.' con parcialidad';
-            }
-        }else{
-            $modoDePago = 'No definido'; // TODO: como corresponde validar el Pago Unico ?
-        }
-
-        $dataUpdate = [
-            // Contrato
-            'Monto_de_parcialidad' => $request->installment_amount,
-            'Seleccione_total_de_pagos_recurrentes' => $request->installments,
-            'Monto_de_cada_pago_restantes' => $request->is_advanceSuscription ? $request->payPerMonthAdvance : $request->installment_amount,
-            'Cantidad_de_pagos_recurrentes_restantes' => $request->installments - 1,
-            'Fecha_de_primer_cobro' => date('Y-m-d'),
-            'Status' => 'Aprovado',
-            'M_todo_de_pago' => 'CTC',
-            // 'M_todo_de_pago' => , // No se incluye 'Modalidad_de_pago_del_Anticipo
-            'Modo_de_pago' =>  $modoDePago,
-            // 'Modo_de_pago' => , // No se incluye 'Suscripcion_con_Parcialidad'
-
-
-            //campos CTC
-            'folio_suscripcion' => $request->subscriptionId,
-            'folio_pago' => $request->folio_pago,
-        ];
-
-        $dataUpdateContact = [
-            // Contacto
-            'Identificacion' => ($request->dni??$identification),
-            // 'Identificacion' => , // No se incluye 'DNI'
-            'Tel_fono_de_facturaci_n' => $request->phone,
-            'Raz_n_social' => $request->fullname,
-        ];
-
-        $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
-
-        if ($updateContract['result'] == 'error')
-            return response()->json($updateContract, 500);
-        else
-            return response()->json($updateContract);
-    }
     public function updateZohoCTC(UpdateContractZohoRequest $request)
     {
 
@@ -579,12 +416,12 @@ class ZohoController extends Controller
 
             $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();
             if ($session == null) {
-                return response()->json('No se encontro la session en la DB.' , 500);
+                return response()->json('No se encontro la session en la DB.' . 500);
             }
 
             $subscription = $session->subscriptions()->where(['nro_quote' => 1])->get()->first();
             if ($subscription == null) {
-                return response()->json('No se encontraron subcripciones de cuota 1 pagadas en la DB.' , 500);
+                return response()->json('No se encontraron subcripciones de cuota 1 pagadas en la DB.' . 500);
             }
 
             $resultTransaction = $this->placeToPayService->getByRequestId($session->requestId, $cron = false, $isSubscription = true);
@@ -615,9 +452,8 @@ class ZohoController extends Controller
                 'Discount' => abs($request['adjustment'])
             ];
 
-            // return $dataUpdate;
-
             $updateContract = $this->updateRecordNewVersion('Sales_Orders', $dataUpdate, $request->contractId, true);
+
             if ($updateContract['result'] == 'error')
                 return response()->json($updateContract, 500);
             else
