@@ -60,23 +60,22 @@ class ZohoController extends Controller
         try {
             $this->placeToPayService = $placeToPayService;
 
-            $this->emi_owner = '2712674000000899001';
+            $this->emi_owner = 'x';
 
             ZCRMRestClient::initialize([
-                "client_id" => env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_CLIENT_ID') : env('ZOHO_API_PAYMENTS_PROD_CLIENT_ID'),
-                "client_secret" => env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_CLIENT_SECRECT') : env('ZOHO_API_PAYMENTS_PROD_CLIENT_SECRECT'),
-                "redirect_uri" => env('APP_DEBUG') ? 'https://www.zoho.com' : 'https://www.oceanomedicina.com.ar',
+                "client_id" => env('ZOHO_CRM_MSK_PAYMENTS_CLIENT_ID'),
+                "client_secret" => env('ZOHO_CRM_MSK_PAYMENTS_CLIENT_SECRECT'),
+                "redirect_uri" => 'https://www.msklatam.com',
                 "token_persistence_path" => Storage::path("zoho"),
                 "persistence_handler_class" => "ZohoOAuthPersistenceByFile",
-                "currentUserEmail" => env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar',
-                //'copyzoho.custom@gmail.com',
+                "currentUserEmail" => 'integraciones@msklatam.com',
                 "accounts_url" => 'https://accounts.zoho.com',
                 "access_type" => "offline"
             ]);
 
             $oAuthClient = ZohoOAuth::getClientInstance();
-            $refreshToken = env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_REFRESH_TOKEN') : env('ZOHO_API_PAYMENTS_PROD_REFRESH_TOKEN');
-            $userIdentifier = env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar';
+            $refreshToken = env('ZOHO_CRM_MSK_PAYMENTS_REFRESH_TOKEN');
+            $userIdentifier = 'integraciones@msklatam.com';
             $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier);
         } catch (Exception $e) {
             Log::error($e);
@@ -416,13 +415,13 @@ class ZohoController extends Controller
         try {
 
             $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();
-            if($session == null){
-                return response()->json('No se encontro la session en la DB.'. 500);
+            if ($session == null) {
+                return response()->json('No se encontro la session en la DB.' . 500);
             }
 
             $subscription = $session->subscriptions()->where(['nro_quote' => 1])->get()->first();
-            if($subscription == null){
-                return response()->json('No se encontraron subcripciones de cuota 1 pagadas en la DB.'. 500);
+            if ($subscription == null) {
+                return response()->json('No se encontraron subcripciones de cuota 1 pagadas en la DB.' . 500);
             }
 
             $resultTransaction = $this->placeToPayService->getByRequestId($session->requestId, $cron = false, $isSubscription = true);
