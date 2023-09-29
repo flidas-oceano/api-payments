@@ -60,10 +60,10 @@ Route::get('/stripe/customer/search/{email}', [StripePaymentController::class, '
 
 Route::get('/getContactByContract/{so}', [ZohoController::class, 'getContactByContract']);
 
-Route::post('/updateZohoCTCZohoCRM', [ZohoController::class, 'updateZohoCTC']);
+Route::post('/updateZohoCTCZohoCRM', [ZohoController::class, 'updateZohoCTCMSK']);
 Route::post('/saveCardZohoCTC', [ZohoController::class, 'saveCardZohoCTC']);
-Route::post('/updateZohoStripeZohoCRM', [ZohoController::class, 'updateZohoStripe']);
-Route::post('/updateZohoMPZohoCRM', [ZohoController::class, 'updateZohoMP']);
+Route::post('/updateZohoStripeZohoCRM', [ZohoController::class, 'updateZohoStripeMSK']);
+Route::post('/updateZohoMPZohoCRM', [ZohoController::class, 'updateZohoMPMSK']);
 Route::post('/updateZohoPTP', [ZohoController::class, 'updateZohoPTP']);
 Route::post('/setContractStatus', [ContractController::class, 'setContractStatus']);
 
