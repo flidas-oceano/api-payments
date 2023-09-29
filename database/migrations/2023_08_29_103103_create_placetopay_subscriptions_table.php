@@ -34,8 +34,8 @@ class CreatePlacetopaySubscriptionsTable extends Migration
             $table->string("expiration_date")->nullable()->default(null);
 
             $table->foreignId('transactionId')->nullable()->default(null)
-            ->references('id')
-            ->on('placetopay_transactions');
+                ->references('id')
+                ->on('placetopay_transactions');
 
             $table->string("date_to_pay")->nullable()->default(null);
 

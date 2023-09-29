@@ -81,4 +81,10 @@ class PlaceToPayTransaction extends Model
     {
         return $this->hasMany(PlaceToPayPaymentLink::class, 'transactionId');
     }
+
+    public static function incrementInstallmentsPaid($sessionId)
+    {
+        self::where('id', $sessionId)->increment('installments_paid', 1);
+        // PlaceToPayTransaction::find($session->id)->update(['installments_paid' => DB::raw('COALESCE(installments_paid, 0) + 1')]);
+    }
 }

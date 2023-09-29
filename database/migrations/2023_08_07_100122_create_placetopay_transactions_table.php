@@ -37,6 +37,7 @@ class CreatePlacetopayTransactionsTable extends Migration
             // $table->integer("remaining_installments")->nullable()->default(null);//TODO: cambiar de string a valor de con coma,
             $table->decimal('remaining_installments', 10, 2)->nullable()->default(null);
             $table->integer("installments_paid")->nullable()->default(null);
+            $table->json('paymentData')->nullable()->default(null);
 
             $table->timestamps();
         });

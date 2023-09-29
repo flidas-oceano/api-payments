@@ -673,7 +673,6 @@ class PlaceToPayService
 
         //Si tengo las cuotas al dia, puedo realizar el pago
 
-
         $today = Carbon::now();
         foreach ($subscriptions as $subscription) {
             // $subscription = $subscriptions->first()
@@ -801,7 +800,6 @@ class PlaceToPayService
 
         // $query = PlaceToPaySubscription::where('status', '!=', 'APPROVED');
         // $sql = $query->toSql();
-
     }
 
     public function payIndividualPayment($subscriptionToPay)
@@ -830,30 +828,30 @@ class PlaceToPayService
             "returnUrl" => "https://dnetix.co/p2p/client",
         ];
         $response = $this->billSubscription($data, $cron = true);
+        $response['payment'][0]['status']['status'] = 'REJECTED';
         if(($response['payment'][0]['status']['status'] ?? null) === 'APPROVED'){
             // Actualizo el transactions, campo: installments_paid
-            PlaceToPayTransaction::find($session->id)->update(['installments_paid' => DB::raw('COALESCE(installments_paid, 0) + 1')]);
+            PlaceToPayTransaction::incrementInstallmentsPaid($session->id);
         }
-        PlaceToPaySubscription::find($subscriptionToPay->id)->update([
-            'status' =>         $response['status']['status'],
-            'message' =>        $response['status']['message'],
-            'reason' =>         $response['status']['reason'],
-            'date' =>           $response['status']['date'],
-            'reference' =>      $response['payment'][0]['reference'] ?? null,
-            'authorization' =>  $response['payment'][0]['authorization'] ?? null, //TODO: siempre lo veo como : 999999
-            'requestId' =>      $response['requestId'],
+        if(($response['payment'][0]['status']['status'] ?? null) === 'REJECTED'){
+            // Actualizo la suscripcion, campo: failed_payment_attempts
+            PlaceToPaySubscription::incrementFailedPaymentAttempts($subscriptionToPay->id);
+            $updatedSubscription = PlaceToPaySubscription::duplicateAndReject($subscriptionToPay->id, $response, $payment);
 
-            'currency' =>       $payment['amount']['currency'],
-            'total' =>          $payment['amount']['total'],
-            // 'type' => , //TODO: me parece que es mejor borrarlo de la tabla. O usarla para diferenciar: subscription, advancedInstallment
-        ]);
-        $updateSubscription = PlaceToPaySubscription::find($subscriptionToPay->id);
-
+        }else{
+            PlaceToPaySubscription::updateSubscription($subscriptionToPay->id,$response,$payment);
+            $updatedSubscription = PlaceToPaySubscription::find($subscriptionToPay->id);
+        }
         return [
-            "updateSubscription" => $updateSubscription,
+            "updateSubscription" => $updatedSubscription,
             "response" => $response,
             "data" => $data,
         ];
+    }
+
+    //Reintenta los pagos que se estan atrasando hasta completar los intentos fallidos.
+    public function reintentodeRechazados(){
+
     }
 
     //Refresca las sessions y las subscriptions de estado PENDING.
@@ -870,36 +868,40 @@ class PlaceToPayService
                         'message' => $sessionFromPTP['status']['message'],
                         'date' => $sessionFromPTP['status']['date'],
                     ]);
-            // //Guardar el cardToken
-            if ($sessionFromPTP['status']['status'] === "APPROVED") {
-                if (isset($sessionFromPTP['subscription'])) {
-                    foreach ($sessionFromPTP['subscription']['instrument'] as $instrument) {
-                        if ($instrument['keyword'] === "token") {
-                            PlaceToPayTransaction::updateOrCreate(
-                                ['requestId' => $sessionFromPTP["requestId"]],
-                                [
-                                    'token_collect_para_el_pago' => $instrument['value']
-                                ]
-                            );
+                // //Guardar el cardToken
+                if ($sessionFromPTP['status']['status'] === "APPROVED") {
+                    if (isset($sessionFromPTP['subscription'])) {
+                        foreach ($sessionFromPTP['subscription']['instrument'] as $instrument) {
+                            if ($instrument['keyword'] === "token") {
+                                PlaceToPayTransaction::where([ 'requestId' => $sessionFromPTP["requestId"] ])
+                                    ->update(
+                                        [
+                                            'token_collect_para_el_pago' => $instrument['value']
+                                        ]
+                                    );
+                                //Loque sigue lo maneja otra regla:
+                                //Realizar el primer pago.
+                                //Creacion de cuotas.
+                            }
                         }
                     }
                 }
-            }
-            //Si pasa a REJECTED cancelar cardToken
-            if ($sessionFromPTP['status']['status'] === "REJECTED") {
-                if (isset($sessionFromPTP['subscription'])) {
-                    foreach ($sessionFromPTP['subscription']['instrument'] as $instrument) {
-                        if ($instrument['keyword'] === "token") {
-                            PlaceToPayTransaction::updateOrCreate(
-                                ['requestId' => $sessionFromPTP["requestId"]],
-                                [
-                                    'token_collect_para_el_pago' => 'CARD_REJECTED_'.$instrument['value']
-                                ]
-                            );
+                //Si pasa a REJECTED cancelar cardToken
+                if ($sessionFromPTP['status']['status'] === "REJECTED") {
+                    if (isset($sessionFromPTP['subscription'])) {
+                        foreach ($sessionFromPTP['subscription']['instrument'] as $instrument) {
+                            if ($instrument['keyword'] === "token") {
+                                PlaceToPayTransaction::where(
+                                    [ 'requestId' => $sessionFromPTP["requestId"] ]
+                                )->update(
+                                    [
+                                        'token_collect_para_el_pago' => 'CARD_REJECTED_'.$instrument['value']
+                                    ]
+                                );
+                            }
                         }
                     }
                 }
-            }
 
             }
         }
@@ -915,9 +917,50 @@ class PlaceToPayService
                         'message' => $subscriptionFromPTP['status']['message'],
                         'date' => $subscriptionFromPTP['status']['date'],
                     ]);
-                //Si pasa a APPROVED creo las cuotas
-                //Si pasa a REJECTED tiene cancelarce el cardToken.
-                //Despues de los 5 intentos.
+
+                // if($subscription->nro_quote > 1){
+                     // //Guardar el cardToken
+                    if ($subscriptionFromPTP['status']['status'] === "APPROVED") {//Si pasa a APPROVED: sumo en la transaccion un pago exitoso.
+
+                        PlaceToPayTransaction::incrementInstallmentsPaid($subscription->transaction->id);
+                        // PlaceToPayTransaction::find($subscription->transaction->id)->update(['installments_paid' => DB::raw('COALESCE(installments_paid, 0) + 1')]);
+                        //Tengo que proceder de la siguiente formga:
+                            //Si es primer pago
+                            //Si  otra cuota
+                    }
+                    if ($subscriptionFromPTP['status']['status'] === "REJECTED") {//Si pasa a REJECTED: sumo en la subscription un pago fallido
+
+                        if( !(($subscription->failed_payment_attempts??0) > 3) ){
+
+                            PlaceToPaySubscription::incrementFailedPaymentAttempts($subscription->id);
+                            // PlaceToPaySubscription::find($subscription->id)
+                            //     ->update(['failed_payment_attempts' => DB::raw('COALESCE(failed_payment_attempts, 0) + 1')]);
+                        }else{
+
+                            //TODO: Dar de baja la session y solicitar otra.
+                            if ($sessionFromPTP['status']['status'] === "REJECTED") {
+                                if (isset($sessionFromPTP['subscription'])) {
+                                    foreach ($sessionFromPTP['subscription']['instrument'] as $instrument) {
+                                        if ($instrument['keyword'] === "token") {
+                                            PlaceToPayTransaction::where(
+                                                [ 'requestId' => $sessionFromPTP["requestId"] ]
+                                            )->update(
+                                                [
+                                                    'token_collect_para_el_pago' => 'CARD_REJECTED_'.$instrument['value']
+                                                ]
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                            //Inavilitar las cuotas posteriores de esta session con status CANCELADO POR 3 INTENTOS FALLIDOS
+
+                            //TODO: O manejar el servicio de zoho para usar el sub form del contrato.
+                        }
+                    }
+                // }
+
+                //TODO: Tengo que decidir si crear las primeras cuotas de los primeros pagos en esta regla o si lo tendria que crear en otra para no mezclar y modularizar bien.
             }
         }
     }
@@ -930,8 +973,8 @@ class PlaceToPayService
             if($sessionToFirstPay->status === 'APPROVED'){
                 // Pagar primer cuota.
                 // Guardar registro con estado.
-                // Si es rejected cancelar tarjeta
-                // Si es aprroved crear demas cuotas
+                // Si es rejected cancelar tarjeta.
+                // Si es aprroved crear demas cuotas.
                 // $sessionToFirstPay->token_collect_para_el_pago;
             }
         }
@@ -939,15 +982,17 @@ class PlaceToPayService
     //Cobros que se realizan a tiempo, sin interrupciones de pago.
     public function stageOne(){
 
-        // $d = Carbon\Carbon::create(2023, 9, 22);$date = $d->copy()->addMonth();
+        // $today = Carbon\Carbon::create(2023, 10, 27);
+        $today = Carbon::create(2023, 10, 27);
 
-        $today = Carbon::now()->startOfDay();
+
+        // $today = Carbon::now()->startOfDay();
         $date = $today->copy()->addMonth();
 
         //Tomar las Cuotas de hoy, segun un criterio:
         $subscriptionsToPay = PlaceToPaySubscription::whereDate('date_to_pay', '=', $date)
-            ->where(['status'=> null])
-            ->where(['nro_quote', '>=', 2])
+            ->where('status', '=', null)
+            ->where('nro_quote', '>=', 2)
             ->get();
 
         foreach($subscriptionsToPay as $subscriptionToPay){

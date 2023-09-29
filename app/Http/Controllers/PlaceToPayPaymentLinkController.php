@@ -225,7 +225,6 @@ class PlaceToPayPaymentLinkController extends Controller
 
                     //asociarlos
 
-
                 // $result = $this->placeTopayService->create($data);
 
                 // if (isset($result['status']['status'])) {
