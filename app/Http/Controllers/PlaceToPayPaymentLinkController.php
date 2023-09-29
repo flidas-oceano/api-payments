@@ -107,17 +107,25 @@ class PlaceToPayPaymentLinkController extends Controller
             return response()->json([$result, $getById]);
         } catch (\Exception $e) {
             // Manejo de errores si ocurre alguno durante la solicitud
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString(),
+            ];
 
-            Manage::error($e);
+            Log::error("Error en createSessionSuscription: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ], 500);
         }
     }
-
 
     public function create(CreateGenerateLinkRequest $request)
     {
 
         try {
-
             //estos datos se usan para actualizar o crear el contacto en db // $rebillCustomerData = $request->only(['email', 'phone', 'personalId', 'address', 'fullName', 'zip']);
             // mandame la informacion de datos personalescuando crees la susbscripcion. No se puede actualizar datos
 
@@ -155,7 +163,18 @@ class PlaceToPayPaymentLinkController extends Controller
                 "type" => "paymentLink"
             ]);
         } catch (\Exception $e) {
-            Manage::error($e);
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString()
+            ];
+
+            Log::error("Error en PlaceToPayPaymentLinkController-create: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ]);
         }
     }
 
