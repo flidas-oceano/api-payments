@@ -34,6 +34,7 @@ class PlaceToPayTransaction extends Model
         'first_installment',
         'quotes',
         'installments_paid',
+        'paymentData',
 
     ];
     private static $formAttributes = [
@@ -56,6 +57,7 @@ class PlaceToPayTransaction extends Model
         'first_installment',
         'quotes',
         'installments_paid',
+        'paymentData',
     ];
     function isSubscription() {
         return ($this->type === 'requestSubscription') ? true: false;
@@ -74,5 +76,9 @@ class PlaceToPayTransaction extends Model
     public function lead()
     {
         return $this->belongsTo(Lead::class, 'lead_id');
+    }
+    public function paymentLinks()
+    {
+        return $this->hasMany(PlaceToPayPaymentLink::class, 'transactionId');
     }
 }

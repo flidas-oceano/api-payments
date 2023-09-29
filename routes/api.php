@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\{ExcelController, PassportAuthController, RebillController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController, PlaceToPayController};
-use App\Http\Controllers\MercadoPagoController;
+use App\Http\Controllers\{ExcelController, PassportAuthController, RebillController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController, PlaceToPayController, PlaceToPayPaymentLinkController};
+use App\Http\Controllers\MercadopagoController;
 use App\Http\Controllers\PaymentLinkController;
 use App\Http\Controllers\Webhooks\WebhookGatewayController;
 use App\Http\Controllers\Webhooks\CrmOrderSalesStep5ChargeDetailsController;
@@ -60,6 +60,7 @@ Route::get('/stripe/customer/search/{email}', [StripePaymentController::class, '
 
 
 Route::post('/updateZohoCTCZohoCRM', [ZohoController::class, 'updateZohoCTC']);
+Route::post('/saveCardZohoCTC', [ZohoController::class, 'saveCardZohoCTC']);
 Route::post('/updateZohoStripeZohoCRM', [ZohoController::class, 'updateZohoStripe']);
 Route::post('/updateZohoMPZohoCRM', [ZohoController::class, 'updateZohoMP']);
 Route::post('/updateZohoPTP', [ZohoController::class, 'updateZohoPTP']);
@@ -108,15 +109,24 @@ Route::prefix("/webhook")->group(function () {
     Route::post('/stripe', [StripePaymentController::class, 'handleWebhook']);
 });
 
-Route::prefix("/payments_msk")->group(function () {
+Route::middleware('api-api')->prefix("/payments_msk")->group(function () {
     Route::post('/create', [\App\Http\Controllers\PaymentsMsk\CreatePaymentMskController::class, 'create']);
     Route::get('/list', [\App\Http\Controllers\PaymentsMsk\ReadPaymentMskController::class, 'list']);
 });
 
-Route::get("/mp/searchPaymentApprove/{so}", [MercadoPagoPaymentController::class, 'searchPaymentApprove']);
+Route::middleware('api-api')->prefix("/contifico")->group(function () {
+    //user
+    Route::post('/user', [\App\Http\Controllers\Contifico\ContificoUserController::class, 'store']);
+    Route::get('/user/{uuid}', [\App\Http\Controllers\Contifico\ContificoUserController::class, 'getUser']);
+    //invoice
+    Route::get('/invoice/{uuid}', [\App\Http\Controllers\Contifico\ContificoInvoiceController::class, 'getInvoice']);
+    Route::post('/invoice', [\App\Http\Controllers\Contifico\ContificoInvoiceController::class, 'store']);
+    Route::post('/charge', [\App\Http\Controllers\Contifico\ContificoChargeController::class, 'store']);
+});
+
+Route::get("/mp/searchPaymentApprove/{so}", [\App\Http\Controllers\MercadoPagoPaymentController::class, 'searchPaymentApprove']);
 
 Route::get('/getPaymentsStatusDistintContratoEfectivo', [PaymentLinkController::class, 'getPaymentsStatusDistintContratoEfectivo']);
-
 
 Route::post('/ctc/exportExcel', [ExcelController::class, 'exportExcel']);
 Route::get('/download-excel/{filename}', [ExcelController::class, 'downloadExcel']);
@@ -127,6 +137,8 @@ Route::post('/ctc/exportExcel2BPOCP', [ExcelController::class, 'exportExcel2BPOC
 Route::post('/ctc/exportExcel3OBPOCP', [ExcelController::class, 'exportExcel3OBPOCP']);
 Route::post('/ctc/exportExcel4PBOCP', [ExcelController::class, 'exportExcel4PBOCP']);
 
+
+// /placetopay/notificationUpdate
 Route::prefix("/placetopay")->group(function () {
     Route::get('/getAuth', [PlaceToPayController::class, 'getAuth']);
     Route::post('/createSession', [PlaceToPayController::class, 'createSession']);
@@ -139,10 +151,15 @@ Route::prefix("/placetopay")->group(function () {
     Route::post('/savePayments', [PlaceToPayController::class, 'savePayments']);
     Route::post('/savePaymentSubscription', [PlaceToPayController::class, 'savePaymentSubscription']);
     Route::get('/billSubscription/{requestId}', [PlaceToPayController::class, 'billSubscription']);
+    Route::get('/revokeTokenSession/{requestIdSession}', [PlaceToPayController::class, 'revokeTokenSession']);
 
     Route::get('/pruebaregladepago', [PlaceToPayController::class, 'pruebaregladepago']);
 
-
     Route::post('/generatePaymentLink', [PlaceToPayPaymentLinkController::class, 'create']);
-    Route::get('/getPaymentLink/{saleId}', [PlaceToPayPaymentLinkController::class, 'show']);
+    Route::get('/getPaymentLink/{saleId}', [PlaceToPayPaymentLinkController::class, 'getPaymentLink']);
+
+    Route::get('/updatePaymentLinkStatus/{saleId}', [PlaceToPayPaymentLinkController::class, 'updatePaymentLinkStatus']);
+
+    Route::post('/notificationUpdate', [PlaceToPayController::class, 'notificationUpdate']);
+
 });
