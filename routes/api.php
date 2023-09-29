@@ -58,6 +58,7 @@ Route::post('/stripe/paymentIntent', [StripePaymentController::class, 'paymentIn
 Route::middleware('cors')->post('/stripe/subscriptionPayment', [StripePaymentController::class, 'subscriptionPayment']);
 Route::get('/stripe/customer/search/{email}', [StripePaymentController::class, 'findCustomerByEmail']);
 
+Route::get('/getContactByContract/{so}', [ZohoController::class, 'getContactByContract']);
 
 Route::post('/updateZohoCTCZohoCRM', [ZohoController::class, 'updateZohoCTC']);
 Route::post('/saveCardZohoCTC', [ZohoController::class, 'saveCardZohoCTC']);
