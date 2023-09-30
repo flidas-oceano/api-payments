@@ -539,7 +539,7 @@ class ZohoController extends Controller
     public function saveCardZohoCTC(Request $request)
     {
         $data = $request->only(['card', 'card_v']);
-        $updateContract = $this->updateRecord('Sales_Orders', ['tarjeta' => $data['card'], 'vencimiento' => $data['card_v']], $request->contractId, true);
+        $updateContract = $this->updateRecord('Sales_Orders', ['Numero_de_tarjeta' => $data['card'], 'Vencimiento_de_tarjeta' => $data['card_v']], $request->contractId, true);
 
         if ($updateContract['result'] == 'error') {
             return response()->json($updateContract, 500);
