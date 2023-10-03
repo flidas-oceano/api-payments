@@ -64,10 +64,8 @@ Route::post('/updateZohoCTCZohoCRM', [ZohoController::class, 'updateZohoCTCMSK']
 Route::post('/saveCardZohoCTC', [ZohoController::class, 'saveCardZohoCTC']);
 Route::post('/updateZohoStripeZohoCRM', [ZohoController::class, 'updateZohoStripeMSK']);
 Route::post('/updateZohoMPZohoCRM', [ZohoController::class, 'updateZohoMPMSK']);
-Route::post('/updateZohoPTP', [ZohoController::class, 'updateZohoPTP']);
+Route::post('/updateZohoPTPMSK', [ZohoController::class, 'updateZohoPTPMSK']);
 Route::post('/setContractStatus', [ContractController::class, 'setContractStatus']);
-
-
 
 Route::get('/db', [PurchasingProcessController::class, 'index']);
 
