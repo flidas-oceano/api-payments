@@ -81,4 +81,35 @@ class PlaceToPayTransaction extends Model
     {
         return $this->hasMany(PlaceToPayPaymentLink::class, 'transactionId');
     }
+    public static function incrementInstallmentsPaid($sessionId)
+    {
+        self::where('id', $sessionId)->increment('installments_paid', 1);
+        // PlaceToPayTransaction::find($session->id)->update(['installments_paid' => DB::raw('COALESCE(installments_paid, 0) + 1')]);
+    }
+    public function getFirstInstallmentPaid()
+    {
+        return $this->subscriptions()
+        ->where('nro_quote' , 1)
+        ->where('status', 'APPROVED')
+        ->get()
+        ->first();
+    }
+    public static function getPaymentDataByRequestId($requestId)
+    {
+        $session = self::where(['requestId' => $requestId])->first();
+        if ($session) {
+            $paymentData = json_decode($session->paymentData);
+            return $paymentData;
+        }
+        return null;
+    }
+    public static function getFullNameFromPaymentData($paymentData)
+    {
+        if (isset($paymentDataArray['name']) && isset($paymentDataArray['surname'])) {
+            $fullName = $paymentDataArray['name'] . ' ' . $paymentDataArray['surname'];
+            return $fullName;
+        } else {
+            return 'Nombre no disponible';
+        }
+    }
 }

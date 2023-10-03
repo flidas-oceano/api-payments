@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class PlaceToPaySubscription extends Model
 {
@@ -29,6 +30,7 @@ class PlaceToPaySubscription extends Model
         'expiration_date',
         'transactionId',
         'date_to_pay',
+        'failed_payment_attempts'
     ];
     private static $formAttributes = [
         'id',
@@ -47,9 +49,44 @@ class PlaceToPaySubscription extends Model
         'expiration_date',
         'transactionId',
         'date_to_pay',
+        'failed_payment_attempts'
     ];
     public function transaction()
     {
         return $this->belongsTo(PlaceToPayTransaction::class, 'transactionId');
+    }
+
+
+    public static function incrementFailedPaymentAttempts($subscriptionId)
+    {
+        // self::where('id', $subscriptionId)->increment('failed_payment_attempts', 1);
+        PlaceToPaySubscription::find($subscriptionId)->update(['failed_payment_attempts' => DB::raw('COALESCE(failed_payment_attempts, 0) + 1')]);
+    }
+
+    public static function duplicateAndReject($subscriptionId, $response, $payment)
+    {
+        // Duplica la cuota actual
+        $originalSubscription = self::find($subscriptionId);
+        $newSubscriptionRejected = $originalSubscription->replicate();
+        $newSubscriptionRejected->save();
+
+        // Actualiza la cuota original (marcándola como rechazada)
+        self::updateSubscription($newSubscriptionRejected->id, $response, $payment);
+
+        return $newSubscriptionRejected;
+    }
+    public static function updateSubscription($id,$response,$payment){
+        PlaceToPaySubscription::find($id)->update([
+            'status' =>         'REJECTED',
+            // 'status' =>         $response['status']['status'],
+            'message' =>        $response['status']['message'],
+            'reason' =>         $response['status']['reason'],
+            'date' =>           $response['status']['date'],
+            'reference' =>      $response['payment'][0]['reference'] ?? null,
+            'authorization' =>  $response['payment'][0]['authorization'] ?? null,
+            'requestId' =>      $response['requestId'],
+            'currency' =>       $payment['amount']['currency'],
+            'total' =>          $payment['amount']['total'],
+        ]);
     }
 }
