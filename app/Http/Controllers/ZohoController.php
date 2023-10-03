@@ -348,7 +348,7 @@ class ZohoController extends Controller
                 $modoDePago = $modoDePago . ' con parcialidad';
             }
         } else {
-            $modoDePago = 'No definido'; // TODO: como corresponde validar el Pago Unico ?
+            $modoDePago = 'Cobro total en un pago';
         }
 
         if ($gateway == 'CTC') {
