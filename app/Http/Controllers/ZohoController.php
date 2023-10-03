@@ -142,7 +142,7 @@ class ZohoController extends Controller
     //en cualquier caso, te devuelve el id
     //exception -> reventó todo
     //ok -> salio bien
-    //duplicate -> no es malo, pero está duplicado, o sea que no se crea, sino que trae su id
+    //duplicate -> no es malo, pero esPlaceToPaySubscription tá duplicado, o sea que no se crea, sino que trae su id
     public function createNewRecord($type, $data)
     {
         $status = 'ok'; //el status, y en base a esto armo el answer o no...
@@ -368,6 +368,34 @@ class ZohoController extends Controller
                 'folio_pago' => $request->folio_pago,
             ];
         }
+        if($gateway == 'Placetopay'){
+
+            $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();
+            if ($session == null) {
+                return response()->json('No se encontro la session en la DB.', 500);
+            }
+            $subscription = $session->subscriptions()->where(['nro_quote' => 1])->get()->first();
+            if ($subscription == null) {
+                return response()->json('No se encontraron subcripciones de cuota 1 pagadas en la DB.', 500);
+            }
+
+            return [
+                'Monto_de_parcialidad' => $session->first_installment,
+                'Seleccione_total_de_pagos_recurrentes' => $session->quotes,
+                'Monto_de_cada_pago_restantes' => $session->remaining_installments,
+                'Cantidad_de_pagos_recurrentes_restantes' => strval($session->quotes - 1 ),
+                'Fecha_de_primer_cobro' => date('Y-m-d'),
+                'Status' => 'Aprobado',
+                'M_todo_de_pago' => $gateway,
+                'Modo_de_pago' => $modoDePago,
+                'stripe_subscription_id' => $request->subscriptionId,
+
+                'session_subscription_requestId' => $session->requestId,
+                'cuota_subscription_requestId' => $session->getFirstInstallmentPaid()->requestId,
+
+
+            ];
+        }
 
         return [
             'Monto_de_parcialidad' => $request->installment_amount,
@@ -382,8 +410,18 @@ class ZohoController extends Controller
         ];
     }
 
-    private function mappingDataContact($request)
+    private function mappingDataContact($request, $gateway = null)
     {
+        if($gateway == 'Placetopay'){
+            $paymentData = PlaceToPayTransaction::getPaymentDataByRequestId($request['requestId']);
+
+            return [
+                'Identificacion' => $paymentData->document,
+                'Tel_fono_de_facturaci_n' => $paymentData->mobile,
+                'Raz_n_social' => PlaceToPayTransaction::getFullNameFromPaymentData($paymentData),
+            ];
+        }
+
         $identification = $this->getIdentification($request->dni, $request->country);
 
         return [
@@ -548,46 +586,74 @@ class ZohoController extends Controller
         return response()->json($updateContract);
     }
 
-    public function updateZohoPTP(Request $request)
+    public function updateZohoPTPMSK(Request $request)
     {
         try {
 
+            $saleZoho = $this->fetchRecordWithValue('Sales_Orders', 'id', $request->contractId)->getData();
+            $contactEntityId = $saleZoho['Contact_Name']->getEntityId();
+
+            $dataUpdate = $this->mappingDataContract($request, 'Placetopay');
+            $dataUpdateContact = $this->mappingDataContact($request, 'Placetopay');
+
+            // $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
+            // $updateContact = $this->updateRecord('Contacts', $dataUpdateContact, $contactEntityId, true);
+
+
+            // $this->processResponse($updateContact, $updateContract);
+
+        } catch (\Exception $e) {
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString(),
+            ];
+
+            Log::error("Error en updateZohoPTP: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ]);
+        }
+    }
+    public function updateZohoPTP(Request $request)
+    {
+        try {
             $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();
             if ($session == null) {
                 return response()->json('No se encontro la session en la DB.', 500);
             }
-
             $subscription = $session->subscriptions()->where(['nro_quote' => 1])->get()->first();
             if ($subscription == null) {
                 return response()->json('No se encontraron subcripciones de cuota 1 pagadas en la DB.', 500);
             }
 
+
             $resultTransaction = $this->placeToPayService->getByRequestId($session->requestId, $cron = false, $isSubscription = true);
             $resultSubscription = $this->placeToPayService->getByRequestId($subscription->requestId, $cron = false, $isSubscription = true);
 
             $dataUpdate = [
-                'Email' => $resultSubscription['request']['payer']['email'],
-                //si tiene que ir el email del comprador hay que crear el payment con buyer aparte del payer
+                //Contrato
                 'Anticipo' => $session->first_installment,
-                'Saldo' => $resultSubscription['request']['payment']['amount']['total'],
                 'Cantidad' => $session->quotes,
-                //     //Nro de cuotas
                 'Monto_de_cuotas_restantes' => $session->remaining_installments,
-                //     //Costo de cada cuota
                 'Cuotas_restantes_sin_anticipo' => $session->isAdvancedSubscription() ? $session->quotes - 1 : null,
-                'DNI' => $resultSubscription['request']['payer']['document'],
                 'Fecha_de_Vto' => date('Y-m-d'),
                 'Status' => 'Contrato Efectivo',
-                'Modalidad_de_pago_del_Anticipo' => 'Placetopay',
                 'Medio_de_Pago' => 'Placetopay',
+                'Modalidad_de_pago_del_Anticipo' => 'Placetopay',
+                'Saldo' => $resultSubscription['request']['payment']['amount']['total'],
                 'Es_Suscri' => $session->isSubscription(),
                 'Suscripcion_con_Parcialidad' => $session->isAdvancedSubscription(),
-                'L_nea_nica_6' => $resultSubscription['request']['payer']['name'] . " " . $resultSubscription['request']['payer']['surname'],
-                // 'Billing_Street' => $result['request']['payer']['address']['street'],
-                'Billing_Street' => $request['street'],
+                'Discount' => abs($request['adjustment']),
+                //Contrato
+                'DNI' => $resultSubscription['request']['payer']['document'],
                 'L_nea_nica_3' => $resultSubscription['request']['payer']['document'],
                 'Tel_fono_Facturacion' => $resultSubscription['request']['payer']['mobile'],
-                'Discount' => abs($request['adjustment'])
+                'L_nea_nica_6' => $resultSubscription['request']['payer']['name'] . " " . $resultSubscription['request']['payer']['surname'],
+                'Email' => $resultSubscription['request']['payer']['email'],
+                'Billing_Street' => $request['street'],
             ];
 
             // return $dataUpdate;
@@ -597,8 +663,6 @@ class ZohoController extends Controller
                 return response()->json($updateContract, 500);
             else
                 return response()->json($updateContract);
-
-
 
         } catch (\Exception $e) {
             $err = [
@@ -621,27 +685,26 @@ class ZohoController extends Controller
         $requestsSubscription = PlaceToPayTransaction::where(['requestId' => $requestIdRequestSubscription])->get()->first();
 
         $dataUpdate = [
-            'Email' => $result['request']['payer']['email'],
-            //si tiene que ir el email del comprador hay que crear el payment con buyer aparte del payer
             'Anticipo' => $requestsSubscription->first_installment,
-            'Saldo' => $result['request']['payment']['amount']['total'],
             'Cantidad' => $requestsSubscription->quotes,
-            //     //Nro de cuotas
             'Monto_de_cuotas_restantes' => $requestsSubscription->isAdvancedSubscription() ? $requestsSubscription->first_installment : $requestsSubscription->installmentsToPay(),
-            //     //Costo de cada cuota
             'Cuotas_restantes_sin_anticipo' => $requestsSubscription->isAdvancedSubscription() ? $requestsSubscription->quotes - 1 : null,
-            'DNI' => '',
             'Fecha_de_Vto' => date('Y-m-d'),
             'Status' => 'Contrato Efectivo',
-            'Modalidad_de_pago_del_Anticipo' => 'Placetopay',
             'Medio_de_Pago' => 'Placetopay',
+            'Modalidad_de_pago_del_Anticipo' => 'Placetopay',
+            'Saldo' => $result['request']['payment']['amount']['total'],
             'Es_Suscri' => $requestsSubscription->isSubscription(),
             'Suscripcion_con_Parcialidad' => $requestsSubscription->isAdvancedSubscription(),
-            'L_nea_nica_6' => $result['request']['payer']['name'] . " " . $result['request']['payer']['surname'],
-            'Billing_Street' => $result['request']['payer']['address']['street'],
+            'Discount' => abs($request['adjustment']),
+
+
+            'DNI' => '',
             'L_nea_nica_3' => $result['request']['payer']['document'],
             'Tel_fono_Facturacion' => $result['request']['payer']['mobile'],
-            'Discount' => abs($request['adjustment'])
+            'L_nea_nica_6' => $result['request']['payer']['name'] . " " . $result['request']['payer']['surname'],
+            'Email' => $result['request']['payer']['email'],
+            'Billing_Street' => $result['request']['payer']['address']['street'],
         ];
 
         $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
