@@ -34,7 +34,6 @@ class UpdateContractZohoRequest extends FormRequest
             'contractId' => 'required',
             'address' => 'required',
             'dni' => 'required',
-            'phone' => 'required',
             'fullname' => 'required',
             'is_suscri' => 'required',
             'country' => 'required',

@@ -60,23 +60,22 @@ class ZohoController extends Controller
         try {
             $this->placeToPayService = $placeToPayService;
 
-            $this->emi_owner = '2712674000000899001';
+            $this->emi_owner = 'x';
 
             ZCRMRestClient::initialize([
-                "client_id" => env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_CLIENT_ID') : env('ZOHO_API_PAYMENTS_PROD_CLIENT_ID'),
-                "client_secret" => env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_CLIENT_SECRECT') : env('ZOHO_API_PAYMENTS_PROD_CLIENT_SECRECT'),
-                "redirect_uri" => env('APP_DEBUG') ? 'https://www.zoho.com' : 'https://www.oceanomedicina.com.ar',
+                "client_id" => env('ZOHO_CRM_MSK_PAYMENTS_CLIENT_ID'),
+                "client_secret" => env('ZOHO_CRM_MSK_PAYMENTS_CLIENT_SECRECT'),
+                "redirect_uri" => 'https://www.msklatam.com',
                 "token_persistence_path" => Storage::path("zoho"),
                 "persistence_handler_class" => "ZohoOAuthPersistenceByFile",
-                "currentUserEmail" => env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar',
-                //'copyzoho.custom@gmail.com',
+                "currentUserEmail" => 'integraciones@msklatam.com',
                 "accounts_url" => 'https://accounts.zoho.com',
                 "access_type" => "offline"
             ]);
 
             $oAuthClient = ZohoOAuth::getClientInstance();
-            $refreshToken = env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_REFRESH_TOKEN') : env('ZOHO_API_PAYMENTS_PROD_REFRESH_TOKEN');
-            $userIdentifier = env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar';
+            $refreshToken = env('ZOHO_CRM_MSK_PAYMENTS_REFRESH_TOKEN');
+            $userIdentifier = 'integraciones@msklatam.com';
             $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier);
         } catch (Exception $e) {
             Log::error($e);
@@ -282,6 +281,30 @@ class ZohoController extends Controller
         return ($answer);
     }
 
+
+
+    public function getContactByContract($so)
+    {
+
+        $answer = 'error';
+
+        $so = (int) $so;
+        $record = null;
+
+        $record = $this->fetchRecordWithValue('Sales_Orders', 'SO_Number', $so);
+        try {
+            if ($record != 'error') {
+                $answer = $record;
+            } else
+                $answer = '???';
+        } catch (\Exception $e) {
+            Log::error($e);
+        }
+
+        return response()->json($answer);
+    }
+
+
     public function updateZohoStripe(UpdateContractZohoRequest $request)
     {
         $identification = $this->getIdentification($request->dni, $request->country);
@@ -315,6 +338,119 @@ class ZohoController extends Controller
             return response()->json($updateContract, 500);
         else
             return response()->json($updateContract);
+    }
+
+    private function mappingDataContract($request, $gateway)
+    {
+        if (boolval($request->is_suscri)) {
+            $modoDePago = 'Cobro recurrente';
+            if (boolval($request->is_advanceSuscription)) {
+                $modoDePago = $modoDePago . ' con parcialidad';
+            }
+        } else {
+            $modoDePago = 'No definido'; // TODO: como corresponde validar el Pago Unico ?
+        }
+
+        if ($gateway == 'CTC') {
+            return [
+                // Contrato
+                'Monto_de_parcialidad' => $request->installment_amount,
+                'Seleccione_total_de_pagos_recurrentes' => strval($request->installments),
+                'Monto_de_cada_pago_restantes' => $request->is_advanceSuscription ? $request->payPerMonthAdvance : $request->installment_amount,
+                'Cantidad_de_pagos_recurrentes_restantes' => strval($request->installments - 1),
+                'Fecha_de_primer_cobro' => date('Y-m-d'),
+                'Status' => 'Aprobado',
+                'M_todo_de_pago' => $gateway,
+                'Modo_de_pago' => $modoDePago,
+
+                //campos CTC
+                'folio_suscripcion' => $request->subscriptionId,
+                'folio_pago' => $request->folio_pago,
+            ];
+        }
+
+        return [
+            'Monto_de_parcialidad' => $request->installment_amount,
+            'Seleccione_total_de_pagos_recurrentes' => strval($request->installments),
+            'Monto_de_cada_pago_restantes' => $request->is_advanceSuscription ? $request->payPerMonthAdvance : $request->installment_amount,
+            'Cantidad_de_pagos_recurrentes_restantes' => strval($request->installments - 1),
+            'Fecha_de_primer_cobro' => date('Y-m-d'),
+            'Status' => 'Aprobado',
+            'M_todo_de_pago' => $gateway,
+            'Modo_de_pago' => $modoDePago,
+            'stripe_subscription_id' => $request->subscriptionId,
+        ];
+    }
+
+    private function mappingDataContact($request)
+    {
+        $identification = $this->getIdentification($request->dni, $request->country);
+
+        return [
+            'Identificacion' => ($request->dni ?? $identification),
+            'Tel_fono_de_facturaci_n' => $request->phone,
+            'Raz_n_social' => $request->fullname,
+        ];
+    }
+
+    private function processResponse($contact, $contract)
+    {
+        if ($contract['result'] == 'error' || $contact['result'] == 'error') {
+            return response()->json(["contract" => $contract, "contact" => $contact], 500);
+        }
+
+        return response()->json(["contract" => $contract, "contact" => $contact]);
+    }
+
+    public function updateZohoStripeMSK(UpdateContractZohoRequest $request)
+    {
+        $saleZoho = $this->fetchRecordWithValue('Sales_Orders', 'id', $request->contractId)->getData();
+        $contactEntityId = $saleZoho['Contact_Name']->getEntityId();
+
+        $dataUpdate = $this->mappingDataContract($request, 'Stripe');
+
+        $dataUpdateContact = $this->mappingDataContact($request);
+
+        $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
+        $updateContact = $this->updateRecord('Contacts', $dataUpdateContact, $contactEntityId, true);
+
+        $this->processResponse($updateContact, $updateContract);
+    }
+
+    public function updateZohoMPMSK(UpdateContractZohoRequest $request)
+    {
+
+        $saleZoho = $this->fetchRecordWithValue('Sales_Orders', 'id', $request->contractId)->getData();
+        $contactEntityId = $saleZoho['Contact_Name']->getEntityId();
+
+
+        $dataUpdate = $this->mappingDataContract($request, 'Mercado Pago');
+        $dataUpdateContact = $this->mappingDataContact($request);
+
+        $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
+        $updateContact = $this->updateRecord('Contacts', $dataUpdateContact, $contactEntityId, true);
+
+
+        $this->processResponse($updateContact, $updateContract);
+    }
+
+    public function updateZohoCTCMSK(UpdateContractZohoRequest $request)
+    {
+
+        $request->validate([
+            'folio_pago' => 'required'
+        ]);
+
+        $saleZoho = $this->fetchRecordWithValue('Sales_Orders', 'id', $request->contractId)->getData();
+        $contactEntityId = $saleZoho['Contact_Name']->getEntityId();
+
+        $dataUpdate = $this->mappingDataContract($request, 'CTC');
+        $dataUpdateContact = $this->mappingDataContact($request);
+
+        $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
+        $updateContact = $this->updateRecord('Contacts', $dataUpdateContact, $contactEntityId, true);
+
+        $this->processResponse($updateContact, $updateContract);
     }
 
     public function updateZohoMP(UpdateContractZohoRequest $request)
@@ -354,6 +490,7 @@ class ZohoController extends Controller
         else
             return response()->json($updateContract);
     }
+
 
     public function updateZohoCTC(UpdateContractZohoRequest $request)
     {
@@ -402,7 +539,7 @@ class ZohoController extends Controller
     public function saveCardZohoCTC(Request $request)
     {
         $data = $request->only(['card', 'card_v']);
-        $updateContract = $this->updateRecord('Sales_Orders', ['tarjeta' => $data['card'], 'vencimiento' => $data['card_v']], $request->contractId, true);
+        $updateContract = $this->updateRecord('Sales_Orders', ['Numero_de_tarjeta' => $data['card'], 'Vencimiento_de_tarjeta' => $data['card_v']], $request->contractId, true);
 
         if ($updateContract['result'] == 'error') {
             return response()->json($updateContract, 500);
@@ -416,13 +553,13 @@ class ZohoController extends Controller
         try {
 
             $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();
-            if($session == null){
-                return response()->json('No se encontro la session en la DB.'. 500);
+            if ($session == null) {
+                return response()->json('No se encontro la session en la DB.', 500);
             }
 
             $subscription = $session->subscriptions()->where(['nro_quote' => 1])->get()->first();
-            if($subscription == null){
-                return response()->json('No se encontraron subcripciones de cuota 1 pagadas en la DB.'. 500);
+            if ($subscription == null) {
+                return response()->json('No se encontraron subcripciones de cuota 1 pagadas en la DB.', 500);
             }
 
             $resultTransaction = $this->placeToPayService->getByRequestId($session->requestId, $cron = false, $isSubscription = true);
@@ -453,8 +590,9 @@ class ZohoController extends Controller
                 'Discount' => abs($request['adjustment'])
             ];
 
-            $updateContract = $this->updateRecordNewVersion('Sales_Orders', $dataUpdate, $request->contractId, true);
+            // return $dataUpdate;
 
+            $updateContract = $this->updateRecordNewVersion('Sales_Orders', $dataUpdate, $request->contractId, true);
             if ($updateContract['result'] == 'error')
                 return response()->json($updateContract, 500);
             else
