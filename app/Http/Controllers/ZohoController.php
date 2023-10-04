@@ -379,12 +379,6 @@ class ZohoController extends Controller
                 return response()->json('No se encontraron subcripciones de cuota 1 pagadas en la DB.', 500);
             }
 
-            // result: "error"
-            // id:""
-            // detail: array(2)
-            // expected_data_type:"text"
-            // api_name:"Seleccione_total_de_pagos_recurrentes"
-
             return [
                 'Monto_de_parcialidad' => $session->first_installment,
                 'Seleccione_total_de_pagos_recurrentes' => strval($session->quotes),
