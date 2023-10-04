@@ -379,20 +379,24 @@ class ZohoController extends Controller
                 return response()->json('No se encontraron subcripciones de cuota 1 pagadas en la DB.', 500);
             }
 
+            // result: "error"
+            // id:""
+            // detail: array(2)
+            // expected_data_type:"text"
+            // api_name:"Seleccione_total_de_pagos_recurrentes"
+
             return [
                 'Monto_de_parcialidad' => $session->first_installment,
-                'Seleccione_total_de_pagos_recurrentes' => $session->quotes,
+                'Seleccione_total_de_pagos_recurrentes' => strval($session->quotes),
                 'Monto_de_cada_pago_restantes' => $session->remaining_installments,
                 'Cantidad_de_pagos_recurrentes_restantes' => strval($session->quotes - 1 ),
                 'Fecha_de_primer_cobro' => date('Y-m-d'),
                 'Status' => 'Aprobado',
                 'M_todo_de_pago' => $gateway,
                 'Modo_de_pago' => $modoDePago,
-                'stripe_subscription_id' => $request->subscriptionId,
 
-                'session_subscription_requestId' => $session->requestId,
-                'cuota_subscription_requestId' => $session->getFirstInstallmentPaid()->requestId,
-
+                // 'session_subscription_requestId' => $session->requestId,
+                // 'cuota_subscription_requestId' => $session->getFirstInstallmentPaid()->requestId,
 
             ];
         }
@@ -596,11 +600,10 @@ class ZohoController extends Controller
             $dataUpdate = $this->mappingDataContract($request, 'Placetopay');
             $dataUpdateContact = $this->mappingDataContact($request, 'Placetopay');
 
-            // $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
-            // $updateContact = $this->updateRecord('Contacts', $dataUpdateContact, $contactEntityId, true);
+            $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
+            $updateContact = $this->updateRecord('Contacts', $dataUpdateContact, $contactEntityId, true);
 
-
-            // $this->processResponse($updateContact, $updateContract);
+            $this->processResponse($updateContact, $updateContract);
 
         } catch (\Exception $e) {
             $err = [
@@ -611,7 +614,7 @@ class ZohoController extends Controller
                 // 'trace' => $e->getTraceAsString(),
             ];
 
-            Log::error("Error en updateZohoPTP: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            Log::error("Error en updateZohoPTPMSK: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
             return response()->json([
                 $err
             ]);
