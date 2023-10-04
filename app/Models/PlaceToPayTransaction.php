@@ -105,8 +105,8 @@ class PlaceToPayTransaction extends Model
     }
     public static function getFullNameFromPaymentData($paymentData)
     {
-        if (isset($paymentDataArray['name']) && isset($paymentDataArray['surname'])) {
-            $fullName = $paymentDataArray['name'] . ' ' . $paymentDataArray['surname'];
+        if (isset($paymentData->name) && isset($paymentData->surname)) {
+            $fullName = $paymentData->name . ' ' . $paymentData->surname;
             return $fullName;
         } else {
             return 'Nombre no disponible';
