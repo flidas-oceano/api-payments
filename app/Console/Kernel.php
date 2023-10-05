@@ -7,9 +7,11 @@ use App\Console\Commands\GitPullAndCleanLaravelLogs;
 use App\Console\Commands\RebillCommand;
 use App\Console\Commands\StripeCommand;
 use App\Http\Controllers\CronosController;
+use App\Services\PlaceToPay\PlaceToPayService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\Log;
 
 class Kernel extends ConsoleKernel
 {
@@ -21,8 +23,14 @@ class Kernel extends ConsoleKernel
         RebillCommand::class,
     ];
 
-    /**
+       /**
      * Define the application's command schedule.
+     *
+     * Ejecutatodo de una:
+     * Ejecutar por comando: php artisan schedule:run
+     *
+     * Ejecutra las tareas con los intervalos de tiempo:
+     * Ejecutar por comando: php artisan schedule:work
      *
      * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
@@ -44,6 +52,24 @@ class Kernel extends ConsoleKernel
             $response = Http::get('https://oceanomedicina.net/api-payments/public/api/rebill/checkPendingPayments');
             return response()->json($response);
         })->everyFiveMinutes();
+
+
+
+        // $schedule->call(function () {
+        //     try {
+        //         $placeToPayService = new PlaceToPayService(); // Instancia el servicio
+        //     // $placeToPayService->createInstallments();
+
+        //     // $placeToPayService->refreshPendingS();//Busca los pendientes de las sessiones y usbcripciones.
+        //     $placeToPayService->stageOne(); //Pagar los que no tinen deudas.
+
+        //     //En test ejecutar cada 5 minutos
+        //     //En prod cada un dia
+        //     } catch (\Exception $e) {
+        //         Log::error('Error en el comando programado: ' . $e->getMessage());
+        //     }
+
+        // })->everyMinute();
 
         $schedule->command('sales-order:mp 100 1')->dailyAt('05:40:06')->timezone('America/Argentina/Buenos_Aires');
         $schedule->command('sales-order:mp 100 2')->dailyAt('05:45:06')->timezone('America/Argentina/Buenos_Aires');
