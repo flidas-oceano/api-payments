@@ -140,6 +140,7 @@ Route::post('/ctc/exportExcel4PBOCP', [ExcelController::class, 'exportExcel4PBOC
 
 // /placetopay/notificationUpdate
 Route::prefix("/placetopay")->group(function () {
+    Route::get('/{reference}/renew', [PlaceToPayController::class, 'authRenewSession']);
     Route::get('/getAuth', [PlaceToPayController::class, 'getAuth']);
     Route::post('/createSession', [PlaceToPayController::class, 'createSession']);
     Route::post('/createSessionSubscription', [PlaceToPayController::class, 'createSessionSubscription']);

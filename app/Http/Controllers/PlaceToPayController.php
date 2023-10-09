@@ -25,7 +25,7 @@ class PlaceToPayController extends Controller
     public $placeTopayService = null;
     public $zohoController = null;
 
-    public $status= [
+    public $status = [
         'FAILED' => 400,
         'APPROVED' => 200,
         'REJECTED' => 400,
@@ -49,7 +49,66 @@ class PlaceToPayController extends Controller
         $this->login_su = env("REACT_APP_PTP_LOGIN_SU");
         $this->secret_su = env("REACT_APP_PTP_SECRECT_SU");
     }
-    public function revokeTokenSession($requestIdSession){
+
+    public function show()
+    {
+        $transactions = PlaceToPayTransaction::all();
+        return view('ptp.subs', compact('transactions'));
+    }
+
+    public function showPaymentsOfTransaction($reference)
+    {
+        $completeTransaction = PlaceToPayTransaction::where('reference', $reference)->first();
+
+        return view('ptp.completeTransaction', compact('completeTransaction'));
+    }
+
+    public function renewSession(Request $request, $reference)
+    {
+        $session = PlaceToPayTransaction::where(['reference' => $request->reference, 'status' => 'SUSPEND'])->first();
+        $newSession = $session->replicate();
+        $newSession->save();
+
+        $newSession->update([
+            'status' => 'RENEW',
+            'reason' => null,
+            'message' => null,
+            'requestId' => null,
+            'processUrl' => null,
+            'token_collect_para_el_pago' => null,
+            'expiration_date' => null,
+            'reference' => $newSession->reference . "_RT_" . $session->count() - 1
+        ]);
+
+        // Copia otros atributos si es necesario
+
+        foreach ($session->subscriptions as $subscription) {
+            if ($subscription->status === null) {
+                $newSubscription = $subscription->replicate();
+                // Realiza modificaciones en la nueva suscripción si es necesario
+                $newSession->subscriptions()->save($newSubscription);
+            }
+        }
+
+        dump($newSession);
+
+        return $session;
+    }
+
+    public function authRenewSession($reference)
+    {
+        $renewSession = PlaceToPayTransaction::where('reference', $reference)->where('status', 'RENEW')->first();
+        return response()->json([
+            "renewSession" => $renewSession,
+            "quotes" => [
+                "detail" => $renewSession->subscriptions,
+                "count" => $renewSession->subscriptions->count(),
+            ]
+        ]);
+    }
+
+    public function revokeTokenSession($requestIdSession)
+    {
         try {
 
             return response()->json([
@@ -182,44 +241,49 @@ class PlaceToPayController extends Controller
 
         try {
 
-            $requestsTransaction = PlaceToPayTransaction::where(['requestId' => $request['requestId']['requestId']])->get()->first();
-            if (count($requestsTransaction->subscriptions) > 0) {//Las subscripciones se crean solo si se aprobo el primer pago.
+            $transaction = PlaceToPayTransaction::where(['requestId' => $request['requestId']['requestId']])->first();
+            if ($transaction->subscriptions->count() > 0) {
 
-                $firstSubscription = $requestsTransaction->subscriptions->first();
-                if( $firstSubscription->status==='APPROVED'){
+                //Las subscripciones se crean solo si se aprobo el primer pago.
+
+                $firstSubscription = $transaction->subscriptions->first();
+
+                if ($firstSubscription->status === 'APPROVED') {
                     return response()->json([
                         "result" => $this->message[$firstSubscription->status],
                         "statusPayment" => 'APPROVED',
                     ]);
                 }
 
-                $sessionSubscription = $this->placeTopayService->getByRequestId($firstSubscription->requestId, $cron = false,$isSubscription = true);
+                $sessionSubscription = $this->placeTopayService->getByRequestId($firstSubscription->requestId, $cron = false, $isSubscription = true);
 
-                if( ($sessionSubscription['status']['status'] ?? 'DESCONOCIDO') === 'PENDING')
+                if (($sessionSubscription['status']['status'] ?? 'DESCONOCIDO') === 'PENDING')
                     $statusPayment = $sessionSubscription['status']['status'];
 
-                if( isset( $sessionSubscription['payment'][0]['status']['status'] ) )
-                    $statusPayment =  $sessionSubscription['payment'][0]['status']['status'] ?? 'DESCONOCIDO' ;
+                if (isset($sessionSubscription['payment'][0]['status']['status']))
+                    $statusPayment = $sessionSubscription['payment'][0]['status']['status'] ?? 'DESCONOCIDO';
 
                 //Respuestas de error
-                if($statusPayment!=='APPROVED'){
+                if ($statusPayment !== 'APPROVED') {
                     //Actualizar estado
-                    PlaceToPaySubscription::where(['id' => $firstSubscription->id ])->update([
+                    PlaceToPaySubscription::where(['id' => $firstSubscription->id])->update([
                         'date' => $sessionSubscription['status']['date'],
                         'status' => $sessionSubscription['status']['status'],
                         'reason' => $sessionSubscription['status']['reason'],
                         'message' => $sessionSubscription['status']['message'],
-                        'authorization' => $sessionSubscription['payment'][0]['authorization'] ?? null, //TODO: siempre lo veo como : 999999
-                        'reference' => $response['payment'][0]['reference'] ?? null,
+                        'authorization' => $sessionSubscription['payment'][0]['authorization'] ?? null,
+                        'reference' => $sessionSubscription['payment'][0]['reference'] ?? null,
                     ]);
-                    if($statusPayment==='REJECTED'){
+
+                    if ($statusPayment === 'REJECTED') {
                         //borrar subscripcion y transaccion.
-                        if( !$this->placeTopayService->isRejectedTokenTransaction($requestsTransaction) ){
-                            $requestsTransaction->update([
-                                'token_collect_para_el_pago' => 'CARD_REJECTED_'.$requestsTransaction->token_collect_para_el_pago
+                        if (!$this->placeTopayService->isRejectedTokenTransaction($transaction)) {
+                            $transaction->update([
+                                'token_collect_para_el_pago' => 'CARD_REJECTED_' . $transaction->token_collect_para_el_pago
                             ]);
                         }
                     }
+
                     return response()->json([
                         "result" => $this->message[$statusPayment],
                         "statusPayment" => $statusPayment,
@@ -228,7 +292,7 @@ class PlaceToPayController extends Controller
             }
 
             //Consulto a ptp la session.
-            $sessionSubscription = $this->placeTopayService->getByRequestId($request['requestId']['requestId'], $cron = false,$isSubscription = true);
+            $sessionSubscription = $this->placeTopayService->getByRequestId($request['requestId']['requestId'], $cron = false, $isSubscription = true);
             //Actualizo el estado de la session.
             $updateRequestSession = PlaceToPayTransaction::updateOrCreate(
                 ['requestId' => $sessionSubscription["requestId"]],
@@ -254,11 +318,11 @@ class PlaceToPayController extends Controller
                             // realizar primer pago de subscripcion
                             $result = $this->placeTopayService->payFirstQuoteCreateRestQuotesByRequestId($sessionSubscription["requestId"]);
 
-                            if( ($result['response']['status']['status'] ?? 'DESCONOCIDO') === 'PENDING')
+                            if (($result['response']['status']['status'] ?? 'DESCONOCIDO') === 'PENDING')
                                 $statusPayment = $result['response']['status']['status'];
 
-                            if( isset( $result['response']['payment'][0]['status']['status'] ) )
-                                $statusPayment =  $result['response']['payment'][0]['status']['status'] ?? 'DESCONOCIDO' ;
+                            if (isset($result['response']['payment'][0]['status']['status']))
+                                $statusPayment = $result['response']['payment'][0]['status']['status'] ?? 'DESCONOCIDO';
 
                             $this->message['APPROVED'] = 'Se ha realizado el pago con exito.';
 
@@ -277,7 +341,7 @@ class PlaceToPayController extends Controller
             //Preparo las respuestas de ERROR
             $status = $sessionSubscription['status']['status'] ?? 'DESCONOCIDO';
             $message = $sessionSubscription['status']['message'] ?? 'DESCONOCIDO';
-            if($status === 'REJECTED')
+            if ($status === 'REJECTED')
                 $message = $message . '. Cree una nueva session.';
 
             if ($status !== "APPROVED") {
@@ -311,7 +375,7 @@ class PlaceToPayController extends Controller
         try {
             return response()->json([
                 'sessionPTP' => $this->placeTopayService->getByRequestId($requestId),
-                'sessionDB' => PlaceToPayTransaction::where([ 'requestId' => $requestId ])->get()->first()
+                'sessionDB' => PlaceToPayTransaction::where(['requestId' => $requestId])->get()->first()
             ]);
         } catch (\Exception $e) {
             // Manejo de errores si ocurre alguno durante la solicitud
@@ -357,13 +421,14 @@ class PlaceToPayController extends Controller
                 "document" => $request['payer']['document'],
                 "documentType" => $request['payer']['documentType'],
                 "mobile" => $request['payer']['mobile'],
-                "address" => [ //domicilio
+                "address" => [
+                    //domicilio
                     "country" => $request['country'],
-                //     // "state" => $request['state'],
-                //     // "city" => $request['city'],
-                //     // "postalCode" => $request['postalCode'],
+                    //     // "state" => $request['state'],
+                    //     // "city" => $request['city'],
+                    //     // "postalCode" => $request['postalCode'],
                     "street" => $request['payer']['address']['street'],
-                //     // "phone" => $request['phone'],//+573214445566
+                    //     // "phone" => $request['phone'],//+573214445566
                 ]
             ];
             $subscription = [
@@ -538,21 +603,22 @@ class PlaceToPayController extends Controller
             ], 500);
         }
     }
-    public function notificationUpdate(Request $request){
-        try{
-            if($this->placeTopayService->validateSignature($request)){
+    public function notificationUpdate(Request $request)
+    {
+        try {
+            if ($this->placeTopayService->validateSignature($request)) {
 
-                PlaceToPayTransaction::where([ 'requestId' => $request['requestId'] ])
-                ->update([
-                    'requestId' => $request['requestId'],
-                    'status' => $request['status']['status'],
-                    'message' => $request['status']['message'],
-                    'reason' => $request['status']['reason'],
-                    'date' => $request['status']['date'],
-                ]);
+                PlaceToPayTransaction::where(['requestId' => $request['requestId']])
+                    ->update([
+                        'requestId' => $request['requestId'],
+                        'status' => $request['status']['status'],
+                        'message' => $request['status']['message'],
+                        'reason' => $request['status']['reason'],
+                        'date' => $request['status']['date'],
+                    ]);
 
-                $session = PlaceToPayTransaction::where([ 'requestId' => $request['requestId'] ])->get()->first();
-                if($request['status']['status'] === 'APPROVED'){
+                $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();
+                if ($request['status']['status'] === 'APPROVED') {
                     //TODO: Realizas el primer pago si es subscripcion
                 }
 
@@ -637,7 +703,8 @@ class PlaceToPayController extends Controller
                         // 'currency' => $request["request"]["payment"]["amount"]["currency"],
                         // 'total' => $request["request"]["payment"]["amount"]["total"],
                         // 'contact_id' => $request["request"]["payment"]["amount"]["amount"],
-                        'authorization' => $request["payment"] !== null ? $request["payment"]["authorization"] : null, //si sesta pagado tiene este payment
+                        'authorization' => $request["payment"] !== null ? $request["payment"]["authorization"] : null,
+                        //si sesta pagado tiene este payment
                         // 'type' => isset($request["subscription"]) ? ///subscription o payment,
                         // 'token_collect' => $request["processUrl"],
                     ]

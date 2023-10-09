@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+
 class PlaceToPayTransaction extends Model
 {
     use HasFactory;
@@ -59,14 +60,17 @@ class PlaceToPayTransaction extends Model
         'installments_paid',
         'paymentData',
     ];
-    function isSubscription() {
-        return ($this->type === 'requestSubscription') ? true: false;
+    function isSubscription()
+    {
+        return ($this->type === 'requestSubscription') ? true : false;
     }
-    function isAdvancedSubscription() {
+    function isAdvancedSubscription()
+    {
         return $this->first_installment !== null;
     }
-    function installmentsToPay() {
-        $diferencia = $this->quotes -  $this->installments_paid;
+    function installmentsToPay()
+    {
+        $diferencia = $this->quotes - $this->installments_paid;
         return $diferencia;
     }
     public function subscriptions()
@@ -84,15 +88,14 @@ class PlaceToPayTransaction extends Model
     public static function incrementInstallmentsPaid($sessionId)
     {
         self::where('id', $sessionId)->increment('installments_paid', 1);
-        // PlaceToPayTransaction::find($session->id)->update(['installments_paid' => DB::raw('COALESCE(installments_paid, 0) + 1')]);
     }
     public function getFirstInstallmentPaid()
     {
         return $this->subscriptions()
-        ->where('nro_quote' , 1)
-        ->where('status', 'APPROVED')
-        ->get()
-        ->first();
+            ->where('nro_quote', 1)
+            ->where('status', 'APPROVED')
+            ->get()
+            ->first();
     }
     public static function getPaymentDataByRequestId($requestId)
     {
@@ -111,5 +114,10 @@ class PlaceToPayTransaction extends Model
         } else {
             return 'Nombre no disponible';
         }
+    }
+
+    public static function suspend($session)
+    {
+        $session->update(['status' => 'SUSPEND']);
     }
 }

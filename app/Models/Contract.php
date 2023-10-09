@@ -40,7 +40,7 @@ class Contract extends Model
         'currency'
     ];
     protected $table = 'contracts';
-    public $hidden = ['created_at','updated_at','products'];
+    public $hidden = ['created_at', 'updated_at', 'products'];
 
     public static function getFormAttributes()
     {
@@ -50,5 +50,21 @@ class Contract extends Model
     public function products()
     {
         return $this->hasMany(Product::class, 'contract_id', 'id');
+    }
+
+    public static function getProducts($lineItems)
+    {
+        $answer = [];
+        foreach ($lineItems as $p) {
+            $newP = [];
+            $newP['name'] = $p->getProduct()->getLookupLabel();
+            $newP['quantity'] = $p->getQuantity();
+            $newP['id'] = $p->getId();
+            $newP['price'] = $p->getNetTotal();
+
+            $answer[] = $newP;
+
+        }
+        return $answer;
     }
 }

@@ -25,3 +25,6 @@ Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/cronos', [App\Http\Controllers\CronosController::class, 'viewCronos']);
+Route::get('/ptp', [App\Http\Controllers\PlaceToPayController::class, 'show'])->name('ptp.home');
+Route::get('/ptp/{reference}', [App\Http\Controllers\PlaceToPayController::class, 'showPaymentsOfTransaction']);
+Route::get('/ptp/{reference}/renew', [App\Http\Controllers\PlaceToPayController::class, 'renewSession']);

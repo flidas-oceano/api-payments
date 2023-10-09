@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Contract;
 use Exception;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -368,7 +369,7 @@ class ZohoController extends Controller
                 'folio_pago' => $request->folio_pago,
             ];
         }
-        if($gateway == 'Placetopay'){
+        if ($gateway == 'Placetopay') {
 
             $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();
             if ($session == null) {
@@ -383,7 +384,7 @@ class ZohoController extends Controller
                 'Monto_de_parcialidad' => $session->first_installment,
                 'Seleccione_total_de_pagos_recurrentes' => strval($session->quotes),
                 'Monto_de_cada_pago_restantes' => $session->remaining_installments,
-                'Cantidad_de_pagos_recurrentes_restantes' => strval($session->quotes - 1 ),
+                'Cantidad_de_pagos_recurrentes_restantes' => strval($session->quotes - 1),
                 'Fecha_de_primer_cobro' => date('Y-m-d'),
                 'Status' => 'Aprobado',
                 'M_todo_de_pago' => $gateway,
@@ -410,7 +411,7 @@ class ZohoController extends Controller
 
     private function mappingDataContact($request, $gateway = null)
     {
-        if($gateway == 'Placetopay'){
+        if ($gateway == 'Placetopay') {
             $paymentData = PlaceToPayTransaction::getPaymentDataByRequestId($request['requestId']);
 
             return [
@@ -717,8 +718,6 @@ class ZohoController extends Controller
     {
 
         if ($country == "Chile" && strpos(strval($identification), '-') == false) {
-
-
             return substr(strval($identification), 0, -1) . '-' . substr(strval($identification), -1);
         }
 
@@ -740,36 +739,24 @@ class ZohoController extends Controller
         if ($key == '9j9fj0Do204==3fja134') {
             $sale = $this->fetchRecordWithValue('Sales_Orders', 'id', $id, true);
 
-            if ($sale != 'error') {
-                $answer = [];
-                $answer['products'] = [];
+            if ($sale == 'error') {
+                $sale = $this->fetchRecordWithValue('Sales_Orders', 'SO_Number', $id, true);
 
-                $products = $sale->getLineItems();
-
-                foreach ($products as $p) {
-                    $newP = [];
-                    $newP['name'] = $p->getProduct()->getLookupLabel();
-                    $newP['quantity'] = $p->getQuantity();
-                    $newP['id'] = $p->getId();
-                    $newP['price'] = $p->getNetTotal();
-
-                    $answer['products'][] = $newP;
-
+                if ($sale == 'error') {
+                    $answer['detail'] = 'Sale not found';
+                    $answer['status'] = 'error';
+                    return $answer;
                 }
-                $answer['sale'] = $sale->getData();
-
-                $contactId = $sale->getFieldValue('Contact_Name')->getEntityId();
-
-                $contact = $this->fetchRecordWithValue('Contacts', 'id', $contactId, true);
-
-                $answer['contact'] = $contact->getData();
-
-                $answer['status'] = 'ok';
-
-            } else {
-                $answer['detail'] = 'sale not found';
-                $answer['status'] = 'error';
             }
+
+            $answer['products'] = Contract::getProducts($sale->getLineItems());
+            $answer['sale'] = $sale->getData();
+
+            $contactId = $sale->getFieldValue('Contact_Name')->getEntityId();
+            $contact = $this->fetchRecordWithValue('Contacts', 'id', $contactId, true);
+
+            $answer['contact'] = $contact->getData();
+            $answer['status'] = 'ok';
         }
 
         if ($answer['status'] == 'error')
@@ -1306,50 +1293,5 @@ class ZohoController extends Controller
             ], 500);
         }
     }
-
-    /* public function updateRecordBySO($type, $data, $id, $workflow = true)
-    {
-        $answer = array();
-
-        $answer['result'] = 'error';
-        $answer['id'] = '';
-        $answer['detail'] = '';
-
-        try {
-            $zcrmRecordIns = ZCRMRecord::getInstance($type, $id);
-
-            foreach ($data as $k => $v)
-                $zcrmRecordIns->setFieldValue($k, $v);
-
-            //workflow?
-            if ($workflow)
-                $apiResponse = $zcrmRecordIns->update();
-            else
-                $apiResponse = $zcrmRecordIns->update(array());
-
-            if ($apiResponse->getCode() == 'SUCCESS') {
-                $answer['result'] = 'ok';
-                $answer['id'] = $id;
-            }
-        } catch (ZCRMException $e) {
-            Log::error($e);
-
-            if (!empty($e->getExceptionDetails()))
-                $answer['detail'] = $e->getExceptionDetails();
-            else
-                $answer['detail'] = $e->getMessage();
-        }
-
-        return ($answer);
-    }
-
-    public function sendMercadoPagoPayment(){
-        $payments = MercadoPagoPayment::where('send_crm', 0)->get();
-
-        foreach($payments as $p){
-            $this->upda
-        }
-
-    } */
 
 }
