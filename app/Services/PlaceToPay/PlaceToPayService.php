@@ -385,7 +385,7 @@ class PlaceToPayService
     {
 
         // $requestsSessionByContractId = PlaceToPayTransaction::where('reference', 'LIKE', '%' . '2000339000617515006' . '%')->get();
-        $requestsSessionByContractId = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $contractId . '%')->get();
+        $requestsSessionByContractId = PlaceToPayTransaction::where('reference', 'LIKE', $contractId . '%')->get();
 
         if (count($requestsSessionByContractId) === 0) {
             return $contractId;
@@ -981,4 +981,19 @@ class PlaceToPayService
         }
     }
     // END // Cronologia de cobro
+
+    public function extractSOFromReference($reference)
+    {
+        $segmentos = explode('_', $reference); // Divide la cadena por el carácter "_"
+
+        $numeroMasLargo = 0;
+
+        foreach ($segmentos as $segmento) {
+            if (is_numeric($segmento) && strlen($segmento) > strlen($numeroMasLargo)) {
+                $numeroMasLargo = $segmento;
+            }
+        }
+
+        return $numeroMasLargo;
+    }
 }

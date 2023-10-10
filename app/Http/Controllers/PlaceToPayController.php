@@ -69,6 +69,8 @@ class PlaceToPayController extends Controller
         $newSession = $session->replicate();
         $newSession->save();
 
+        $soContract = $this->placeTopayService->extractSOFromReference($newSession->reference);
+
         $newSession->update([
             'status' => 'RENEW',
             'reason' => null,
@@ -77,7 +79,7 @@ class PlaceToPayController extends Controller
             'processUrl' => null,
             'token_collect_para_el_pago' => null,
             'expiration_date' => null,
-            'reference' => $newSession->reference . "_RT_" . $session->count() - 1
+            'reference' => $this->placeTopayService->getNameReferenceSession('TEST_' . $soContract)
         ]);
 
         // Copia otros atributos si es necesario
@@ -90,9 +92,8 @@ class PlaceToPayController extends Controller
             }
         }
 
-        dump($newSession);
 
-        return $session;
+        return redirect()->route('ptp.home');
     }
 
     public function authRenewSession($reference)
