@@ -413,6 +413,83 @@ class PlaceToPayController extends Controller
             ], 500);
         }
     }
+
+    public function renewSessionSubscription(Request $request)
+    {
+        try {
+            // TEST_5344455000014458391_RT_2
+            //Actualizar Estado ed la session en DB
+
+            $payer = [
+                    "name" => $request['payer']['name'],
+                    "surname" => $request['payer']['surname'],
+                    "email" => $request['payer']['email'],
+                    "document" => $request['payer']['document'],
+                    "documentType" => $request['payer']['documentType'],
+                    "mobile" => $request['payer']['mobile'],
+                    "address" => [
+                        //domicilio
+                        "country" => $request['country'],
+                        //     // "state" => $request['state'],
+                        //     // "city" => $request['city'],
+                        //     // "postalCode" => $request['postalCode'],
+                        "street" => $request['payer']['address']['street'],
+                        //     // "phone" => $request['phone'],//+573214445566
+                    ]
+            ];
+            $subscription = [
+                    "reference" => $request['so'],
+                    "description" => ""
+            ];
+            $data = [
+                    "auth" => $this->placeTopayService->generateAuthentication($isSubscription = true),
+                    "locale" => "es_CO",
+                    "payer" => $payer,
+                    "subscription" => $subscription,
+                    "expiration" => $this->placeTopayService->getDateExpiration(),
+                    "returnUrl" => "https://dnetix.co/p2p/client",
+                    "ipAddress" => $request->ip(),
+                    // Usar la dirección IP del cliente
+                    "userAgent" => $request->header('User-Agent')
+            ];
+
+            $result = $this->placeTopayService->create($data);
+
+            if (isset($result['status']['status'])) {
+                    $placeToPayTransaction = PlaceToPayTransaction::where('reference', $request['SO'])->update([
+                        'status' => $result['status']['status'],
+                        'reason' => $result['status']['reason'],
+                        'message' => $result['status']['message'],
+                        'date' => $result['status']['date'],
+                        'requestId' => $result['requestId'],
+                        'processUrl' => $this->placeTopayService->reduceUrl($result['processUrl']),
+                        'reference' => $subscription['reference'],
+                        'expiration_date' => $data['expiration'],
+                        'paymentData' => $jsonData = json_encode($payer, JSON_UNESCAPED_SLASHES)
+                    ]);
+                    $getById = $this->placeTopayService->getByRequestId($result['requestId'], $cron = false, $isSubscription = true);
+                    if ($result['status']['status'] === 'OK') {
+                        $this->placeTopayService->updateStatusSessionSubscription($request['SO']);
+                    }
+            }
+
+            return response()->json([$result, $getById]);
+
+        } catch (\Exception $e) {
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString(),
+            ];
+
+            Log::error("Error en createSessionSuscription: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ], 500);
+        }
+    }
     public function createSessionSubscription(CreateSessionSubscriptionRequest $request)
     {
         try {
@@ -493,6 +570,7 @@ class PlaceToPayController extends Controller
             ], 500);
         }
     }
+
     public function createSession(Request $request)
     {
         try {

@@ -144,6 +144,8 @@ Route::prefix("/placetopay")->group(function () {
     Route::get('/getAuth', [PlaceToPayController::class, 'getAuth']);
     Route::post('/createSession', [PlaceToPayController::class, 'createSession']);
     Route::post('/createSessionSubscription', [PlaceToPayController::class, 'createSessionSubscription']);
+    Route::post('/renewSessionSubscription', [PlaceToPayController::class, 'renewSessionSubscription']);
+
     Route::get('/getSessionByRequestId/{requestId}', [PlaceToPayController::class, 'getSessionByRequestId']);
 
     Route::get('/placetopay', [PlaceToPayController::class, 'index']);
