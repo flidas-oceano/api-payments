@@ -433,39 +433,17 @@ class PlaceToPayController extends Controller
 
             //Crear nueva Session
             //pagador - el que paga
-            $payer = [
-                "name" => $request['payer']['name'],
-                "surname" => $request['payer']['surname'],
-                "email" => $request['payer']['email'],
-                "document" => $request['payer']['document'],
-                "documentType" => $request['payer']['documentType'],
-                "mobile" => $request['payer']['mobile'],
-                "address" => [
-                    //domicilio
-                    "country" => $request['country'],
-                    //     // "state" => $request['state'],
-                    //     // "city" => $request['city'],
-                    //     // "postalCode" => $request['postalCode'],
-                    "street" => $request['payer']['address']['street'],
-                    //     // "phone" => $request['phone'],//+573214445566
-                ]
-            ];
-            $subscription = [
-                "reference" => $this->placeTopayService->getNameReferenceSession($request['so']),
-                // "reference" => $request['so'],
-                "description" => "Prueba suscripcion contrato de OceanoMedicina"
-            ];
-            $data = [
-                "auth" => $this->placeTopayService->generateAuthentication($isSubscription = true),
-                "locale" => "es_CO",
-                "payer" => $payer,
-                "subscription" => $subscription,
-                "expiration" => $this->placeTopayService->getDateExpiration(),
-                "returnUrl" => "https://dnetix.co/p2p/client",
-                "ipAddress" => $request->ip(),
-                // Usar la dirección IP del cliente
-                "userAgent" => $request->header('User-Agent')
-            ];
+
+            /*       */
+
+            $payer = PlaceToPaySubscription::generatePayerPaymentSession($request);
+            $reference = $this->placeTopayService->getNameReferenceSession($request['so']);
+            $subscription = PlaceToPaySubscription::generateDetailPaymentSession($reference);
+
+            $auth = $this->placeTopayService->generateAuthentication($isSubscription = true);
+            $expiration = $this->placeTopayService->getDateExpiration();
+
+            $data = PlaceToPaySubscription::generatePaymentDataSession($auth, $payer, $subscription, $expiration, $request);
 
             $result = $this->placeTopayService->create($data);
 
@@ -491,7 +469,9 @@ class PlaceToPayController extends Controller
                     'paymentData' => $jsonData = json_encode($payer, JSON_UNESCAPED_SLASHES)
 
                 ]);
+
                 $getById = $this->placeTopayService->getByRequestId($result['requestId'], $cron = false, $isSubscription = true);
+
                 if ($result['status']['status'] === 'OK') {
                     $this->placeTopayService->updateStatusSessionSubscription($request['SO']);
                 }

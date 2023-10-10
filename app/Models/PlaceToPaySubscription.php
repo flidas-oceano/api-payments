@@ -120,6 +120,50 @@ class PlaceToPaySubscription extends Model
         ];
     }
 
+    public static function generatePayerPaymentSession($request)
+    {
+        return [
+            "name" => $request['payer']['name'],
+            "surname" => $request['payer']['surname'],
+            "email" => $request['payer']['email'],
+            "document" => $request['payer']['document'],
+            "documentType" => $request['payer']['documentType'],
+            "mobile" => $request['payer']['mobile'],
+            "address" => [
+                //domicilio
+                "country" => $request['country'],
+                //     // "state" => $request['state'],
+                //     // "city" => $request['city'],
+                //     // "postalCode" => $request['postalCode'],
+                "street" => $request['payer']['address']['street'],
+                //     // "phone" => $request['phone'],//+573214445566
+            ]
+        ];
+    }
+
+    public static function generateDetailPaymentSession($reference)
+    {
+        return [
+            "reference" => $reference,
+            "description" => "Prueba suscripcion contrato de OceanoMedicina"
+        ];
+    }
+
+    public static function generatePaymentDataSession($auth, $payer, $subscription, $expiration, $request)
+    {
+        return [
+            "auth" => $auth,
+            "locale" => "es_CO",
+            "payer" => $payer,
+            "subscription" => $subscription,
+            "expiration" => $expiration,
+            "returnUrl" => "https://dnetix.co/p2p/client",
+            "ipAddress" => $request->ip(),
+            // Usar la dirección IP del cliente
+            "userAgent" => $request->header('User-Agent')
+        ];
+    }
+
     public static function generatePayment($reference, $subscriptionToPay)
     {
         return [
