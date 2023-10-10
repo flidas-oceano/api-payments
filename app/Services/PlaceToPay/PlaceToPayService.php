@@ -185,12 +185,35 @@ class PlaceToPayService
             }
         }
     }
+
+    public function updateStatusRenewSessionSubscription($reference)
+    {
+        $sessionRenew = PlaceToPayTransaction::where('reference', $reference)
+            ->where('status', 'RENEW')
+            ->first();
+
+        if ($sessionRenew !== null) {
+            $sessionByRequestId = $this->getByRequestId($sessionRenew->requestId, $cron = false, $isSubscription = true);
+            if (isset($sessionByRequestId['status']['status'])) {
+                $placeToPayTransaction = PlaceToPayTransaction::where(['requestId' => $sessionByRequestId['requestId']])
+                    ->update([
+                        'status' => $sessionByRequestId['status']['status'],
+                        'reason' => $sessionByRequestId['status']['reason'],
+                        'message' => $sessionByRequestId['status']['message'],
+                        'date' => $sessionByRequestId['status']['date'],
+                    ]);
+            }
+        }
+    }
     public function updateStatusSessionSubscription($SO)
     {
         // $lastRequestSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . 'sadasd' . '%')->orderBy('created_at', 'desc')->first();
-        $lastRequestSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $SO . '%')
+
+
+            $lastRequestSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $SO . '%')
             ->orderBy('created_at', 'desc')
             ->first();
+
         if ($lastRequestSessionDB !== null) {
             $sessionByRequestId = $this->getByRequestId($lastRequestSessionDB->requestId, $cron = false, $isSubscription = true);
             if (isset($sessionByRequestId['status']['status'])) {
@@ -954,7 +977,6 @@ class PlaceToPayService
         $today = Carbon::now();
         $subscriptionsToPay = PlaceToPaySubscription::whereDate('date_to_pay', '=', $today)->where('status', null)->where('nro_quote', '>=', 2)->get();
 
-
         foreach ($subscriptionsToPay as $subscriptionToPay) {
             $subsSession = $subscriptionToPay->transaction->subscriptions;
 
@@ -964,7 +986,7 @@ class PlaceToPayService
                 $dateToPay = Carbon::parse($subsc->date_to_pay);
 
                 // Verificar si la cuota es anterior a la fecha de cobro
-                if ($dateToPay->lt(now())) {
+                if ($dateToPay->lt(now())) { // now = 10/10/2023 datetopay =
                     if ($subsc->status === null) {
                         break;
                     } else {
