@@ -83,6 +83,22 @@ class PlaceToPayController extends Controller
         ]);
 
         // Copia otros atributos si es necesario
+        $lastRejected = $session->lastRejectedSubscription();
+        $newFirstPayment = $lastRejected->replicate();
+        $newSession->subscriptions()->save($newFirstPayment);
+
+        $newFirstPayment->update([
+            'status' => null,
+            'reason' => null,
+            'message' => null,
+            'requestId' => null,
+            'authorization' => null,
+            'reference' => null,
+            'date' => null,
+            'failed_payment_attempts' => 0,
+            'date_to_pay' => null
+        ]);
+
 
         foreach ($session->subscriptions as $subscription) {
             if ($subscription->status === null) {
@@ -93,12 +109,14 @@ class PlaceToPayController extends Controller
         }
 
 
+
         return redirect()->route('ptp.home');
     }
 
     public function authRenewSession($reference)
     {
         $renewSession = PlaceToPayTransaction::where('reference', $reference)->where('status', 'RENEW')->first();
+
         return response()->json([
             "renewSession" => $renewSession,
             "quotes" => [

@@ -77,6 +77,15 @@ class PlaceToPayTransaction extends Model
     {
         return $this->hasMany(PlaceToPaySubscription::class, 'transactionId');
     }
+
+    public function lastRejectedSubscription()
+    {
+        return $this->hasMany(PlaceToPaySubscription::class, 'transactionId')
+            ->where('status', 'REJECTED')
+            ->latest('updated_at')
+            ->first();
+    }
+
     public function lead()
     {
         return $this->belongsTo(Lead::class, 'lead_id');
