@@ -154,13 +154,13 @@ class PlaceToPaySubscription extends Model
         return [
             "auth" => $auth,
             "locale" => "es_CO",
-            "payer" => $payer,
+            "buyer" => $payer,
             "subscription" => $subscription,
             "expiration" => $expiration,
             "returnUrl" => "https://dnetix.co/p2p/client",
             "ipAddress" => $request->ip(),
-            // Usar la dirección IP del cliente
-            "userAgent" => $request->header('User-Agent')
+            "userAgent" => $request->header('User-Agent'),
+           // "skipResult" => true
         ];
     }
 
@@ -213,9 +213,9 @@ class PlaceToPaySubscription extends Model
         ]);
     }
 
-    public static function updateWith($request, $data)
+    public static function updateWith($request, $data, $quoteId)
     {
-        $payment = self::find($request->id);
+        $payment = self::find($quoteId);
 
         $payment->update([
             'transactionId' => $request->id,
@@ -253,7 +253,7 @@ class PlaceToPaySubscription extends Model
                 }
 
                 // guardas registro primer cuota
-                $updatePayment = PlaceToPaySubscription::updateWith($this, $subscriptionByRequestId);
+                $updatePayment = PlaceToPaySubscription::updateWith($this, $subscriptionByRequestId, $this->id);
 
                 $requestSubscriptionById = $this->getByRequestId($transaction['requestId'], $cron = false, $isSubscription = true);
                 // creas todas las cuotas restantes, si hay

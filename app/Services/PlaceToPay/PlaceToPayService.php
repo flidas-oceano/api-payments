@@ -44,7 +44,7 @@ class PlaceToPayService
     {
         PlaceToPaySubscription::where('status', '!=', 'APPROVED')->get();
     }
-    public function pagarCuotaSuscripcion($request, $nro_quote, $renewSub = false)
+    public function pagarCuotaSuscripcion($request, $nro_quote, $renewSub)
     {
         $requestSubscriptionById = $this->getByRequestId($request['requestId'], $cron = false, $isSubscription = true);
 
@@ -53,7 +53,9 @@ class PlaceToPayService
         // pagar primer cuota de subscripcion normal, no anticipo
         $payer = PlaceToPaySubscription::generatePayerPayment($requestSubscriptionById);
 
-        $reference = $renewSub ? '' : $this->getNameReferenceSubscription(1, $requestSubscriptionById['requestId'], $request['reference']);
+        $quoteToPay = $renewSub ? $transaccion->subscriptions->first()->nro_quote : $nro_quote;
+
+        $reference = $this->getNameReferenceSubscription($quoteToPay, $requestSubscriptionById['requestId'], $request['reference']);
 
         $subscriptionToPay = new stdClass();
         $subscriptionToPay->currency = $request->currency;
@@ -83,9 +85,16 @@ class PlaceToPayService
             }
         }
 
-        $request->nro_quote = $nro_quote;
+        $request->nro_quote = $quoteToPay;
 
-        $newPayment = PlaceToPaySubscription::createWith($request, $response);
+        $newPayment = null;
+
+        if($renewSub){
+            $newPayment = PlaceToPaySubscription::updateWith($request, $response, $transaccion->subscriptions->first()->id);
+        }else{
+            $newPayment = PlaceToPaySubscription::createWith($request, $response);
+        }
+
         // guardas registro primer cuota
 
         return [
@@ -95,7 +104,7 @@ class PlaceToPayService
         ];
     }
 
-    public function payFirstQuote($requestIdOfSubscription)
+    public function payFirstQuote($requestIdOfSubscription, $renewSuscription)
     {
         $transaction = PlaceToPayTransaction::where(['requestId' => $requestIdOfSubscription])->first();
         $firstQuote = $transaction->subscriptions->first();
@@ -105,7 +114,7 @@ class PlaceToPayService
             $isPendingQuote = $firstQuote->isPending($transaction);
 
             if (is_array($isPendingQuote)) {
-                $result = $this->pagarCuotaSuscripcion($transaction, $firstQuote->nro_quote); //TODO: help
+                $result = $this->pagarCuotaSuscripcion($transaction, $firstQuote->nro_quote, $renewSuscription); //TODO: help
                 return $result;
             }
 
@@ -114,7 +123,7 @@ class PlaceToPayService
             }
         }
 
-        $result = $this->pagarCuotaSuscripcion($transaction, 1);
+        $result = $this->pagarCuotaSuscripcion($transaction, 1, $renewSuscription);
         return $result;
     }
 
@@ -560,11 +569,10 @@ class PlaceToPayService
     }
     public function create($data)
     {
-        $url = "https://checkout-test.placetopay.ec/api/session";
         $response = Http::withHeaders([
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
-        ])->post($url, $data)->json();
+        ])->post(env('PTP_ENDPOINT'), $data)->json();
 
         $this->isResponseValid($response);
 
@@ -577,7 +585,7 @@ class PlaceToPayService
             throw new \InvalidArgumentException("El parámetro 'requestId' es obligatorio.");
         }
 
-        $url = "https://checkout-test.placetopay.ec/api/session/" . $requestId;
+        $url = env('PTP_ENDPOINT')."/" . $requestId;
         $data = [
             "auth" => $this->generateAuthentication($isSubscription),
         ];
@@ -623,7 +631,6 @@ class PlaceToPayService
                 //No estan creadas todas las cuotas de la suscripcion
 
                 //empiezo pagando la primer cuota
-
                 $success = false;
                 //es anticipo ?
                 if ($request->first_installment !== null)
@@ -648,23 +655,7 @@ class PlaceToPayService
                         }
                     }
                 }
-
-                // pagar cuotas
-
             }
-
-            // pagar cuotas
-            // for ($i = 1; $i <= $request->quotes; $i++) {
-            //     PlaceToPaySubscription::create([
-            //         'requestIdFather' => $request->requestId,
-            //         // 'requestId' => ,
-            //         // 'total' => ,
-            //         // 'currency' => ,
-            //         // 'suscription' => ,
-            //         // 'suscription' => ,
-            //         // 'payment date' => ,
-            //     ]);
-            // }
         }
     }
 

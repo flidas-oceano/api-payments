@@ -589,7 +589,8 @@ class ZohoController extends Controller
     {
         try {
 
-            $saleZoho = $this->fetchRecordWithValue('Sales_Orders', 'id', $request->contractId)->getData();
+            $saleZoho = $this->getContractZoho($request->contractId)->getData();
+
             $contactEntityId = $saleZoho['Contact_Name']->getEntityId();
 
             $dataUpdate = $this->mappingDataContract($request, 'Placetopay');
@@ -615,6 +616,8 @@ class ZohoController extends Controller
             ]);
         }
     }
+
+
     public function updateZohoPTP(Request $request)
     {
         try {
@@ -763,6 +766,24 @@ class ZohoController extends Controller
             return response()->json($answer, 500);
         else
             return response()->json($answer);
+    }
+
+    private function getContractZoho($number){
+        $sale = $this->fetchRecordWithValue('Sales_Orders', 'id', $number);
+
+        if ($sale == 'error') {
+            $sale = $this->fetchRecordWithValue('Sales_Orders', 'SO_Number', $number);
+
+            if ($sale == 'error') {
+                $answer['detail'] = 'Sale not found';
+                $answer['status'] = 'error';
+                return $answer;
+            }else{
+                return $sale;
+            }
+        }else{
+            return $sale;
+        }
     }
 
     public function createLead(Request $request)

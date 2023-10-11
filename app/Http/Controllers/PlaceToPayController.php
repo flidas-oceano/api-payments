@@ -97,7 +97,7 @@ class PlaceToPayController extends Controller
             'reference' => null,
             'date' => now(),
             'failed_payment_attempts' => 0,
-            'date_to_pay' => null
+            'date_to_pay' => now()
         ]);
 
 
@@ -256,7 +256,7 @@ class PlaceToPayController extends Controller
             ]);
 
             //Cuando la session esta APRROVED.
-            $isApproveSession = PlaceToPayTransaction::checkApprovedSessionTryPay($sessionSubscription, $transaction, $this->placeTopayService);
+            $isApproveSession = PlaceToPayTransaction::checkApprovedSessionTryPay($sessionSubscription, $transaction, $this->placeTopayService, $request->renewSuscription);
 
             $transaction->save();
 
@@ -407,21 +407,17 @@ class PlaceToPayController extends Controller
                     'quotes' => $request['payment']['quotes'],
                     'remaining_installments' => $request['payment']['remaining_installments'],
                     'first_installment' => ($request['payment']['first_installment'] ?? null),
-                    // 'contact_id' => ,
-                    // 'authorization' => ,
                     'reference' => $subscription['reference'],
                     'type' => "requestSubscription",
-                    // 'token_collect_para_el_pago' => ,
                     'expiration_date' => $data['expiration'],
                     'paymentData' => json_encode($payer, JSON_UNESCAPED_SLASHES),
                     'transaction_id' => 0
-
                 ]);
 
                 $getById = $this->placeTopayService->getByRequestId($result['requestId'], $cron = false, $isSubscription = true);
 
                 if ($result['status']['status'] === 'OK') {
-                    $this->placeTopayService->updateStatusSessionSubscription($request['SO']);
+                    $this->placeTopayService->updateStatusSessionSubscription($request['so']);
                 }
             }
 
@@ -638,7 +634,7 @@ class PlaceToPayController extends Controller
 
         try {
             $client = new Client();
-            $response = $client->post('https://checkout-test.placetopay.ec/api/session', [
+            $response = $client->post(env('PTP_ENDPOINT'), [
                 'headers' => [
                     'Accept' => 'application/json',
                     'Content-Type' => 'application/json',

@@ -26,22 +26,6 @@ class PlaceToPayPaymentLinkController extends Controller
     public function createSessionSubscription(Request $request)
     {
         //comprador - el que recibe el curso
-        $buyer = [
-            "name" => $request['payer']['name'],
-            "surname" => $request['payer']['surname'],
-            "email" => $request['payer']['email'],
-            "document" => $request['payer']['document'],
-            "documentType" => $request['payer']['documentType'],
-            "mobile" => $request['payer']['mobile'],
-            // "address" => [ //domicilio
-            //     // "country" => $request['country'],
-            //     // "state" => $request['state'],
-            //     // "city" => $request['city'],
-            //     // "postalCode" => $request['postalCode'],
-            //     "street" => $request['payer']['address']['street'],
-            //     // "phone" => $request['phone'],//+573214445566
-            // ]
-        ];
         $payer = [
             "name" => $request['payer']['name'],
             "surname" => $request['payer']['surname'],

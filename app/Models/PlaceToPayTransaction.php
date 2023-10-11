@@ -200,14 +200,14 @@ class PlaceToPayTransaction extends Model
         $session->update(['status' => 'SUSPEND', 'token_collect_para_el_pago' => null]);
     }
 
-    public static function checkApprovedSessionTryPay($sessionSubscription, $transaction, $service)
+    public static function checkApprovedSessionTryPay($sessionSubscription, $transaction, $service, $renewSuscription = false)
     {
         if ($sessionSubscription['status']['status'] === "APPROVED" && isset($sessionSubscription['subscription'])) {
             foreach ($sessionSubscription['subscription']['instrument'] as $instrument) {
                 if ($instrument['keyword'] === "token") {
                     $transaction->update(['token_collect_para_el_pago' => $instrument['value']]);
 
-                    $result = $service->payFirstQuote($sessionSubscription["requestId"]);
+                    $result = $service->payFirstQuote($sessionSubscription["requestId"], $renewSuscription);
 
                     // $result = $service->payFirstQuoteCreateRestQuotesByRequestId($sessionSubscription["requestId"]);
 
