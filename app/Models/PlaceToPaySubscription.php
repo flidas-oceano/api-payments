@@ -198,14 +198,14 @@ class PlaceToPaySubscription extends Model
         return self::create([
             'transactionId' => $request->id,
             'nro_quote' => $request->nro_quote,
-            'date' => $response['status']['date'],
+            'date' => $response['payment'][0]['status']['date'],
             'requestId' => $response['requestId'],
             'total' => $response['request']['payment']['amount']['total'],
             'currency' => $response['request']['payment']['amount']['currency'],
-            'status' => $response['status']['status'],
+            'status' => $response['payment'][0]['status']['status'],
             'date_to_pay' => $response['status']['date'],
-            'reason' => $response['status']['reason'],
-            'message' => $response['status']['message'],
+            'reason' => $response['payment'][0]['status']['reason'],
+            'message' => $response['payment'][0]['status']['message'],
             'authorization' => $response['payment'][0]['authorization'] ?? null,
             'reference' => $response['payment'][0]['reference'] ?? null,
             // 'type' => , //TODO: me parece que es mejor borrarlo de la tabla. O usarla para diferenciar: subscription, advancedInstallment
@@ -235,5 +235,47 @@ class PlaceToPaySubscription extends Model
     public static function suspend($subscription)
     {
         $subscription->update(['status' => 'SUSPEND']);
+    }
+
+    public function isPending($transaction)
+    {
+        if (($this->status ?? null) === 'PENDING') {
+            //Actualizar la primer cuota que pasa de PENDING a APPROVED
+            $subscriptionByRequestId = $this->getByRequestId($this->requestId, $cron = false, $isSubscription = true);
+
+            if (($subscriptionByRequestId['payment'][0]['status']['status'] ?? null) === 'APPROVED') {
+
+                // Actualizo el transactions, campo: installments_paid
+                $this->update(['installments_paid' => $this->installments_paid + 1]);
+
+                if ($this->paymentLinks()->first() !== null) {
+                    $this->paymentLinks()->first()->update(['status' => 'Contrato Efectivo']);
+                }
+
+                // guardas registro primer cuota
+                $updatePayment = PlaceToPaySubscription::updateWith($this, $subscriptionByRequestId);
+
+                $requestSubscriptionById = $this->getByRequestId($transaction['requestId'], $cron = false, $isSubscription = true);
+                // creas todas las cuotas restantes, si hay
+                $result = [
+                    "newPayment" => $updatePayment,
+                    "response" => $requestSubscriptionById,
+                    // "data" => $data,
+                ];
+
+                if (($requestSubscriptionById['response']['status']['status'] ?? null) === 'APPROVED') {
+                    $createInstallments = $this->createRemainingInstallments($result, $transaction);
+
+                    return [$result, $createInstallments];
+                }
+
+                return $result;
+
+            } else {
+                return $subscriptionByRequestId['payment'][0]['status']['status'];
+            }
+        } else {
+            return $this->status;
+        }
     }
 }

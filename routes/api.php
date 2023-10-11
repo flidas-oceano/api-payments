@@ -64,7 +64,7 @@ Route::post('/updateZohoCTCZohoCRM', [ZohoController::class, 'updateZohoCTCMSK']
 Route::post('/saveCardZohoCTC', [ZohoController::class, 'saveCardZohoCTC']);
 Route::post('/updateZohoStripeZohoCRM', [ZohoController::class, 'updateZohoStripeMSK']);
 Route::post('/updateZohoMPZohoCRM', [ZohoController::class, 'updateZohoMPMSK']);
-Route::post('/updateZohoPTPMSK', [ZohoController::class, 'updateZohoPTPMSK']);
+Route::post('/updateZohoPTP', [ZohoController::class, 'updateZohoPTPMSK']);
 Route::post('/setContractStatus', [ContractController::class, 'setContractStatus']);
 
 Route::get('/db', [PurchasingProcessController::class, 'index']);
@@ -141,6 +141,7 @@ Route::post('/ctc/exportExcel4PBOCP', [ExcelController::class, 'exportExcel4PBOC
 // /placetopay/notificationUpdate
 Route::prefix("/placetopay")->group(function () {
     Route::get('/{reference}/renew', [PlaceToPayController::class, 'authRenewSession']);
+    Route::put('/{reference}', [PlaceToPayController::class, 'updateStatusSessionSubscription']);
     Route::get('/getAuth', [PlaceToPayController::class, 'getAuth']);
     Route::post('/createSession', [PlaceToPayController::class, 'createSession']);
     Route::post('/createSessionSubscription', [PlaceToPayController::class, 'createSessionSubscription']);

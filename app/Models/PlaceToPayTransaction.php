@@ -36,6 +36,7 @@ class PlaceToPayTransaction extends Model
         'quotes',
         'installments_paid',
         'paymentData',
+        'transaction_id'
 
     ];
     private static $formAttributes = [
@@ -60,6 +61,15 @@ class PlaceToPayTransaction extends Model
         'installments_paid',
         'paymentData',
     ];
+
+    private static $messageOfPtp = [
+        'FAILED' => 'Hubo un error con el pago de la sesion, cree otra.',
+        'APPROVED' => 'Ya se ha realizado el pago de la primera cuota.',
+        'REJECTED' => 'La tarjeta fue rechazada, cree otra session e ingrese denuevo los datos de la tarjeta.',
+        'PENDING' => 'El estado de la peticion de la tarjeta estan pendientes.',
+        'DESCONOCIDO' => 'Se desconoce el error. Mire los logs o consulte en PTP.',
+    ];
+
     function isSubscription()
     {
         return ($this->type === 'requestSubscription') ? true : false;
@@ -125,8 +135,102 @@ class PlaceToPayTransaction extends Model
         }
     }
 
+
+    public static function checkFirstPaymentWithServiceOf($transaction, $service)
+    {
+        if ($transaction->subscriptions->count() > 0) {
+            $firstSubscription = $transaction->subscriptions->first();
+
+            if ($firstSubscription->status === 'APPROVED') {
+                return self::handleApprovedSubscription($firstSubscription);
+            }
+
+            $sessionSubscription = $service->getByRequestId($firstSubscription->requestId, $cron = false, $isSubscription = true);
+            $statusPayment = self::getStatusPayment($sessionSubscription);
+
+            if ($statusPayment !== 'APPROVED') {
+                self::updateSubscriptionStatus($firstSubscription, $sessionSubscription);
+                $isTokenRejected = !$service->placeTopayService->isRejectedTokenTransaction($transaction);
+
+                if ($statusPayment === 'REJECTED' && $isTokenRejected) {
+                    $transaction->update([
+                        'token_collect_para_el_pago' => 'CARD_REJECTED_' . $transaction->token_collect_para_el_pago
+                    ]);
+                }
+
+                return response()->json([
+                    "result" => self::$messageOfPtp[$statusPayment],
+                    "statusPayment" => $statusPayment,
+                ], 400);
+            }
+        }
+    }
+
+    private function handleApprovedSubscription($subscription)
+    {
+        return response()->json([
+            "result" => self::$messageOfPtp[$subscription->status],
+            "statusPayment" => 'APPROVED',
+        ]);
+    }
+
+    private function getStatusPayment($sessionSubscription)
+    {
+        if (($sessionSubscription['status']['status'] ?? 'DESCONOCIDO') === 'PENDING') {
+            return $sessionSubscription['status']['status'];
+        }
+
+        return $sessionSubscription['payment'][0]['status']['status'] ?? 'DESCONOCIDO';
+    }
+
+    private function updateSubscriptionStatus($subscription, $sessionSubscription)
+    {
+        $subscription->update([
+            'date' => $sessionSubscription['status']['date'],
+            'status' => $sessionSubscription['status']['status'],
+            'reason' => $sessionSubscription['status']['reason'],
+            'message' => $sessionSubscription['status']['message'],
+            'authorization' => $sessionSubscription['payment'][0]['authorization'] ?? null,
+            'reference' => $sessionSubscription['payment'][0]['reference'] ?? null,
+        ]);
+    }
+
     public static function suspend($session)
     {
-        $session->update(['status' => 'SUSPEND']);
+        $session->update(['status' => 'SUSPEND', 'token_collect_para_el_pago' => null]);
+    }
+
+    public static function checkApprovedSessionTryPay($sessionSubscription, $transaction, $service)
+    {
+        if ($sessionSubscription['status']['status'] === "APPROVED" && isset($sessionSubscription['subscription'])) {
+            foreach ($sessionSubscription['subscription']['instrument'] as $instrument) {
+                if ($instrument['keyword'] === "token") {
+                    $transaction->update(['token_collect_para_el_pago' => $instrument['value']]);
+
+                    $result = $service->payFirstQuote($sessionSubscription["requestId"]);
+
+                    // $result = $service->payFirstQuoteCreateRestQuotesByRequestId($sessionSubscription["requestId"]);
+
+                    $statusPayment = 'DESCONOCIDO';
+
+                    if (isset($result['response']['status']['status'])) {
+                        $statusPayment = $result['response']['status']['status'];
+                    } elseif (isset($result['response']['payment'][0]['status']['status'])) {
+                        $statusPayment = $result['response']['payment'][0]['status']['status'] ?? 'DESCONOCIDO';
+                    } elseif (isset($result['message'])) {
+                        $statusPayment = $result['status'];
+                    }
+
+                    return [
+                        "updateRequestSession" => $transaction,
+                        "paymentDate" => now(),
+                        "result" => self::$messageOfPtp[$statusPayment],
+                        "statusPayment" => $statusPayment,
+                    ];
+                }
+            }
+        } else {
+            return ["sessionPtp" => $sessionSubscription, 'transaction' => $transaction];
+        }
     }
 }

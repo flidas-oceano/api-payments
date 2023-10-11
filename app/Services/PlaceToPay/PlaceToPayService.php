@@ -44,7 +44,7 @@ class PlaceToPayService
     {
         PlaceToPaySubscription::where('status', '!=', 'APPROVED')->get();
     }
-    public function pagarCuotaSuscripcion($request, $nro_quote)
+    public function pagarCuotaSuscripcion($request, $nro_quote, $renewSub = false)
     {
         $requestSubscriptionById = $this->getByRequestId($request['requestId'], $cron = false, $isSubscription = true);
 
@@ -52,13 +52,17 @@ class PlaceToPayService
 
         // pagar primer cuota de subscripcion normal, no anticipo
         $payer = PlaceToPaySubscription::generatePayerPayment($requestSubscriptionById);
-        // $requestsTransaction = PlaceToPayTransaction::where(['requestId' => $request['requestId']['requestId']])->get()->first();
 
-        $reference = $this->getNameReferenceSubscription(1, $requestSubscriptionById['requestId'], $request['reference']);
+        $reference = $renewSub ? '' : $this->getNameReferenceSubscription(1, $requestSubscriptionById['requestId'], $request['reference']);
 
         $subscriptionToPay = new stdClass();
         $subscriptionToPay->currency = $request->currency;
-        $subscriptionToPay->total = $transaccion->first_installment ?? $request->remaining_installments;
+
+        if ($renewSub) {
+            $subscriptionToPay->total = $request->remaining_installments;
+        } else {
+            $subscriptionToPay->total = $transaccion->first_installment ?? $request->remaining_installments;
+        }
 
         $payment = PlaceToPaySubscription::generatePayment($reference, $subscriptionToPay);
 
@@ -90,11 +94,36 @@ class PlaceToPayService
             "data" => $data,
         ];
     }
+
+    public function payFirstQuote($requestIdOfSubscription)
+    {
+        $transaction = PlaceToPayTransaction::where(['requestId' => $requestIdOfSubscription])->first();
+        $firstQuote = $transaction->subscriptions->first();
+
+        if ($firstQuote !== null) {
+
+            $isPendingQuote = $firstQuote->isPending($transaction);
+
+            if (is_array($isPendingQuote)) {
+                $result = $this->pagarCuotaSuscripcion($transaction, $firstQuote->nro_quote); //TODO: help
+                return $result;
+            }
+
+            if ($isPendingQuote === 'APPROVED') {
+                return ['message' => 'El pago ya estaba aprobado', 'status' => $isPendingQuote, 'created_quotes' => count($transaction->subscriptions)];
+            }
+        }
+
+        $result = $this->pagarCuotaSuscripcion($transaction, 1);
+        return $result;
+    }
+
     public function payFirstQuoteCreateRestQuotesByRequestId($requestIdRequestSubscription)
     {
-        $requestsSubscription = PlaceToPayTransaction::where(['requestId' => $requestIdRequestSubscription])->get()->first();
+        $requestsSubscription = PlaceToPayTransaction::where(['requestId' => $requestIdRequestSubscription])->first();
 
         $subscription = $requestsSubscription->subscriptions->first();
+
         if (($subscription->status ?? null) === 'PENDING') {
             //Actualizar la primer cuota que pasa de PENDING a APPROVED
             $subscriptionByRequestId = $this->getByRequestId($subscription->requestId, $cron = false, $isSubscription = true);
@@ -151,36 +180,34 @@ class PlaceToPayService
                     // $responseUpdateZohoPlaceToPay = $this->zohoController->updateZohoPlaceToPay($result,$requestIdRequestSubscription);
                     $this->createRemainingInstallments($result, $requestsSubscription);
                 }
+
                 return $result;
             }
         }
     }
-    public function createRemainingInstallments($result, $requestsSubscription)
+    public function createRemainingInstallments($paymentDate, $requestsSubscription)
     {
 
-        // // crear cuotas
+        if (isset($requestsSubscription->suscriptions) && count($requestsSubscription->suscriptions) > 1) {
+            return ['message' => 'Ya tiene cuotas'];
+        }
+
+        // crear cuotas
         if ($requestsSubscription->quotes > 1) {
-            $dateParsedPaidFirstInstallment = date_parse($result['newPayment']['date']);
-            // $dateParsedPaidFirstInstallment = date_parse("2023-01-30T18:38:53.000000Z"); // TODO: Se puede usar esto para probar unas fecha de cobro especifica
+            $dateParsedPaidFirstInstallment = date_parse($paymentDate);
 
             //Obtener
             $datesToPay = $this->getDatesToPay($dateParsedPaidFirstInstallment, $requestsSubscription->quotes);
 
             for ($i = 2; $i <= $requestsSubscription->quotes; $i++) {
+                $dateToPay = $this->dateToPay($datesToPay[$i - 2]['year'], $datesToPay[$i - 2]['month'], $dateParsedPaidFirstInstallment['day']);
 
                 PlaceToPaySubscription::create([
                     'transactionId' => $requestsSubscription->id,
                     'nro_quote' => $i,
-                    // 'date' => $response['status']['date'],
-                    // 'requestId' => $response['status']['status'],
                     'total' => $requestsSubscription->remaining_installments,
                     'currency' => $requestsSubscription->currency,
-                    'date_to_pay' => date_format($this->dateToPay(
-                        $datesToPay[$i - 2]['year'],
-                        $datesToPay[$i - 2]['month'],
-                        $dateParsedPaidFirstInstallment['day']
-                    ), 'Y-m-d H:i:s'),
-                    // 'type' => 'subscription',
+                    'date_to_pay' => date_format($dateToPay, 'Y-m-d H:i:s'),
                 ]);
             }
         }
@@ -207,23 +234,18 @@ class PlaceToPayService
     }
     public function updateStatusSessionSubscription($SO)
     {
-        // $lastRequestSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . 'sadasd' . '%')->orderBy('created_at', 'desc')->first();
-
-
-            $lastRequestSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $SO . '%')
-            ->orderBy('created_at', 'desc')
-            ->first();
+        $lastRequestSessionDB = PlaceToPayTransaction::where('reference', 'LIKE', '%' . $SO . '%')->orderBy('created_at', 'desc')->first();
 
         if ($lastRequestSessionDB !== null) {
             $sessionByRequestId = $this->getByRequestId($lastRequestSessionDB->requestId, $cron = false, $isSubscription = true);
+
             if (isset($sessionByRequestId['status']['status'])) {
-                $placeToPayTransaction = PlaceToPayTransaction::where(['requestId' => $sessionByRequestId['requestId']])
-                    ->update([
-                        'status' => $sessionByRequestId['status']['status'],
-                        'reason' => $sessionByRequestId['status']['reason'],
-                        'message' => $sessionByRequestId['status']['message'],
-                        'date' => $sessionByRequestId['status']['date'],
-                    ]);
+                PlaceToPayTransaction::where(['requestId' => $sessionByRequestId['requestId']])->update([
+                    'status' => $sessionByRequestId['status']['status'],
+                    'reason' => $sessionByRequestId['status']['reason'],
+                    'message' => $sessionByRequestId['status']['message'],
+                    'date' => $sessionByRequestId['status']['date'],
+                ]);
             }
         }
     }
@@ -389,9 +411,8 @@ class PlaceToPayService
     // $placeToPayService->getNameReferenceSubscription(1,680002,'2000339000617515006'); // Llama al método que deseas ejecutar
     public function getNameReferenceSubscription($nroQuote, $requestIdSession, $contractId)
     {
-
         // $requestsSession = PlaceToPayTransaction::where(['requestId' => 680002])->get()->first();
-        $requestsSession = PlaceToPayTransaction::where(['requestId' => $requestIdSession])->get()->first();
+        $requestsSession = PlaceToPayTransaction::where(['requestId' => $requestIdSession])->first();
 
         // $sessionsRejected = $requestsSession->subscriptions()->where(['status' => 'REJECTED', 'nro_quote' => 1])->get();
         $sessionsRejected = $requestsSession->subscriptions()->where(['status' => 'REJECTED', 'nro_quote' => $nroQuote])->get();
@@ -399,6 +420,7 @@ class PlaceToPayService
         if (count($sessionsRejected) === 0) {
             return $nroQuote . '_' . $contractId;
         }
+
         if (count($sessionsRejected) > 0) {
             return $nroQuote . '_' . $contractId . '_R_' . count($sessionsRejected);
         }
