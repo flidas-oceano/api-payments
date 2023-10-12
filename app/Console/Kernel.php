@@ -37,7 +37,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        /*    $schedule->command('telescope:prune --hours=48')->daily();
+         $schedule->command('telescope:prune --hours=48')->daily();
 
            $schedule->command('passport:purge')->hourly();
 
@@ -64,21 +64,21 @@ class Kernel extends ConsoleKernel
            $schedule->command('sales-order:rebill 100 4')->dailyAt('06:15:06')->timezone('America/Argentina/Buenos_Aires');
            $schedule->command('sales-order:rebill 100 5')->dailyAt('06:20:06')->timezone('America/Argentina/Buenos_Aires');
            $schedule->command('sales-order:rebill 100 6')->dailyAt('06:35:06')->timezone('America/Argentina/Buenos_Aires');
-           $schedule->command('sales-order:stripe')->dailyAt('06:25:06')->timezone('America/Argentina/Buenos_Aires'); */
+           $schedule->command('sales-order:stripe')->dailyAt('06:25:06')->timezone('America/Argentina/Buenos_Aires');
 
 
-        $schedule->call(function () {
-            try {
-                $placeToPayService = new PlaceToPayService(); // Instancia el servicio
-                // $placeToPayService->createInstallments();
-                // $placeToPayService->refreshPendingS();//Busca los pendientes de las sessiones y usbcripciones.
-                $placeToPayService->stageOne(); //Pagar los que no tinen deudas.
-                //En test ejecutar cada 5 minutos
-                //En prod cada un dia
-            } catch (\Exception $e) {
-                Log::error('Error en el comando programado: ' . $e->getMessage());
-            }
-        })->everyMinute();
+        // $schedule->call(function () {
+        //     try {
+        //         $placeToPayService = new PlaceToPayService(); // Instancia el servicio
+        //         // $placeToPayService->createInstallments();
+        //         // $placeToPayService->refreshPendingS();//Busca los pendientes de las sessiones y usbcripciones.
+        //         $placeToPayService->stageOne(); //Pagar los que no tinen deudas.
+        //         //En test ejecutar cada 5 minutos
+        //         //En prod cada un dia
+        //     } catch (\Exception $e) {
+        //         Log::error('Error en el comando programado: ' . $e->getMessage());
+        //     }
+        // })->everyMinute();
 
 
     }
