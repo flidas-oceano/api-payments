@@ -643,6 +643,7 @@ class PlaceToPayService
                     $success = $this->pagarCuotaSuscripcionAnticipo($request);
                 else
                     $success = $this->pagarCuotaSuscripcion($request, 1);
+                    $success = $this->pagarCuotaSuscripcion($request, 1,$request->transaction_id);
 
                 // creas todas las cuotas restantes, si hay
                 if ($success) {
@@ -749,6 +750,7 @@ class PlaceToPayService
                         ],
                         "expiration" => $this->getDateExpiration(),
                         "returnUrl" => "https://dnetix.co/p2p/client",
+                        // "returnUrl" => "https://dnetix.co/p2p/client",
                         // "ipAddress" => $request->ip(), // Usar la dirección IP del cliente
                         // "userAgent" => $request->header('User-Agent')
                     ];
