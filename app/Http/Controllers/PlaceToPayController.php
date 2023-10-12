@@ -108,6 +108,7 @@ class PlaceToPayController extends Controller
                 $newSubscription = $subscription->replicate();
                 // Realiza modificaciones en la nueva suscripción si es necesario
                 $newSession->subscriptions()->save($newSubscription);
+                $subscription->delete();
             }
         }
         return redirect()->route('ptp.home');

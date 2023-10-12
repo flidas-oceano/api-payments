@@ -110,7 +110,7 @@ class PlaceToPayPaymentLinkController extends Controller
 
             //obtener datos personales
             $ptpTransaction = PlaceToPayTransaction::where('requestId', $request['requestId'])->first();
-            $objetoStdClass = $this->placeToPayService->getByRequestId($request['requestId']);
+            $objetoStdClass = $this->placeToPayService->getByRequestId($request['requestId'], false, true);
             // $objetoStdClass = $placeToPayService->getByRequestId(677217);
             // Convertir el objeto stdClass en un objeto PHP
             $transactionByRequestId = json_decode(json_encode($objetoStdClass), false);
@@ -147,13 +147,13 @@ class PlaceToPayPaymentLinkController extends Controller
                 'exception' => get_class($e),
                 'line' => $e->getLine(),
                 'file' => $e->getFile(),
-                // 'trace' => $e->getTraceAsString()
             ];
 
-            Log::error("Error en PlaceToPayPaymentLinkController-create: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            //Log::error("Error en PlaceToPayPaymentLinkController-create: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+
             return response()->json([
                 $err
-            ]);
+            ], 400);
         }
     }
 
