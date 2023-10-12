@@ -96,6 +96,14 @@ class PlaceToPayTransaction extends Model
             ->first();
     }
 
+    public function lastApprovedSubscription()
+    {
+        return $this->hasMany(PlaceToPaySubscription::class, 'transactionId')
+            ->where('status', 'APPROVED')
+            ->latest('updated_at')
+            ->first();
+    }
+
     public function lead()
     {
         return $this->belongsTo(Lead::class, 'lead_id');

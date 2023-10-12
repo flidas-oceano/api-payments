@@ -369,27 +369,37 @@ class ZohoController extends Controller
                 'folio_pago' => $request->folio_pago,
             ];
         }
+
         if ($gateway == 'Placetopay') {
 
-            $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();
+            $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->first();
             if ($session == null) {
                 return response()->json('No se encontro la session en la DB.', 500);
             }
-            $subscription = $session->subscriptions()->where(['nro_quote' => 1])->get()->first();
+            $subscription = $session->lastApprovedSubscription();
             if ($subscription == null) {
                 return response()->json('No se encontraron subcripciones de cuota 1 pagadas en la DB.', 500);
             }
+
+            $detailApprovedPayments = [
+                'Fecha_Cobro' => date('Y-m-d', strtotime($subscription->date_to_pay)),
+                'Num_de_orden_o_referencia_ext' => $session->reference,
+                'Cobro_ID' => $subscription->reference,
+                'Monto' => $subscription->total,
+                'Numero_de_cobro' => $subscription->nro_quote,
+                'Origen_Pago' => 'SPP',
+            ];
 
             return [
                 'Monto_de_parcialidad' => $session->first_installment,
                 'Seleccione_total_de_pagos_recurrentes' => strval($session->quotes),
                 'Monto_de_cada_pago_restantes' => $session->remaining_installments,
                 'Cantidad_de_pagos_recurrentes_restantes' => strval($session->quotes - 1),
-                'Fecha_de_primer_cobro' => date('Y-m-d'),
+                'Fecha_de_primer_cobro' => date('Y-m-d', strtotime($subscription->date_to_pay)),
                 'Status' => 'Aprobado',
                 'M_todo_de_pago' => $gateway,
                 'Modo_de_pago' => $modoDePago,
-
+                'Paso_5_Detalle_pagos' => [$detailApprovedPayments]
                 // 'session_subscription_requestId' => $session->requestId,
                 // 'cuota_subscription_requestId' => $session->getFirstInstallmentPaid()->requestId,
 
@@ -768,7 +778,8 @@ class ZohoController extends Controller
             return response()->json($answer);
     }
 
-    private function getContractZoho($number){
+    private function getContractZoho($number)
+    {
         $sale = $this->fetchRecordWithValue('Sales_Orders', 'id', $number);
 
         if ($sale == 'error') {
@@ -778,10 +789,10 @@ class ZohoController extends Controller
                 $answer['detail'] = 'Sale not found';
                 $answer['status'] = 'error';
                 return $answer;
-            }else{
+            } else {
                 return $sale;
             }
-        }else{
+        } else {
             return $sale;
         }
     }
