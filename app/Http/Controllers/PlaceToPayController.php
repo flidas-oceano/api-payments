@@ -411,7 +411,7 @@ class PlaceToPayController extends Controller
                     'type' => "requestSubscription",
                     'expiration_date' => $data['expiration'],
                     'paymentData' => json_encode($payer, JSON_UNESCAPED_SLASHES),
-                    'transaction_id' => 0
+                    'transaction_id' => null
                 ]);
 
                 $getById = $this->placeTopayService->getByRequestId($result['requestId'], $cron = false, $isSubscription = true);
