@@ -83,6 +83,8 @@ class PlaceToPayController extends Controller
             'transaction_id' => $session->id
         ]);
 
+        $session->update(['status' => 'RENEWED']);
+
         // Copia otros atributos si es necesario
         $lastRejected = $session->lastRejectedSubscription();
         $newFirstPayment = $lastRejected->replicate();
