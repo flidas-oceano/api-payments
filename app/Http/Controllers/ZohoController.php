@@ -399,6 +399,7 @@ class ZohoController extends Controller
                 'Status' => 'Aprobado',
                 'M_todo_de_pago' => $gateway,
                 'Modo_de_pago' => $modoDePago,
+                'stripe_subscription_id' => $session->reference,
                 'Paso_5_Detalle_pagos' => [$detailApprovedPayments]
                 // 'session_subscription_requestId' => $session->requestId,
                 // 'cuota_subscription_requestId' => $session->getFirstInstallmentPaid()->requestId,
