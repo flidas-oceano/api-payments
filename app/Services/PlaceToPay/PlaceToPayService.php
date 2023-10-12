@@ -198,6 +198,7 @@ class PlaceToPayService
     {
 
         if (isset($requestsSubscription->suscriptions) && count($requestsSubscription->suscriptions) > 1) {
+        if (isset($requestsSubscription->subscriptions) && count($requestsSubscription->subscriptions) > 1) {
             return ['message' => 'Ya tiene cuotas'];
         }
 
