@@ -557,6 +557,7 @@ class PlaceToPayService
             ]
         ];
         $url = "https://checkout-test.placetopay.ec/api/instrument/invalidate";
+        $url = env("PTP_INSTRUMENT_INVALIDATE");
         $response = Http::withHeaders([
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
@@ -609,6 +610,7 @@ class PlaceToPayService
         }
 
         $url = "https://checkout-test.placetopay.ec/api/collect";
+        $url = env("PTP_COLLECT");
         $response = Http::withHeaders([
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
