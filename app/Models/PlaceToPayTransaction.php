@@ -36,7 +36,8 @@ class PlaceToPayTransaction extends Model
         'quotes',
         'installments_paid',
         'paymentData',
-        'transaction_id'
+        'transaction_id',
+        'contract_id'
 
     ];
     private static $formAttributes = [

@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddColumsToPlacetopaySubscriptions extends Migration
+class AddContractIdToPlacetopayTransactions extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,8 @@ class AddColumsToPlacetopaySubscriptions extends Migration
      */
     public function up()
     {
-        Schema::table('placetopay_subscriptions', function (Blueprint $table) {
-            $table->integer("failed_payment_attempts")->nullable()->default(null);
+        Schema::table('placetopay_transactions', function (Blueprint $table) {
+            $table->string("contract_id", 180)->nullable()->default(null);
         });
     }
 
@@ -25,8 +25,9 @@ class AddColumsToPlacetopaySubscriptions extends Migration
      */
     public function down()
     {
-        Schema::table('placetopay_subscriptions', function (Blueprint $table) {
-            $table->dropColumn("failed_payment_attempts");
+        Schema::table('placetopay_transactions', function (Blueprint $table) {
+            $table->dropColumn("contract_id");
+
         });
     }
 }
