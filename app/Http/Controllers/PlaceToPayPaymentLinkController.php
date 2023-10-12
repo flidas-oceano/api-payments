@@ -69,19 +69,14 @@ class PlaceToPayPaymentLinkController extends Controller
                     'date' => $result['status']['date'],
                     'requestId' => $result['requestId'],
                     'processUrl' => $this->placeToPayService->reduceUrl($result['processUrl']),
-
                     'total' => $request['payment']['total'],
                     'currency' => 'USD',
                     'quotes' => $request['payment']['quotes'],
                     'remaining_installments' => $request['payment']['remaining_installments'],
-
-                    // 'contact_id' => ,
-                    // 'authorization' => ,
-
                     'reference' => $request['so'],
                     'type' => "requestSubscription",
-                    // 'token_collect_para_el_pago' => ,
                     'expiration_date' => $data['expiration'],
+                    'contract_id' => $request->contractId
                 ]);
                 $getById = $this->placeToPayService->getByRequestId($result['requestId']);
             }
@@ -188,9 +183,9 @@ class PlaceToPayPaymentLinkController extends Controller
     {
         try {
             // $paymentLinkPTP = PlaceToPayPaymentLink::where('contract_entity_id', $saleId)->first();
-            $paymentLink = PlaceToPayPaymentLink::find( $request['paymentLink']['id'] )->update(['']);
+            $paymentLink = PlaceToPayPaymentLink::find($request['paymentLink']['id'])->update(['']);
             $requestSubscriptionById = $this->getByRequestId($paymentLink->transaction->requestId);
-            if(($requestSubscriptionById->status->status ?? null) === 'REJECTED'){
+            if (($requestSubscriptionById->status->status ?? null) === 'REJECTED') {
                 //acutalizo el payment link registo
                 PlaceToPayPaymentLink::find($paymentLink->id)->update(['status' => $requestSubscriptionById->status->status]);
                 //acutalizo el transaction a rechazado
@@ -200,14 +195,14 @@ class PlaceToPayPaymentLinkController extends Controller
                     'message' => $requestSubscriptionById['status']['message'],
                 ]);
 
-                    //creo creo un nuevo registro paymentlink //duplicando el registro.
-                    // //creo una nueva transaccion. con el r_{numero de intento}
-                    // tener en cuenta que el reference va a ser asi:
-                    // 2000339000617515005 -> REJECTED
-                    // 2000339000617515005_R_1 -> REJECTED
-                    // 2000339000617515005_R_2 -> APROVEED
+                //creo creo un nuevo registro paymentlink //duplicando el registro.
+                // //creo una nueva transaccion. con el r_{numero de intento}
+                // tener en cuenta que el reference va a ser asi:
+                // 2000339000617515005 -> REJECTED
+                // 2000339000617515005_R_1 -> REJECTED
+                // 2000339000617515005_R_2 -> APROVEED
 
-                    //asociarlos
+                //asociarlos
 
 
                 // $result = $this->placeTopayService->create($data);

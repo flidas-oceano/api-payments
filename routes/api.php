@@ -149,15 +149,11 @@ Route::prefix("/placetopay")->group(function () {
 
     Route::get('/getSessionByRequestId/{requestId}', [PlaceToPayController::class, 'getSessionByRequestId']);
 
-    Route::get('/placetopay', [PlaceToPayController::class, 'index']);
     Route::get('/createPayment', [PlaceToPayController::class, 'createPayment']);
 
     Route::post('/savePayments', [PlaceToPayController::class, 'savePayments']);
     Route::post('/savePaymentSubscription', [PlaceToPayController::class, 'savePaymentSubscription']);
-    Route::get('/billSubscription/{requestId}', [PlaceToPayController::class, 'billSubscription']);
     Route::get('/revokeTokenSession/{requestIdSession}', [PlaceToPayController::class, 'revokeTokenSession']);
-
-    Route::get('/pruebaregladepago', [PlaceToPayController::class, 'pruebaregladepago']);
 
     Route::post('/generatePaymentLink', [PlaceToPayPaymentLinkController::class, 'create']);
     Route::get('/getPaymentLink/{saleId}', [PlaceToPayPaymentLinkController::class, 'getPaymentLink']);

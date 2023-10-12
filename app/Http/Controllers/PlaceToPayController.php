@@ -110,9 +110,6 @@ class PlaceToPayController extends Controller
                 $newSession->subscriptions()->save($newSubscription);
             }
         }
-
-
-
         return redirect()->route('ptp.home');
     }
 
@@ -152,81 +149,6 @@ class PlaceToPayController extends Controller
         }
     }
 
-    public function pruebaregladepago()
-    {
-        try {
-            $this->placeTopayService->createInstallments();
-            // $this->payInstallmentsSubscriptions();
-        } catch (\Exception $e) {
-            $err = [
-                'message' => $e->getMessage(),
-                'exception' => get_class($e),
-                'line' => $e->getLine(),
-                'file' => $e->getFile(),
-                // 'trace' => $e->getTraceAsString()
-            ];
-
-            Log::error("Error en pruebaregladepago: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
-            return response()->json([
-                $err
-            ]);
-        }
-    }
-
-    public function billSubscription(Request $request, $requestId)
-    {
-        try {
-
-            $requestSusbcription = PlaceToPayTransaction::where(['requestId' => $requestId])->get()->first();
-            $data = [
-                "auth" => $this->placeTopayService->generateAuthentication(),
-                "locale" => "es_CO",
-                "payer" => [
-                    "name" => "1122334455",
-                    "surname" => "Prueba",
-                    "email" => "facundobrizuela@oceano.com.ar",
-                    "document" => "1758859431",
-                    "documentType" => "CC",
-                ],
-                "payment" => [
-                    "reference" => "1122334455",
-                    "description" => "Prueba",
-                    "amount" => [
-                        "currency" => "USD",
-                        "total" => 455
-                    ]
-                ],
-                "instrument" => [
-                    "token" => [
-                        "token" => $requestSusbcription->token_collect_para_el_pago
-                    ]
-                ],
-                "expiration" => $this->placeTopayService->getDateExpiration(),
-                "returnUrl" => "https://dnetix.co/p2p/client",
-                "ipAddress" => $request->ip(),
-                // Usar la dirección IP del cliente
-                "userAgent" => $request->header('User-Agent')
-            ];
-
-            $response = $this->placeTopayService->billSubscription($data);
-            // Aquí puedes procesar la respuesta como desees
-            // Por ejemplo, devolverla como una respuesta JSON
-            return response()->json($response);
-        } catch (\Exception $e) {
-            $err = [
-                'message' => $e->getMessage(),
-                'exception' => get_class($e),
-                'line' => $e->getLine(),
-                'file' => $e->getFile(),
-                // 'trace' => $e->getTraceAsString()
-            ];
-
-            Log::error("Error en billSubscription: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
-            return response()->json([
-                $err
-            ]);
-        }
-    }
     public function savePaymentSubscription(Request $request)
     {
 
@@ -413,7 +335,8 @@ class PlaceToPayController extends Controller
                     'type' => "requestSubscription",
                     'expiration_date' => $data['expiration'],
                     'paymentData' => json_encode($payer, JSON_UNESCAPED_SLASHES),
-                    'transaction_id' => null
+                    'transaction_id' => null,
+                    'contract_id' => $request->contractId
                 ]);
 
                 $getById = $this->placeTopayService->getByRequestId($result['requestId'], $cron = false, $isSubscription = true);
@@ -442,27 +365,8 @@ class PlaceToPayController extends Controller
 
     public function createSession(Request $request)
     {
+        //TODO: Refacfor pago unico
         try {
-            // $lead = Lead::updateOrCreate(
-            //     [ 'email' => $request['payer']['email'] ],
-            //     [
-            //         'name' => $request['payer']['email'],
-            //         'username' => $request['payer']['surname'],
-            //         'email' => $request['payer']['email'],
-            //     ]
-            // );
-            // $contact = Contact::updateOrCreate(
-            //     [ 'id' => $lead->contact_id ],
-            //     [
-            //         'dni' => $request['payer']['document'],
-            //     ]
-            // );
-
-            // $lead->contact_id = $contact->id;
-            // $lead->save();
-
-            // CI - Cédula de identidad - '/^\d{10}$/' // RUC - Registro Único de Contribuyentes - '/^\d{13}$/'
-
             $payer = [
                 "name" => $request['payer']['name'],
                 "surname" => $request['payer']['surname'],
@@ -607,50 +511,7 @@ class PlaceToPayController extends Controller
 
 
     }
-    public function index()
-    {
-        // Generar autenticación
-        $auth = $this->placeTopayService->generateAuthentication();
 
-        // return response()->json($auth);
-
-        // Datos de la solicitud
-        $data = '{
-            "auth": ' . json_encode($auth) . ',
-            "payment": {
-                "reference": "1234567890",
-                "description": "Testing Payment",
-                "amount": {
-                    "currency": "COP",
-                    "total": 3000
-                }
-            },
-            "instrument": {
-                "card": {
-                    "number": "4110760000000008"
-                }
-            },
-            "ipAddress": "127.0.0.1",
-            "userAgent": "Testing"
-        }';
-
-        try {
-            $client = new Client();
-            $response = $client->post(env('PTP_ENDPOINT'), [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Content-Type' => 'application/json',
-                ],
-                'body' => $data,
-            ]);
-
-            // Imprimir el resultado de la consulta
-            echo $response->getBody();
-        } catch (\GuzzleHttp\Exception\RequestException $e) {
-            // En caso de error en la solicitud
-            echo "Error: " . $e->getMessage();
-        }
-    }
     // Esto es cuando se ejecuta el create sesion que es la creacion del pago unico. //Se paga a travez de la pasarela.
     public function savePayments(Request $request)
     {
@@ -703,55 +564,6 @@ class PlaceToPayController extends Controller
             ]);
         }
     }
-    //requestId() payment unico
-    public function requestId(Request $request)
-    {
-        try {
 
-            // ver si en el body de request tengo subscription o payment y ponerlo en el type
-            foreach ($request->transactions as $transaction) {
-                if ($transaction["status"]["status"] === "OK") {
-                    //esta ok
-                    PlaceToPayTransaction::create(
-                        ['requestId' => $transaction["requestId"]],
-                        [
-                            'status' => $transaction["status"]["status"],
-                            'reason' => $transaction["status"]["reason"],
-                            'message' => $transaction["status"]["message"],
-                            'date' => $transaction["status"]["date"],
-                            'requestId' => $transaction["requestId"],
-                            'processUrl' => $transaction["processUrl"],
-                            // 'contact_id' => $request->,
-                            // 'authorization' => $request->,
-                            // 'total' => $request->,
-                            // 'currency' => $request->,
-                            // 'reference' => $request->,
-                            // 'type' => $request->,
-                            // 'token_collect' => $request->,
-                        ]
-                    );
-                }
-            }
-
-            return response()->json([
-                // $arrayRequest,
-                // $arrayResponse
-            ]);
-
-        } catch (\Exception $e) {
-            $err = [
-                'message' => $e->getMessage(),
-                'exception' => get_class($e),
-                'line' => $e->getLine(),
-                'file' => $e->getFile(),
-                'trace' => $e->getTraceAsString(),
-            ];
-
-            Log::error("Error en PopulateProducts: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
-            return response()->json([
-                $err
-            ]);
-        }
-    }
 
 }
