@@ -128,6 +128,7 @@ class PlaceToPayService
     }
 
     public function payFirstQuoteCreateRestQuotesByRequestId($requestIdRequestSubscription)
+    public function payFirstQuoteCreateRestQuotesByRequestId($requestIdRequestSubscription) // TODO: ya no se usa
     {
         $requestsSubscription = PlaceToPayTransaction::where(['requestId' => $requestIdRequestSubscription])->first();
 
@@ -150,6 +151,7 @@ class PlaceToPayService
                 }
 
                 $updatePayment = PlaceToPaySubscription::updateWith($subscription, $subscriptionByRequestId);
+                $updatePayment = PlaceToPaySubscription::updateWith($subscription, $subscriptionByRequestId,null);
 
                 // guardas registro primer cuota
 
@@ -174,6 +176,7 @@ class PlaceToPayService
 
                 //empiezo pagando la primer cuota
                 $result = $this->pagarCuotaSuscripcion($requestsSubscription, 1);
+                $result = $this->pagarCuotaSuscripcion($requestsSubscription, 1, $requestsSubscription->transaction_id);
 
                 if (($result['response']['status']['status'] ?? null) === 'REJECTED') {
                     if (!$this->isRejectedTokenTransaction($requestsSubscription)) {
