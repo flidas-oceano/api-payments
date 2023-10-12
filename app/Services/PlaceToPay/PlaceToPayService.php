@@ -127,7 +127,6 @@ class PlaceToPayService
         return $result;
     }
 
-    public function payFirstQuoteCreateRestQuotesByRequestId($requestIdRequestSubscription)
     public function payFirstQuoteCreateRestQuotesByRequestId($requestIdRequestSubscription) // TODO: ya no se usa
     {
         $requestsSubscription = PlaceToPayTransaction::where(['requestId' => $requestIdRequestSubscription])->first();
@@ -150,7 +149,6 @@ class PlaceToPayService
                     }
                 }
 
-                $updatePayment = PlaceToPaySubscription::updateWith($subscription, $subscriptionByRequestId);
                 $updatePayment = PlaceToPaySubscription::updateWith($subscription, $subscriptionByRequestId,null);
 
                 // guardas registro primer cuota
@@ -175,7 +173,6 @@ class PlaceToPayService
                 //No estan creadas todas las cuotas de la suscripcion
 
                 //empiezo pagando la primer cuota
-                $result = $this->pagarCuotaSuscripcion($requestsSubscription, 1);
                 $result = $this->pagarCuotaSuscripcion($requestsSubscription, 1, $requestsSubscription->transaction_id);
 
                 if (($result['response']['status']['status'] ?? null) === 'REJECTED') {
@@ -200,7 +197,6 @@ class PlaceToPayService
     public function createRemainingInstallments($paymentDate, $requestsSubscription)
     {
 
-        if (isset($requestsSubscription->suscriptions) && count($requestsSubscription->suscriptions) > 1) {
         if (isset($requestsSubscription->subscriptions) && count($requestsSubscription->subscriptions) > 1) {
             return ['message' => 'Ya tiene cuotas'];
         }
@@ -560,7 +556,6 @@ class PlaceToPayService
                 ]
             ]
         ];
-        $url = "https://checkout-test.placetopay.ec/api/instrument/invalidate";
         $url = env("PTP_INSTRUMENT_INVALIDATE");
         $response = Http::withHeaders([
             'Accept' => 'application/json',
@@ -613,7 +608,6 @@ class PlaceToPayService
             throw new \InvalidArgumentException("El parámetro 'data' es obligatorio.");
         }
 
-        $url = "https://checkout-test.placetopay.ec/api/collect";
         $url = env("PTP_COLLECT");
         $response = Http::withHeaders([
             'Accept' => 'application/json',
@@ -642,7 +636,6 @@ class PlaceToPayService
                 if ($request->first_installment !== null)
                     $success = $this->pagarCuotaSuscripcionAnticipo($request);
                 else
-                    $success = $this->pagarCuotaSuscripcion($request, 1);
                     $success = $this->pagarCuotaSuscripcion($request, 1,$request->transaction_id);
 
                 // creas todas las cuotas restantes, si hay
@@ -749,7 +742,6 @@ class PlaceToPayService
                             ]
                         ],
                         "expiration" => $this->getDateExpiration(),
-                        "returnUrl" => "https://dnetix.co/p2p/client",
                         // "returnUrl" => "https://dnetix.co/p2p/client",
                         // "ipAddress" => $request->ip(), // Usar la dirección IP del cliente
                         // "userAgent" => $request->header('User-Agent')
