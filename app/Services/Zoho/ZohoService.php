@@ -4,6 +4,7 @@ namespace App\Services\Zoho;
 
 use App\Clients\ZohoClient;
 use Illuminate\Support\Facades\Log;
+use zcrmsdk\crm\crud\ZCRMRecord;
 use zcrmsdk\crm\exception\ZCRMException;
 use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
 use zcrmsdk\oauth\exception\ZohoOAuthException;
@@ -72,10 +73,47 @@ class ZohoService
             'Origen_Pago' => 'SPP',
         ];
 
-        $detailApprovedPayments = $this->buildTablePaymentDetail($contractId,$detailApprovedPayment);
+        $dataUpdate = [
+            'Paso_5_Detalle_pagos' => $this->buildTablePaymentDetail($contractId,$detailApprovedPayment)
+        ];
 
-        return $detailApprovedPayments;
+        $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $contractId, true);
+    }
+    //actualiza un record, le pasas el id separado
+    public function updateRecord($type, $data, $id, $workflow = true)
+    {
+        $answer = array();
 
+        $answer['result'] = 'error';
+        $answer['id'] = '';
+        $answer['detail'] = '';
+
+        try {
+            $zcrmRecordIns = ZCRMRecord::getInstance($type, $id);
+
+            foreach ($data as $k => $v)
+                $zcrmRecordIns->setFieldValue($k, $v);
+
+            //workflow?
+            if ($workflow)
+                $apiResponse = $zcrmRecordIns->update();
+            else
+                $apiResponse = $zcrmRecordIns->update(array());
+
+            if ($apiResponse->getCode() == 'SUCCESS') {
+                $answer['result'] = 'ok';
+                $answer['id'] = $id;
+            }
+        } catch (ZCRMException $e) {
+            Log::error($e);
+
+            if (!empty($e->getExceptionDetails()))
+                $answer['detail'] = $e->getExceptionDetails();
+            else
+                $answer['detail'] = $e->getMessage();
+        }
+
+        return ($answer);
     }
 
 }

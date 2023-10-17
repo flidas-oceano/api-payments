@@ -24,7 +24,6 @@ class PlaceToPayService
 
     public function __construct()
     {
-
         $this->login_pu = env("REACT_APP_PTP_LOGIN_PU");
         $this->secret_pu = env("REACT_APP_PTP_SECRECT_PU");
         $this->login_su = env("REACT_APP_PTP_LOGIN_SU");
@@ -827,7 +826,7 @@ class PlaceToPayService
             //Actualizo zoho
             $zohoClient = new ZohoClient(); // Crear una instancia de ZohoClient según sea necesario
             $zohoService = new ZohoService($zohoClient);
-            $zohoService->updateTablePaymentsDetails($session->contractId,$session,$subscriptionToPay);
+            $zohoService->updateTablePaymentsDetails($session->contract_id,$session,$subscriptionToPay);
         }
 
         if ($responsePaymentStatus === 'REJECTED') {
