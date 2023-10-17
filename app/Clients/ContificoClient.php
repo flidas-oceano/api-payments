@@ -50,11 +50,7 @@ class ContificoClient implements IClient
 
             return $client->sendAsync($request)->wait();
         } catch (\Exception $e) {
-            $posA = strpos($e->getMessage(), '{');
-            $posB = strpos($e->getMessage(), '}');
-            $resp = substr($e->getMessage(), $posA, $posB);
-
-            throw new \Exception($resp);
+            throw new \Exception($e->getResponse()->getBody()->getContents());
         }
     }
 
