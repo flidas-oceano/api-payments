@@ -21,24 +21,21 @@ class ZohoClient implements IClient
 
             return $instance;
         } catch (\Exception $e) {
-            $clientId = env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_CLIENT_ID') : env('ZOHO_API_PAYMENTS_PROD_CLIENT_ID');
-            $secret = env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_CLIENT_SECRECT') : env('ZOHO_API_PAYMENTS_PROD_CLIENT_SECRECT');
-            $uri = env('APP_DEBUG') ? 'https://www.zoho.com' : 'https://www.oceanomedicina.com.ar';
-            \Log::info("Logging to zoho client", [$clientId, $secret, $uri]);
+
             ZCRMRestClient::initialize([
-                "client_id" => $clientId,
-                "client_secret" => $secret,
-                "redirect_uri" => $uri,
+                "client_id" => env('ZOHO_CRM_MSK_PAYMENTS_CLIENT_ID'),
+                "client_secret" => env('ZOHO_CRM_MSK_PAYMENTS_CLIENT_SECRECT'),
+                "redirect_uri" => 'https://www.msklatam.com',
                 "token_persistence_path" => Storage::path("zoho"),
                 "persistence_handler_class" => "ZohoOAuthPersistenceByFile",
-                "currentUserEmail" => env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar',
-                //'copyzoho.custom@gmail.com',
+                "currentUserEmail" => 'integraciones@msklatam.com',
                 "accounts_url" => 'https://accounts.zoho.com',
                 "access_type" => "offline"
             ]);
+
             $oAuthClient = ZohoOAuth::getClientInstance();
-            $refreshToken = env('APP_DEBUG') ? env('ZOHO_API_PAYMENTS_TEST_REFRESH_TOKEN') : env('ZOHO_API_PAYMENTS_PROD_REFRESH_TOKEN');
-            $userIdentifier = env('APP_DEBUG') ? 'copyzoho.custom@gmail.com' : 'sistemas@oceano.com.ar';
+            $refreshToken = env('ZOHO_CRM_MSK_PAYMENTS_REFRESH_TOKEN');
+            $userIdentifier = 'integraciones@msklatam.com';
             $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier);
 
             return self::getClient();

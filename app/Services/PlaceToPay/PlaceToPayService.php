@@ -2,6 +2,7 @@
 
 namespace App\Services\PlaceToPay;
 
+use App\Clients\ZohoClient;
 use DateTime;
 use stdClass;
 use Exception;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use App\Models\PlaceToPayTransaction;
 use App\Models\PlaceToPaySubscription;
+use App\Services\Zoho\ZohoService;
 
 class PlaceToPayService
 {
@@ -19,8 +21,10 @@ class PlaceToPayService
     private $login_su;
     private $secret_su;
 
+
     public function __construct()
     {
+
         $this->login_pu = env("REACT_APP_PTP_LOGIN_PU");
         $this->secret_pu = env("REACT_APP_PTP_SECRECT_PU");
         $this->login_su = env("REACT_APP_PTP_LOGIN_SU");
@@ -812,13 +816,18 @@ class PlaceToPayService
 
         $responsePayment = $this->billSubscription($data, $cron = true);
 
-        $responsePaymentStatus = 'REJECTED';
-        $responsePayment['payment'][0]['status']['status'] = $responsePaymentStatus;
+        $responsePaymentStatus = $responsePayment['payment'][0]['status']['status'];
+        // $responsePaymentStatus = 'REJECTED';
+        // $responsePayment['payment'][0]['status']['status'] = $responsePaymentStatus;
 
 
         if ($responsePaymentStatus === 'APPROVED') {
             // Actualizo el transactions, campo: installments_paid
             PlaceToPayTransaction::incrementInstallmentsPaid($session->id);
+            //Actualizo zoho
+            $zohoClient = new ZohoClient(); // Crear una instancia de ZohoClient según sea necesario
+            $zohoService = new ZohoService($zohoClient);
+            $zohoService->updateTablePaymentsDetails($session->contractId,$session,$subscriptionToPay);
         }
 
         if ($responsePaymentStatus === 'REJECTED') {

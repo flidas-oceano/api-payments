@@ -19,12 +19,14 @@ use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
 
 use App\Models\{Contact, Lead, Profession, PurchaseProgress, Speciality, MethodContact, PlaceToPaySubscription, PlaceToPayTransaction, SourceLead};
 use App\Services\PlaceToPay\PlaceToPayService;
+use App\Services\Zoho\ZohoService;
 
 class ZohoController extends Controller
 {
 
     public $emi_owner;
     public $placeToPayService = null;
+    public $zohoService = null;
 
     public function reinit()
     {
@@ -56,35 +58,35 @@ class ZohoController extends Controller
         }
     }
 
-    public function __construct(PlaceToPayService $placeToPayService)
+    public function __construct(PlaceToPayService $placeToPayService, ZohoService $zohoService)
     {
         try {
             $this->placeToPayService = $placeToPayService;
+            $this->zohoService = $zohoService;
 
-            $this->emi_owner = 'x';
-
-            ZCRMRestClient::initialize([
-                "client_id" => env('ZOHO_CRM_MSK_PAYMENTS_CLIENT_ID'),
-                "client_secret" => env('ZOHO_CRM_MSK_PAYMENTS_CLIENT_SECRECT'),
-                "redirect_uri" => 'https://www.msklatam.com',
-                "token_persistence_path" => Storage::path("zoho"),
-                "persistence_handler_class" => "ZohoOAuthPersistenceByFile",
-                "currentUserEmail" => 'integraciones@msklatam.com',
-                "accounts_url" => 'https://accounts.zoho.com',
-                "access_type" => "offline"
-            ]);
-
-            $oAuthClient = ZohoOAuth::getClientInstance();
-            $refreshToken = env('ZOHO_CRM_MSK_PAYMENTS_REFRESH_TOKEN');
-            $userIdentifier = 'integraciones@msklatam.com';
-            $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier);
+             $this->emi_owner = 'x';
         } catch (Exception $e) {
             Log::error($e);
 
         }
     }
 
-    public function fetchRecordWithValue($module, $field, $value)
+    // convertLead
+    // createContact
+    // createAddressRequest
+    // getProducts
+    // getProductsWithoutIso
+    // createSale
+    // getContactByContract
+    // updateZohoCTCMSK
+    // saveCardZohoCTC
+    // updateZohoStripeMSK
+    // updateZohoMPMSK
+    // updateZohoPTPMSK
+    // obtainData
+    // buildTablePaymentDetail
+
+   /*  public function fetchRecordWithValue($module, $field, $value)
     {
         $answer = 'error';
         $record = null;
@@ -96,9 +98,8 @@ class ZohoController extends Controller
         } catch (\zcrmsdk\crm\exception\ZCRMException $e) {
             Log::debug($e);
         }
-        return ($answer);
-    }
-
+         return ($answer);
+    } */
     public function getContractBySO(Request $request, $so)
     {
         $answer = 'error';
@@ -107,7 +108,7 @@ class ZohoController extends Controller
         $record = null;
 
         try {
-            $record = $this->fetchRecordWithValue('Sales_Orders', 'SO_Number', $so);
+            $record = $this->zohoService->fetchRecordWithValue('Sales_Orders', 'SO_Number', $so);
             if ($record != 'error') {
                 $answer = $record;
             } else
@@ -381,7 +382,7 @@ class ZohoController extends Controller
                 return response()->json('No se encontraron subcripciones de cuota 1 pagadas en la DB.', 500);
             }
 
-            $detailApprovedPayments = [
+            $detailApprovedPayment = [
                 'Fecha_Cobro' => date('Y-m-d', strtotime($subscription->date_to_pay)),
                 'Num_de_orden_o_referencia_ext' => $session->reference,
                 'Cobro_ID' => $subscription->reference,
@@ -389,6 +390,10 @@ class ZohoController extends Controller
                 'Numero_de_cobro' => $subscription->nro_quote,
                 'Origen_Pago' => 'SPP',
             ];
+
+            $detailApprovedPayments = $this->buildTablePaymentDetail($request->contractId,$detailApprovedPayment);
+
+            // $detailApprovedPayments = $this->zohoService->buildTablePaymentDetail($request->contractId,$detailApprovedPayment);
 
             return [
                 'Monto_de_parcialidad' => $session->first_installment,
@@ -400,10 +405,9 @@ class ZohoController extends Controller
                 'M_todo_de_pago' => $gateway,
                 'Modo_de_pago' => $modoDePago,
                 'stripe_subscription_id' => $session->reference,
-                'Paso_5_Detalle_pagos' => [$detailApprovedPayments]
+                'Paso_5_Detalle_pagos' => $detailApprovedPayments
                 // 'session_subscription_requestId' => $session->requestId,
                 // 'cuota_subscription_requestId' => $session->getFirstInstallmentPaid()->requestId,
-
             ];
         }
 
@@ -1325,6 +1329,29 @@ class ZohoController extends Controller
                 'error' => 'Error al obtener los productos: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    public function buildTablePaymentDetail($contractId, $detailApprovedPayment)
+    {
+        $table = $this->getSaleOrderPaymentDetail($contractId);
+        $table[] = $detailApprovedPayment;
+        return $table;
+    }
+
+    public function updateTablePaymentsDetails($contractId,$session,$subscription){
+        $detailApprovedPayment = [
+            'Fecha_Cobro' => date('Y-m-d', strtotime($subscription->date_to_pay)),
+            'Num_de_orden_o_referencia_ext' => $session->reference,
+            'Cobro_ID' => $subscription->reference,
+            'Monto' => $subscription->total,
+            'Numero_de_cobro' => $subscription->nro_quote,
+            'Origen_Pago' => 'SPP',
+        ];
+
+        $detailApprovedPayments = $this->buildTablePaymentDetail($contractId,$detailApprovedPayment);
+
+        return $detailApprovedPayments;
+
     }
 
 }

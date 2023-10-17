@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 //     return $request->user();
 // });
 
+
 Route::middleware('auth:api')->group(function () {
     Route::get('/tokenIsValid', [PassportAuthController::class, 'tokenIsValid']);
     Route::get('user', [PassportAuthController::class, 'user']);
@@ -93,6 +94,8 @@ Route::get('/processElements', [CronosController::class, 'cronapi']);
 Route::get('/cronostest', [CronosController::class, 'test']);
 Route::post('/obtainDataCRM', [ZohoController::class, 'obtainData']);
 
+Route::post('/buildTablePaymentDetail', [ZohoController::class, 'buildTablePaymentDetail']);
+
 Route::prefix("/rebill")->group(function () {
     Route::get('/login', [RebillController::class, 'login']);
     Route::get('/getAllCustomers', [RebillController::class, 'getAllCustomers']);
@@ -163,3 +166,5 @@ Route::prefix("/placetopay")->group(function () {
     Route::post('/notificationUpdate', [PlaceToPayController::class, 'notificationUpdate']);
 
 });
+
+
