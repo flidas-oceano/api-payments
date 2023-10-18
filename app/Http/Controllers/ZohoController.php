@@ -293,7 +293,7 @@ class ZohoController extends Controller
         $so = (int) $so;
         $record = null;
 
-        $record = $this->fetchRecordWithValue('Sales_Orders', 'SO_Number', $so);
+        $record = $this->zohoService->fetchRecordWithValue('Sales_Orders', 'SO_Number', $so);
         try {
             if ($record != 'error') {
                 $answer = $record;
@@ -456,7 +456,7 @@ class ZohoController extends Controller
 
     public function updateZohoStripeMSK(UpdateContractZohoRequest $request)
     {
-        $saleZoho = $this->fetchRecordWithValue('Sales_Orders', 'id', $request->contractId)->getData();
+        $saleZoho = $this->zohoService->fetchRecordWithValue('Sales_Orders', 'id', $request->contractId)->getData();
         $contactEntityId = $saleZoho['Contact_Name']->getEntityId();
 
         $dataUpdate = $this->mappingDataContract($request, 'Stripe');
@@ -472,7 +472,7 @@ class ZohoController extends Controller
     public function updateZohoMPMSK(UpdateContractZohoRequest $request)
     {
 
-        $saleZoho = $this->fetchRecordWithValue('Sales_Orders', 'id', $request->contractId)->getData();
+        $saleZoho = $this->zohoService->fetchRecordWithValue('Sales_Orders', 'id', $request->contractId)->getData();
         $contactEntityId = $saleZoho['Contact_Name']->getEntityId();
 
 
@@ -493,7 +493,7 @@ class ZohoController extends Controller
             'folio_pago' => 'required'
         ]);
 
-        $saleZoho = $this->fetchRecordWithValue('Sales_Orders', 'id', $request->contractId)->getData();
+        $saleZoho = $this->zohoService->fetchRecordWithValue('Sales_Orders', 'id', $request->contractId)->getData();
         $contactEntityId = $saleZoho['Contact_Name']->getEntityId();
 
         $dataUpdate = $this->mappingDataContract($request, 'CTC');
@@ -755,10 +755,10 @@ class ZohoController extends Controller
         $answer['status'] = 'error';
 
         if ($key == '9j9fj0Do204==3fja134') {
-            $sale = $this->fetchRecordWithValue('Sales_Orders', 'id', $id, true);
+            $sale = $this->zohoService->fetchRecordWithValue('Sales_Orders', 'id', $id, true);
 
             if ($sale == 'error') {
-                $sale = $this->fetchRecordWithValue('Sales_Orders', 'SO_Number', $id, true);
+                $sale = $this->zohoService->fetchRecordWithValue('Sales_Orders', 'SO_Number', $id, true);
 
                 if ($sale == 'error') {
                     $answer['detail'] = 'Sale not found';
@@ -771,7 +771,7 @@ class ZohoController extends Controller
             $answer['sale'] = $sale->getData();
 
             $contactId = $sale->getFieldValue('Contact_Name')->getEntityId();
-            $contact = $this->fetchRecordWithValue('Contacts', 'id', $contactId, true);
+            $contact = $this->zohoService->fetchRecordWithValue('Contacts', 'id', $contactId, true);
 
             $answer['contact'] = $contact->getData();
             $answer['status'] = 'ok';
@@ -785,10 +785,10 @@ class ZohoController extends Controller
 
     private function getContractZoho($number)
     {
-        $sale = $this->fetchRecordWithValue('Sales_Orders', 'id', $number);
+        $sale = $this->zohoService->fetchRecordWithValue('Sales_Orders', 'id', $number);
 
         if ($sale == 'error') {
-            $sale = $this->fetchRecordWithValue('Sales_Orders', 'SO_Number', $number);
+            $sale = $this->zohoService->fetchRecordWithValue('Sales_Orders', 'SO_Number', $number);
 
             if ($sale == 'error') {
                 $answer['detail'] = 'Sale not found';
@@ -871,7 +871,7 @@ class ZohoController extends Controller
 
         //primero vamos a ver si existe una dirección con el mismo ID de contacto
         //para no repetir
-        $existAddress = $this->fetchRecordWithValue('Domicilios', 'Contacto', $data['contact_id']);
+        $existAddress = $this->zohoService->fetchRecordWithValue('Domicilios', 'Contacto', $data['contact_id']);
 
         //esto significa que no existe
         if ($existAddress == 'error') {
@@ -1060,7 +1060,7 @@ class ZohoController extends Controller
         //arma y reemplaza sku por ID de producto en zoho
         foreach ($products as $p) {
             $p['product_code'] = trim($p['product_code']); //Remove whitespace from product_code
-            $rec = $this->fetchRecordWithValue('Products', 'Product_Code', $p['product_code']);
+            $rec = $this->zohoService->fetchRecordWithValue('Products', 'Product_Code', $p['product_code']);
 
             if ($rec != 'error') {
                 $answer[] = array(
@@ -1124,7 +1124,7 @@ class ZohoController extends Controller
             'Plataforma' => 'Venta Presencial',
         ];
 
-        $fetchContact = $this->fetchRecordWithValue("Contacts", 'DNI', $additionalData['DNI']);
+        $fetchContact = $this->zohoService->fetchRecordWithValue("Contacts", 'DNI', $additionalData['DNI']);
 
         if ($fetchContact != 'error') {
             $entityId = $fetchContact->getEntityId();
@@ -1205,7 +1205,7 @@ class ZohoController extends Controller
     private function processLeadData($data)
     {
         //hay contactos?
-        if ($this->fetchRecordWithValue('Contacts', 'Email', $data["email"]) == "error") {
+        if ($this->zohoService->fetchRecordWithValue('Contacts', 'Email', $data["email"]) == "error") {
             $leadData['Es_Contacto'] = false;
         } else {
             $leadData['Es_Contacto'] = true;
