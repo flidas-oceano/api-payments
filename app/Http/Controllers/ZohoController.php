@@ -391,8 +391,7 @@ class ZohoController extends Controller
                 'Origen_Pago' => 'SPP',
             ];
 
-            $detailApprovedPayments = $this->buildTablePaymentDetail($request->contractId,$detailApprovedPayment);
-
+            $detailApprovedPayments = $this->zohoService->buildTablePaymentDetail($request->contractId,$detailApprovedPayment);
             // $detailApprovedPayments = $this->zohoService->buildTablePaymentDetail($request->contractId,$detailApprovedPayment);
 
             return [
