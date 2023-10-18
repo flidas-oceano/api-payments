@@ -627,7 +627,7 @@ class ZohoController extends Controller
             Log::error("Error en updateZohoPTPMSK: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
             return response()->json([
                 $err
-            ]);
+            ], 400);
         }
     }
 
@@ -691,7 +691,7 @@ class ZohoController extends Controller
             Log::error("Error en updateZohoPTP: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
             return response()->json([
                 $err
-            ]);
+            ], 400);
         }
     }
 
