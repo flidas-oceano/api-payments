@@ -37,14 +37,14 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        /* $schedule->command('telescope:prune --hours=48')->daily();
-
+        /*  $schedule->command('telescope:prune --hours=48')->daily();
+ */
           $schedule->command('passport:purge')->hourly();
-
+/*
           $schedule->call(function () {
               $response = Http::get('https://oceanomedicina.net/api-payments/public/api/processElements');
               return response()->json($response);
-          })->everyFifteenMinutes(); //->everyMinute(); everyFifteenMinutes //
+          })->everyFifteenMinutes(); */
 
 
           $schedule->call(function () {
@@ -64,7 +64,7 @@ class Kernel extends ConsoleKernel
           $schedule->command('sales-order:rebill 100 4')->dailyAt('06:15:06')->timezone('America/Argentina/Buenos_Aires');
           $schedule->command('sales-order:rebill 100 5')->dailyAt('06:20:06')->timezone('America/Argentina/Buenos_Aires');
           $schedule->command('sales-order:rebill 100 6')->dailyAt('06:35:06')->timezone('America/Argentina/Buenos_Aires');
-          $schedule->command('sales-order:stripe')->dailyAt('06:25:06')->timezone('America/Argentina/Buenos_Aires'); */
+          $schedule->command('sales-order:stripe')->dailyAt('06:25:06')->timezone('America/Argentina/Buenos_Aires');
 
 
         $schedule->call(function () {

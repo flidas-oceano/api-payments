@@ -30,6 +30,7 @@ class ZohoService
         $answer = 'error';
         $record = null;
         try {
+            $this->client->getClient();
             $moduleIns = ZCRMRestClient::getInstance()->getModuleInstance($module); //To get module instance
             $response = $moduleIns->searchRecordsByCriteria('(' . $field . ':equals:' . $value . ')');
             $records = $response->getData(); //To get response data
