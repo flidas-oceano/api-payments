@@ -3,6 +3,7 @@
 namespace App\Services\Zoho;
 
 use App\Clients\ZohoClient;
+use App\Interfaces\IClient;
 use Illuminate\Support\Facades\Log;
 use zcrmsdk\crm\crud\ZCRMRecord;
 use zcrmsdk\crm\exception\ZCRMException;
@@ -11,9 +12,9 @@ use zcrmsdk\oauth\exception\ZohoOAuthException;
 
 class ZohoService
 {
-    protected ZohoClient $client;
+    protected IClient $client;
 
-    public function __construct(ZohoClient $client)
+    public function __construct(IClient $client)
     {
         $this->client = $client;
     }
@@ -22,6 +23,7 @@ class ZohoService
     {
         $table = $this->getSaleOrderPaymentDetail($contractId);
         $table[] = $detailApprovedPayment;
+        dd($table);
         return $table;
     }
 
@@ -44,10 +46,11 @@ class ZohoService
     public function getSaleOrderPaymentDetail($id)
     {
         try {
-            $this->client->getClient();
+            $client = $this->client->getClient();
             $moduleIns = ZCRMRestClient::getInstance()->getModuleInstance("Sales_Orders"); //To get module instance
             $record = $moduleIns->getRecord($id);
             $data = $record->getData(); //To get response data
+            dd($data);
             $Paso_5_Detalle_pagos = $record->getData()->getFieldValue("Paso_5_Detalle_pagos");
             $Banco_emisor = $record->getData()->getFieldValue("Banco_emisor");
 
@@ -77,6 +80,7 @@ class ZohoService
         $dataUpdate = [
             'Paso_5_Detalle_pagos' => $this->buildTablePaymentDetail($contractId,$detailApprovedPayment)
         ];
+
 
         $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $contractId, true);
     }

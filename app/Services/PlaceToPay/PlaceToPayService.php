@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Http;
 use App\Models\PlaceToPayTransaction;
 use App\Models\PlaceToPaySubscription;
 use App\Services\Zoho\ZohoService;
+use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
 
 class PlaceToPayService
 {
@@ -20,14 +21,16 @@ class PlaceToPayService
     private $secret_pu;
     private $login_su;
     private $secret_su;
+    private $zohoClient;
 
 
-    public function __construct()
+    public function __construct(ZohoClient $client)
     {
         $this->login_pu = env("REACT_APP_PTP_LOGIN_PU");
         $this->secret_pu = env("REACT_APP_PTP_SECRECT_PU");
         $this->login_su = env("REACT_APP_PTP_LOGIN_SU");
         $this->secret_su = env("REACT_APP_PTP_SECRECT_SU");
+        $this->zohoClient = $client;
     }
     public function getDateExpiration()
     {
@@ -824,8 +827,8 @@ class PlaceToPayService
             // Actualizo el transactions, campo: installments_paid
             PlaceToPayTransaction::incrementInstallmentsPaid($session->id);
             //Actualizo zoho
-            $zohoClient = new ZohoClient(); // Crear una instancia de ZohoClient según sea necesario
-            $zohoService = new ZohoService($zohoClient);
+
+            $zohoService = new ZohoService($this->zohoClient);
             $zohoService->updateTablePaymentsDetails($session->contract_id,$session,$subscriptionToPay);
         }
 

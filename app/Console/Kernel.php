@@ -4,6 +4,7 @@ namespace App\Console;
 
 use App\Console\Commands\MpCommand;
 use App\Console\Commands\GitPullAndCleanLaravelLogs;
+use App\Console\Commands\P2PCommand;
 use App\Console\Commands\RebillCommand;
 use App\Console\Commands\StripeCommand;
 use App\Http\Controllers\CronosController;
@@ -11,6 +12,7 @@ use App\Services\PlaceToPay\PlaceToPayService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 
 class Kernel extends ConsoleKernel
@@ -21,6 +23,7 @@ class Kernel extends ConsoleKernel
         MpCommand::class,
         StripeCommand::class,
         RebillCommand::class,
+        P2PCommand::class
     ];
 
     /**
@@ -69,14 +72,14 @@ class Kernel extends ConsoleKernel
 
         $schedule->call(function () {
             try {
-                $placeToPayService = new PlaceToPayService(); // Instancia el servicio
+                $placeToPayService = App::make(PlaceToPayService::class); // Instancia el servicio
                 $placeToPayService->stageOne(); //Pagar los que no tinen deudas.
                 //En test ejecutar cada 5 minutos
                 //En prod cada un dia
             } catch (\Exception $e) {
                 Log::error('Error en el comando programado: ' . $e->getMessage());
             }
-        })->everyFiveMinutes();
+        })->everyMinute();
 
 
     }

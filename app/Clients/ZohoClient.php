@@ -23,8 +23,8 @@ class ZohoClient implements IClient
         } catch (\Exception $e) {
 
             ZCRMRestClient::initialize([
-                "client_id" => env('ZOHO_CRM_MSK_PAYMENTS_CLIENT_ID'),
-                "client_secret" => env('ZOHO_CRM_MSK_PAYMENTS_CLIENT_SECRECT'),
+                "client_id" => env('ZOHO_API_PAYMENTS_MSK_CLIENT_ID'),
+                "client_secret" => env('ZOHO_API_PAYMENTS_MSK_CLIENT_SECRECT'),
                 "redirect_uri" => 'https://www.msklatam.com',
                 "token_persistence_path" => Storage::path("zoho"),
                 "persistence_handler_class" => "ZohoOAuthPersistenceByFile",
@@ -34,7 +34,7 @@ class ZohoClient implements IClient
             ]);
 
             $oAuthClient = ZohoOAuth::getClientInstance();
-            $refreshToken = env('ZOHO_CRM_MSK_PAYMENTS_REFRESH_TOKEN');
+            $refreshToken = env('ZOHO_API_PAYMENTS_MSK_REFRESH_TOKEN');
             $userIdentifier = 'integraciones@msklatam.com';
             $oAuthTokens = $oAuthClient->generateAccessTokenFromRefreshToken($refreshToken, $userIdentifier);
 
