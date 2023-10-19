@@ -5,6 +5,7 @@ namespace App\Console;
 use App\Console\Commands\MpCommand;
 use App\Console\Commands\GitPullAndCleanLaravelLogs;
 use App\Console\Commands\P2PCommand;
+use App\Console\Commands\P2PRefreshPendingsCommand;
 use App\Console\Commands\RebillCommand;
 use App\Console\Commands\StripeCommand;
 use App\Http\Controllers\CronosController;
@@ -23,7 +24,8 @@ class Kernel extends ConsoleKernel
         MpCommand::class,
         StripeCommand::class,
         RebillCommand::class,
-        P2PCommand::class
+        P2PCommand::class,
+        P2PRefreshPendingsCommand::class
     ];
 
     /**
@@ -40,38 +42,31 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        /*  $schedule->command('telescope:prune --hours=48')->daily();
- */
-          $schedule->command('passport:purge')->hourly();
-/*
-          $schedule->call(function () {
-              $response = Http::get('https://oceanomedicina.net/api-payments/public/api/processElements');
-              return response()->json($response);
-          })->everyFifteenMinutes(); */
-
-
-          /* $schedule->call(function () {
-              $response = Http::get('https://oceanomedicina.net/api-payments/public/api/rebill/checkPendingPayments');
-              return response()->json($response);
-          })->everyFiveMinutes();
-
-          $schedule->command('sales-order:mp 100 1')->dailyAt('05:40:06')->timezone('America/Argentina/Buenos_Aires');
-          $schedule->command('sales-order:mp 100 2')->dailyAt('05:45:06')->timezone('America/Argentina/Buenos_Aires');
-          $schedule->command('sales-order:mp 100 3')->dailyAt('05:50:06')->timezone('America/Argentina/Buenos_Aires');
-          $schedule->command('sales-order:mp 100 4')->dailyAt('05:55:06')->timezone('America/Argentina/Buenos_Aires');
-          $schedule->command('sales-order:mp 100 5')->dailyAt('05:58:06')->timezone('America/Argentina/Buenos_Aires');
-          $schedule->command('sales-order:mp 100 6')->dailyAt('06:30:06')->timezone('America/Argentina/Buenos_Aires');
-          $schedule->command('sales-order:rebill 100 1')->dailyAt('06:00:06')->timezone('America/Argentina/Buenos_Aires');
-          $schedule->command('sales-order:rebill 100 2')->dailyAt('06:05:06')->timezone('America/Argentina/Buenos_Aires');
-          $schedule->command('sales-order:rebill 100 3')->dailyAt('06:10:06')->timezone('America/Argentina/Buenos_Aires');
-          $schedule->command('sales-order:rebill 100 4')->dailyAt('06:15:06')->timezone('America/Argentina/Buenos_Aires');
-          $schedule->command('sales-order:rebill 100 5')->dailyAt('06:20:06')->timezone('America/Argentina/Buenos_Aires');
-          $schedule->command('sales-order:rebill 100 6')->dailyAt('06:35:06')->timezone('America/Argentina/Buenos_Aires');
-          $schedule->command('sales-order:stripe')->dailyAt('06:25:06')->timezone('America/Argentina/Buenos_Aires'); */
-
         if (config('app.env') == 'production') {
-            $schedule->command('p2p:stage')->dailyAt('06:00:00')->timezone('America/Argentina/Buenos_Aires');
+            $schedule->command('passport:purge')->hourly();
+
+            $schedule->call(function () {
+                $response = Http::get('https://oceanomedicina.net/api-payments/public/api/rebill/checkPendingPayments');
+                return response()->json($response);
+            })->everyFiveMinutes();
+
+            $schedule->command('sales-order:mp 100 1')->dailyAt('05:40:06')->timezone('America/Argentina/Buenos_Aires');
+            $schedule->command('sales-order:mp 100 2')->dailyAt('05:45:06')->timezone('America/Argentina/Buenos_Aires');
+            $schedule->command('sales-order:mp 100 3')->dailyAt('05:50:06')->timezone('America/Argentina/Buenos_Aires');
+            $schedule->command('sales-order:mp 100 4')->dailyAt('05:55:06')->timezone('America/Argentina/Buenos_Aires');
+            $schedule->command('sales-order:mp 100 5')->dailyAt('05:58:06')->timezone('America/Argentina/Buenos_Aires');
+            $schedule->command('sales-order:mp 100 6')->dailyAt('06:30:06')->timezone('America/Argentina/Buenos_Aires');
+            $schedule->command('sales-order:rebill 100 1')->dailyAt('06:00:06')->timezone('America/Argentina/Buenos_Aires');
+            $schedule->command('sales-order:rebill 100 2')->dailyAt('06:05:06')->timezone('America/Argentina/Buenos_Aires');
+            $schedule->command('sales-order:rebill 100 3')->dailyAt('06:10:06')->timezone('America/Argentina/Buenos_Aires');
+            $schedule->command('sales-order:rebill 100 4')->dailyAt('06:15:06')->timezone('America/Argentina/Buenos_Aires');
+            $schedule->command('sales-order:rebill 100 5')->dailyAt('06:20:06')->timezone('America/Argentina/Buenos_Aires');
+            $schedule->command('sales-order:rebill 100 6')->dailyAt('06:35:06')->timezone('America/Argentina/Buenos_Aires');
+            $schedule->command('sales-order:stripe')->dailyAt('06:25:06')->timezone('America/Argentina/Buenos_Aires');
+
+          $schedule->command('p2p:stage')->dailyAt('06:00:00')->timezone('America/Argentina/Buenos_Aires');
         } else {
+            $schedule->command('p2p:refresh-pendings')->everyMinute();
             $schedule->command('p2p:stage')->everyFiveMinutes();
         }
     }
