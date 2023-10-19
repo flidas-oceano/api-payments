@@ -484,7 +484,7 @@ class PlaceToPayController extends Controller
             return response()->json([
                 'result' => 'FAILED',
                 'message' => 'Signature no valido.',
-            ]);
+            ], 400);
         } catch (\Exception $e) {
             Manage::error($e);
         }
