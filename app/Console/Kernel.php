@@ -70,7 +70,7 @@ class Kernel extends ConsoleKernel
           $schedule->command('sales-order:stripe')->dailyAt('06:25:06')->timezone('America/Argentina/Buenos_Aires'); */
 
         if (config('app.env') == 'production') {
-            $schedule->command('p2p:stage')->dailyAt()->timezone('America/Argentina/Buenos_Aires');
+            $schedule->command('p2p:stage')->dailyAt('06:00:00')->timezone('America/Argentina/Buenos_Aires');
         } else {
             $schedule->command('p2p:stage')->everyFiveMinutes();
         }
