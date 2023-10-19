@@ -893,13 +893,15 @@ class PlaceToPayService
             $sessionFromPTP = $this->getByRequestId($session->requestId, $cron = true);
             //Actualizar session
             if (isset($sessionFromPTP['status']['status'])) {
-                $updateSession = PlaceToPayTransaction::where(['requestId' => $sessionFromPTP['requestId']])
-                    ->update([
-                        'status' => $sessionFromPTP['status']['status'],
-                        'reason' => $sessionFromPTP['status']['reason'],
-                        'message' => $sessionFromPTP['status']['message'],
-                        'date' => $sessionFromPTP['status']['date'],
-                    ]);
+                $session->update([
+                    'status' => $sessionFromPTP['status']['status'],
+                    'reason' => $sessionFromPTP['status']['reason'],
+                    'message' => $sessionFromPTP['status']['message'],
+                    'date' => $sessionFromPTP['status']['date'],
+                ]);
+                if($sessionFromPTP['status']['status'] === 'FAILED'){
+                    continue;
+                }
                 // //Guardar el cardToken
                 if ($sessionFromPTP['status']['status'] === "APPROVED") {
                     if (isset($sessionFromPTP['subscription'])) {
