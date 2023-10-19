@@ -35,4 +35,9 @@ return [
         'secret_om' => env('APP_DEBUG') ? env('STRIPE_OCEANO_SK_TEST') : env('STRIPE_OCEANO_SK_PROD'),
     ],
 
+    'slack' => [
+        'driver' => 'slack',
+        'url' => env('SLACK_WEBHOOK_URL_P2P'),
+    ],
+
 ];

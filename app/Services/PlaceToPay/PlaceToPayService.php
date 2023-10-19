@@ -95,9 +95,9 @@ class PlaceToPayService
 
         $newPayment = null;
 
-        if($renewSub){
+        if ($renewSub) {
             $newPayment = PlaceToPaySubscription::updateWith($request, $response, $transaccion->subscriptions->first()->id);
-        }else{
+        } else {
             $newPayment = PlaceToPaySubscription::createWith($request, $response);
         }
 
@@ -155,7 +155,7 @@ class PlaceToPayService
                     }
                 }
 
-                $updatePayment = PlaceToPaySubscription::updateWith($subscription, $subscriptionByRequestId,null);
+                $updatePayment = PlaceToPaySubscription::updateWith($subscription, $subscriptionByRequestId, null);
 
                 // guardas registro primer cuota
 
@@ -591,7 +591,7 @@ class PlaceToPayService
             throw new \InvalidArgumentException("El parámetro 'requestId' es obligatorio.");
         }
 
-        $url = env('PTP_ENDPOINT')."/" . $requestId;
+        $url = env('PTP_ENDPOINT') . "/" . $requestId;
         $data = [
             "auth" => $this->generateAuthentication($isSubscription),
         ];
@@ -642,7 +642,7 @@ class PlaceToPayService
                 if ($request->first_installment !== null)
                     $success = $this->pagarCuotaSuscripcionAnticipo($request);
                 else
-                    $success = $this->pagarCuotaSuscripcion($request, 1,$request->transaction_id);
+                    $success = $this->pagarCuotaSuscripcion($request, 1, $request->transaction_id);
 
                 // creas todas las cuotas restantes, si hay
                 if ($success) {
@@ -829,7 +829,7 @@ class PlaceToPayService
             //Actualizo zoho
 
             $zohoService = new ZohoService($this->zohoClient);
-            $zohoService->updateTablePaymentsDetails($session->contract_id,$session,$subscriptionToPay);
+            $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscriptionToPay);
         }
 
         if ($responsePaymentStatus === 'REJECTED') {
@@ -1025,6 +1025,8 @@ class PlaceToPayService
                 $this->payIndividualPayment($subscriptionToPay);
             }
         }
+
+        return $subscriptionsToPay->toArray();
     }
     // END // Cronologia de cobro
 
