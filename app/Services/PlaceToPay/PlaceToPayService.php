@@ -340,6 +340,7 @@ class PlaceToPayService
             if ($cron && $data != null) { //Esto esta porque la regla diaria de los pagos necesita que no rompa, pero si logear que hubo un error en el intento de pago
                 $dataAsString = json_encode($data);
                 // Log::channel('placetopay')->info("Payment request failed: Reason: $errorReason, Message: $errorMessage, Date: $errorDate, Data: $dataAsString");
+                Log::channel('slack')->error("Ha fallado el request a PTP: ", ['response' => $response, 'data' => $data]);
             }
             if (!$cron) {
                 throw new Exception("Payment request failed: Reason: $errorReason, Message: $errorMessage, Date: $errorDate");
@@ -665,6 +666,23 @@ class PlaceToPayService
             }
         }
     }
+    // Cronologia de cobro
+    public function createInstallmentsWithoutPay($session)
+    {
+        //ver si ya se crearon las cuotas
+        if (!(count($session->subscriptions) === $session->quotes)) {
+            //No estan creadas todas las cuotas de la suscripcion
+
+            for ($i = 2; $i <= $session->quotes; $i++) {
+                PlaceToPaySubscription::create([
+                    'transactionId' => $session->id,
+                    'nro_quote' => $i,
+                    'total' => $session->remaining_installments,
+                    'currency' => $session->currency,
+                ]);
+            }
+        }
+    }
 
     public function payInstallments()
     {
@@ -932,49 +950,27 @@ class PlaceToPayService
                         'date' => $subscriptionFromPTP['status']['date'],
                     ]);
 
-                // if($subscription->nro_quote > 1){
-                // //Guardar el cardToken
                 if ($subscriptionFromPTP['status']['status'] === "APPROVED") { //Si pasa a APPROVED: sumo en la transaccion un pago exitoso.
-
                     PlaceToPayTransaction::incrementInstallmentsPaid($subscription->transaction->id);
-                    // PlaceToPayTransaction::find($subscription->transaction->id)->update(['installments_paid' => DB::raw('COALESCE(installments_paid, 0) + 1')]);
-                    //Tengo que proceder de la siguiente formga:
-                    //Si es primer pago
+
+                    $zohoService = new ZohoService($this->zohoClient);
+                    $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($subscription->transaction->contract_id, $subscription->transaction, $subscription);
+                    $this->createInstallmentsWithoutPay($subscription->transaction);
                     //Si  otra cuota
                 }
                 if ($subscriptionFromPTP['status']['status'] === "REJECTED") { //Si pasa a REJECTED: sumo en la subscription un pago fallido
 
-                    if (!(($subscription->failed_payment_attempts ?? 0) > 3)) {
 
-                        PlaceToPaySubscription::incrementFailedPaymentAttempts($subscription->id);
-                        // PlaceToPaySubscription::find($subscription->id)
-                        //     ->update(['failed_payment_attempts' => DB::raw('COALESCE(failed_payment_attempts, 0) + 1')]);
+                    $howFailedAttempts = PlaceToPaySubscription::incrementFailedPaymentAttempts($subscription->id);
+
+                    if (!($howFailedAttempts > 2)) {
+                        $payment = $subscriptionFromPTP['request']['payment'];
+                        $updatedSubscription = PlaceToPaySubscription::duplicateAndReject($subscription->id, $subscriptionFromPTP, $payment);
                     } else {
-
-                        //TODO: Dar de baja la session y solicitar otra.
-                        if ($sessionFromPTP['status']['status'] === "REJECTED") {
-                            if (isset($sessionFromPTP['subscription'])) {
-                                foreach ($sessionFromPTP['subscription']['instrument'] as $instrument) {
-                                    if ($instrument['keyword'] === "token") {
-                                        PlaceToPayTransaction::where(
-                                            ['requestId' => $sessionFromPTP["requestId"]]
-                                        )->update(
-                                                [
-                                                    'token_collect_para_el_pago' => 'CARD_REJECTED_' . $instrument['value']
-                                                ]
-                                            );
-                                    }
-                                }
-                            }
-                        }
-                        //Inavilitar las cuotas posteriores de esta session con status CANCELADO POR 3 INTENTOS FALLIDOS
-
-                        //TODO: O manejar el servicio de zoho para usar el sub form del contrato.
+                        PlaceToPayTransaction::suspend($session);
                     }
-                }
-                // }
 
-                //TODO: Tengo que decidir si crear las primeras cuotas de los primeros pagos en esta regla o si lo tendria que crear en otra para no mezclar y modularizar bien.
+                }
             }
         }
     }
