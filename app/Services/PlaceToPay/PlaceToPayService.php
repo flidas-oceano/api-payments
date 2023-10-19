@@ -267,7 +267,7 @@ class PlaceToPayService
 
         $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();
         $string = $session->type;
-        if (stripos($string, "requestSubscription") !== false) {
+        if (stripos($string, "Subscription") !== false) {
             $secretKey = $this->secret_su;
         } else {
             $secretKey = $this->secret_pu;
