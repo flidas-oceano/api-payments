@@ -486,7 +486,18 @@ class PlaceToPayController extends Controller
                 'message' => 'Signature no valido.',
             ], 400);
         } catch (\Exception $e) {
-            return response()->json($e, 500);
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString(),
+            ];
+
+            Log::error("Error en notificationUpdate: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ], 400);
         }
     }
 
