@@ -15,6 +15,8 @@ use App\Services\Rebill\ReadSubscription;
 use App\Services\SalesOrders\ReadOrderSalesService;
 use App\Services\Webhooks\SaveWebhookZohoCrmService;
 use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Log;
 use Stripe\Exception\ApiErrorException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -29,7 +31,7 @@ class P2PCommand extends Command
 
     protected string $signature = 'p2p:stage';
 
-    protected string $description = 'Connect with zoho crm and rebill, to update recent payments';
+    protected string $description = 'Toma las cuotas para cobrar en el dia, valida que las anteriores cuotas (si tiene alguna) esten aprobadas y cobra en caso de ser necesario';
 
     protected PlaceToPayService $p2pService;
 
@@ -54,16 +56,19 @@ class P2PCommand extends Command
     {
         $this->output = $output;
         try {
-            $this->output->writeln("funciona");
+            $this->output->writeln("Comienzo - Ejecutando cobros P2P manual");
             /** @var PlaceToPayService $placeToPayService */
-            $placeToPayService = \App::make(PlaceToPayService::class); // Instancia el servicio
-            $placeToPayService->stageOne();
-            $this->output->writeln("fin");
+            $placeToPayService = App::make(PlaceToPayService::class);
+            $result = $placeToPayService->stageOne();
+            Log::channel('slack')->info(json_encode($result, JSON_PRETTY_PRINT));
+            $this->output->writeln("Fin - Ejecutando cobros P2P manual");
 
         } catch (\Exception|GuzzleException $e) {
             $msg = "ERROR: " . $e->getMessage(). ' ' . $e->getLine();
             $this->output->writeln($msg);
-            \Log::error($msg);
+
+            Log::error($msg);
+            Log::channel('slack')->error($msg, ['exception' => $e]);
         }
 
         return 0;

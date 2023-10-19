@@ -78,7 +78,7 @@ return [
             'url' => env('SLACK_WEBHOOK_URL_P2P'),
             'username' => 'Laravel Log',
             'emoji' => ':boom:',
-            'level' => 'error', // Define el nivel de registro que deseas enviar a Slack
+            'level' => 'debug', // Define el nivel de registro que deseas enviar a Slack
         ],
 
         'papertrail' => [

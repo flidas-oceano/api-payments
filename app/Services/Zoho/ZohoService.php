@@ -81,8 +81,7 @@ class ZohoService
             'Paso_5_Detalle_pagos' => $this->buildTablePaymentDetail($contractId,$detailApprovedPayment)
         ];
 
-
-        $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $contractId, true);
+        return $this->updateRecord('Sales_Orders', $dataUpdate, $contractId, true);
     }
     //actualiza un record, le pasas el id separado
     public function updateRecord($type, $data, $id, $workflow = true)

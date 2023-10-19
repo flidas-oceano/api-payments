@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Clients\ZohoClient;
 use App\Models\Contract;
 use Exception;
 use App\Models\User;
@@ -58,17 +59,11 @@ class ZohoController extends Controller
         }
     }
 
-    public function __construct(PlaceToPayService $placeToPayService, ZohoService $zohoService)
+    public function __construct(PlaceToPayService $placeToPayService, ZohoClient $client)
     {
-        try {
-            $this->placeToPayService = $placeToPayService;
-            $this->zohoService = $zohoService;
-
-             $this->emi_owner = 'x';
-        } catch (Exception $e) {
-            Log::error($e);
-
-        }
+        $this->placeToPayService = $placeToPayService;
+        $this->zohoService = new ZohoService($client);
+        $this->emi_owner = 'x';
     }
 
     // convertLead

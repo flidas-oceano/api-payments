@@ -819,6 +819,7 @@ class PlaceToPayService
         $responsePayment = $this->billSubscription($data, $cron = true);
 
         $responsePaymentStatus = $responsePayment['payment'][0]['status']['status'];
+        $responseZohoUpdate = false;
         // $responsePaymentStatus = 'REJECTED';
         // $responsePayment['payment'][0]['status']['status'] = $responsePaymentStatus;
 
@@ -829,7 +830,7 @@ class PlaceToPayService
             //Actualizo zoho
 
             $zohoService = new ZohoService($this->zohoClient);
-            $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscriptionToPay);
+           $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscriptionToPay);
         }
 
         if ($responsePaymentStatus === 'REJECTED') {
@@ -852,9 +853,10 @@ class PlaceToPayService
         $updatedSubscription = PlaceToPaySubscription::updateSubscription($subscriptionToPay->id, $responsePayment, $payment);
 
         return [
+            "zohoUpdate" => $responseZohoUpdate,
             "updateSubscription" => $updatedSubscription,
             "responsePayment" => $responsePayment,
-            "bodyForPTP" => $data,
+            "bodyForPTP" => $data
         ];
     }
 
@@ -996,15 +998,18 @@ class PlaceToPayService
     //Cobros que se realizan a tiempo, sin interrupciones de pago.
     public function stageOne()
     {
-
         //Tomar todas las Cuotas de status = NULL partiendo de la nro 2:
         $today = Carbon::now();
-        $subscriptionsToPay = PlaceToPaySubscription::whereDate('date_to_pay', '=', $today)->where('status', null)->where('nro_quote', '>=', 2)->get();
+        $subscriptionsToPay = PlaceToPaySubscription::whereDate('date_to_pay', '<=', $today)->where('status', null)->where('nro_quote', '>=', 2)->get();
+        $responseCommand = [
+          "sessions" => $subscriptionsToPay->toArray(),
+          "transactions" => [],
+            "responsePayIndividual" => []
+        ];
 
         foreach ($subscriptionsToPay as $subscriptionToPay) {
             $subsSession = $subscriptionToPay->transaction->subscriptions;
-
-            $canPay = true; // Supongamos que se puede pagar por defecto
+            $canPay = true;
 
             foreach ($subsSession as $subsc) {
                 $dateToPay = Carbon::parse($subsc->date_to_pay);
@@ -1012,9 +1017,11 @@ class PlaceToPayService
                 // Verificar si la cuota es anterior a la fecha de cobro
                 if ($dateToPay->lt(now())) { // now = 10/10/2023 datetopay =
                     if ($subsc->status === null) {
+                        $responseCommand['transactions'][] = $subsc->toArray();
                         break;
                     } else {
-                        $canPay = $subsc->status === 'APPROVED'; // No se puede pagar si es el día de la fecha y la cuota no está aprobada
+                        // No se puede pagar si es el día de la fecha y la cuota no está aprobada
+                        $canPay = $subsc->status === 'APPROVED';
                         continue;
                     }
                 }
@@ -1022,11 +1029,11 @@ class PlaceToPayService
 
             if ($canPay) {
                 // Pagar
-                $this->payIndividualPayment($subscriptionToPay);
+                $responseCommand['responsePayIndividual'][] = $this->payIndividualPayment($subscriptionToPay);
             }
         }
 
-        return $subscriptionsToPay->toArray();
+        return $responseCommand;
     }
     // END // Cronologia de cobro
 
