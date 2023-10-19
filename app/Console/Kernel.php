@@ -69,19 +69,11 @@ class Kernel extends ConsoleKernel
           $schedule->command('sales-order:rebill 100 6')->dailyAt('06:35:06')->timezone('America/Argentina/Buenos_Aires');
           $schedule->command('sales-order:stripe')->dailyAt('06:25:06')->timezone('America/Argentina/Buenos_Aires'); */
 
-
-        $schedule->call(function () {
-            try {
-                $placeToPayService = App::make(PlaceToPayService::class); // Instancia el servicio
-                $placeToPayService->stageOne(); //Pagar los que no tinen deudas.
-                //En test ejecutar cada 5 minutos
-                //En prod cada un dia
-            } catch (\Exception $e) {
-                Log::error('Error en el comando programado: ' . $e->getMessage());
-            }
-        })->everyMinute();
-
-
+        if (config('app.env') == 'production') {
+            $schedule->command('p2p:stage')->dailyAt()->timezone('America/Argentina/Buenos_Aires');
+        } else {
+            $schedule->command('p2p:stage')->everyFiveMinutes();
+        }
     }
 
     /**
