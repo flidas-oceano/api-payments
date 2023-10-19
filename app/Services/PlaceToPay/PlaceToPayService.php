@@ -269,6 +269,7 @@ class PlaceToPayService
     {
 
         $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();
+        Log::debug('validateSignature-> Valor de $session:', [$session]);
         $string = $session->type;
         if (stripos($string, "Subscription") !== false) {
             $secretKey = $this->secret_su;
