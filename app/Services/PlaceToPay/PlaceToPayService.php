@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Http;
 use App\Models\PlaceToPayTransaction;
 use App\Models\PlaceToPaySubscription;
 use App\Services\Zoho\ZohoService;
+use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
 
 class PlaceToPayService
 {
@@ -20,14 +21,16 @@ class PlaceToPayService
     private $secret_pu;
     private $login_su;
     private $secret_su;
+    private $zohoClient;
 
 
-    public function __construct()
+    public function __construct(ZohoClient $client)
     {
         $this->login_pu = env("REACT_APP_PTP_LOGIN_PU");
         $this->secret_pu = env("REACT_APP_PTP_SECRECT_PU");
         $this->login_su = env("REACT_APP_PTP_LOGIN_SU");
         $this->secret_su = env("REACT_APP_PTP_SECRECT_SU");
+        $this->zohoClient = $client;
     }
     public function getDateExpiration()
     {
@@ -92,9 +95,9 @@ class PlaceToPayService
 
         $newPayment = null;
 
-        if($renewSub){
+        if ($renewSub) {
             $newPayment = PlaceToPaySubscription::updateWith($request, $response, $transaccion->subscriptions->first()->id);
-        }else{
+        } else {
             $newPayment = PlaceToPaySubscription::createWith($request, $response);
         }
 
@@ -152,7 +155,7 @@ class PlaceToPayService
                     }
                 }
 
-                $updatePayment = PlaceToPaySubscription::updateWith($subscription, $subscriptionByRequestId,null);
+                $updatePayment = PlaceToPaySubscription::updateWith($subscription, $subscriptionByRequestId, null);
 
                 // guardas registro primer cuota
 
@@ -588,7 +591,7 @@ class PlaceToPayService
             throw new \InvalidArgumentException("El parámetro 'requestId' es obligatorio.");
         }
 
-        $url = env('PTP_ENDPOINT')."/" . $requestId;
+        $url = env('PTP_ENDPOINT') . "/" . $requestId;
         $data = [
             "auth" => $this->generateAuthentication($isSubscription),
         ];
@@ -639,7 +642,7 @@ class PlaceToPayService
                 if ($request->first_installment !== null)
                     $success = $this->pagarCuotaSuscripcionAnticipo($request);
                 else
-                    $success = $this->pagarCuotaSuscripcion($request, 1,$request->transaction_id);
+                    $success = $this->pagarCuotaSuscripcion($request, 1, $request->transaction_id);
 
                 // creas todas las cuotas restantes, si hay
                 if ($success) {
@@ -824,9 +827,9 @@ class PlaceToPayService
             // Actualizo el transactions, campo: installments_paid
             PlaceToPayTransaction::incrementInstallmentsPaid($session->id);
             //Actualizo zoho
-            $zohoClient = new ZohoClient(); // Crear una instancia de ZohoClient según sea necesario
-            $zohoService = new ZohoService($zohoClient);
-            $zohoService->updateTablePaymentsDetails($session->contract_id,$session,$subscriptionToPay);
+
+            $zohoService = new ZohoService($this->zohoClient);
+            $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscriptionToPay);
         }
 
         if ($responsePaymentStatus === 'REJECTED') {
@@ -1022,6 +1025,8 @@ class PlaceToPayService
                 $this->payIndividualPayment($subscriptionToPay);
             }
         }
+
+        return $subscriptionsToPay->toArray();
     }
     // END // Cronologia de cobro
 

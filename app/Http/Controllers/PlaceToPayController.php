@@ -23,7 +23,6 @@ class PlaceToPayController extends Controller
     public $login_su = "";
     public $secret_su = "";
     public $placeTopayService = null;
-    public $zohoController = null;
 
     public $status = [
         'FAILED' => 400,
@@ -40,9 +39,9 @@ class PlaceToPayController extends Controller
         'DESCONOCIDO' => 'Se desconoce el error. Mire los logs o consulte en PTP.',
     ];
 
-    public function __construct(PlaceToPayService $placeTopayService, ZohoController $zohoController)
+    public function __construct(PlaceToPayService $placeTopayService)
     {
-        $this->zohoController = $zohoController;
+
         $this->placeTopayService = $placeTopayService;
         $this->login_pu = env("REACT_APP_PTP_LOGIN_PU");
         $this->secret_pu = env("REACT_APP_PTP_SECRECT_PU");

@@ -75,10 +75,10 @@ return [
 
         'slack' => [
             'driver' => 'slack',
-            'url' => env('LOG_SLACK_WEBHOOK_URL'),
+            'url' => env('SLACK_WEBHOOK_URL_P2P'),
             'username' => 'Laravel Log',
             'emoji' => ':boom:',
-            'level' => env('LOG_LEVEL', 'critical'),
+            'level' => 'error', // Define el nivel de registro que deseas enviar a Slack
         ],
 
         'papertrail' => [

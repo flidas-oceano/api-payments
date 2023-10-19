@@ -9,21 +9,22 @@
     "license": "MIT",
     "require": {
         "php": "7.4.33",
-        "fruitcake/laravel-cors": "^2.0",
-        "guzzlehttp/guzzle": "^7.0.1",
+        "ext-json": "*",
+        "fruitcake/laravel-cors": "^2.2",
+        "guzzlehttp/guzzle": "7.8.0",
         "laravel/framework": "^8.75",
         "laravel/passport": "^10.4",
         "laravel/sanctum": "^2.11",
+        "laravel/slack-notification-channel": "^2.5",
         "laravel/telescope": "^4.10",
-        "laravel/tinker": "^2.5",
+        "laravel/tinker": "^2.8",
         "laravel/ui": "^3.4",
         "mercadopago/dx-php": "2.5.3",
         "phpoffice/phpspreadsheet": "^1.29",
         "rebillto/sdk-php": "^2.0",
         "stripe/stripe-php": "^10.0",
         "webpatser/laravel-countries": "^1.5",
-        "zohocrm/php-sdk-archive": "^2.1",
-        "ext-json": "*"
+        "zohocrm/php-sdk-archive": "^2.1"
     },
     "require-dev": {
         "facade/ignition": "^2.5",
