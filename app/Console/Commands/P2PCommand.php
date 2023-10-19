@@ -55,6 +55,7 @@ class P2PCommand extends Command
         $this->output = $output;
         try {
             $this->output->writeln("funciona");
+            /** @var PlaceToPayService $placeToPayService */
             $placeToPayService = \App::make(PlaceToPayService::class); // Instancia el servicio
             $placeToPayService->stageOne();
             $this->output->writeln("fin");

@@ -23,7 +23,7 @@ class ZohoService
     {
         $table = $this->getSaleOrderPaymentDetail($contractId);
         $table[] = $detailApprovedPayment;
-        dd($table);
+
         return $table;
     }
 
@@ -46,11 +46,11 @@ class ZohoService
     public function getSaleOrderPaymentDetail($id)
     {
         try {
-            $client = $this->client->getClient();
+            $this->client->getClient();
             $moduleIns = ZCRMRestClient::getInstance()->getModuleInstance("Sales_Orders"); //To get module instance
             $record = $moduleIns->getRecord($id);
             $data = $record->getData(); //To get response data
-            dd($data);
+
             $Paso_5_Detalle_pagos = $record->getData()->getFieldValue("Paso_5_Detalle_pagos");
             $Banco_emisor = $record->getData()->getFieldValue("Banco_emisor");
 
