@@ -929,8 +929,8 @@ class PlaceToPayService
         $subscriptions = PlaceToPaySubscription::whereIn('status', ['OK', 'PENDING'])->get();
         foreach ($subscriptions as $subscription) {
             $session = $subscription->transaction;
-            $subscriptionFromPTP = $this->getByRequestId($subscription->requestId, true);
-            $resultCommand['paymnents'][] = $subscriptionFromPTP;
+            $subscriptionFromPTP = $this->getByRequestId($subscription->requestId, true, $session->isSubscription());
+            $resultCommand['payments'][] = ["ptp" => $subscriptionFromPTP, "bd" => $subscription->toArray()];
 
             $statusPaymentPTP = $subscriptionFromPTP['status']['status'] ?? false;
 
