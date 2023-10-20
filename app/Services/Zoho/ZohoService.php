@@ -26,6 +26,10 @@ class ZohoService
         $seenCobros = [];
 
         foreach ($table as $paymentDetail) {
+            if (!isset($paymentDetail['Numero_de_cobro'])) {
+                continue;
+            }
+
             $numeroCobro = $paymentDetail['Numero_de_cobro'];
 
             if (!in_array($numeroCobro, $seenCobros)) {
