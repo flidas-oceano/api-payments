@@ -168,7 +168,7 @@ class PlaceToPayController extends Controller
             }
 
             //Consulto a ptp la session.
-            $sessionSubscription = $this->placeTopayService->getByRequestId($request->requestId, $cron = false, $isSubscription = true);
+            $sessionSubscription = $this->placeTopayService->getByRequestId($request->requestId, $cron = false, $transaction->isSubscription());
             $statusSession = $sessionSubscription["status"]["status"];
             //Actualizo el estado de la session.
             $transaction->update([
