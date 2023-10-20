@@ -882,9 +882,15 @@ class PlaceToPayService
     {
         $sessions = PlaceToPayTransaction::whereIn('status', ['OK', 'PENDING'])->get();
 
+        $resultCommand = [
+            'sessions' => [],
+            'payments' => [],
+        ];
+
         foreach ($sessions as $session) {
             $isSubscription = strpos($session->type, 'requestSubscription') !== false;
             $sessionFromPTP = $this->getByRequestId($session->requestId, true, $isSubscription);
+            $resultCommand['sessions'][] = $sessionFromPTP;
             $statusSessionPTP = $sessionFromPTP['status']['status'] ?? false;
 
             //Actualizar session
@@ -924,6 +930,8 @@ class PlaceToPayService
         foreach ($subscriptions as $subscription) {
             $session = $subscription->transaction;
             $subscriptionFromPTP = $this->getByRequestId($subscription->requestId, true);
+            $resultCommand['paymnents'][] = $subscriptionFromPTP;
+
             $statusPaymentPTP = $subscriptionFromPTP['status']['status'] ?? false;
 
             //Actualizar session
@@ -967,6 +975,8 @@ class PlaceToPayService
 
             }
         }
+
+        return $resultCommand;
     }
 
     //Cobros que se realizan a tiempo, sin interrupciones de pago.
