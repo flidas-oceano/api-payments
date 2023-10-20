@@ -81,20 +81,20 @@ class ZohoController extends Controller
     // obtainData
     // buildTablePaymentDetail
 
-   /*  public function fetchRecordWithValue($module, $field, $value)
-    {
-        $answer = 'error';
-        $record = null;
-        try {
-            $moduleIns = ZCRMRestClient::getInstance()->getModuleInstance($module); //To get module instance
-            $response = $moduleIns->searchRecordsByCriteria('(' . $field . ':equals:' . $value . ')');
-            $records = $response->getData(); //To get response data
-            $answer = $records[0];
-        } catch (\zcrmsdk\crm\exception\ZCRMException $e) {
-            Log::debug($e);
-        }
-         return ($answer);
-    } */
+    /*  public function fetchRecordWithValue($module, $field, $value)
+     {
+         $answer = 'error';
+         $record = null;
+         try {
+             $moduleIns = ZCRMRestClient::getInstance()->getModuleInstance($module); //To get module instance
+             $response = $moduleIns->searchRecordsByCriteria('(' . $field . ':equals:' . $value . ')');
+             $records = $response->getData(); //To get response data
+             $answer = $records[0];
+         } catch (\zcrmsdk\crm\exception\ZCRMException $e) {
+             Log::debug($e);
+         }
+          return ($answer);
+     } */
     public function getContractBySO(Request $request, $so)
     {
         $answer = 'error';
@@ -386,7 +386,7 @@ class ZohoController extends Controller
                 'Origen_Pago' => 'SPP',
             ];
 
-            $detailApprovedPayments = $this->zohoService->buildTablePaymentDetail($request->contractId,$detailApprovedPayment);
+            $detailApprovedPayments = $this->zohoService->buildTablePaymentDetail($request->contractId, $detailApprovedPayment);
             // $detailApprovedPayments = $this->zohoService->buildTablePaymentDetail($request->contractId,$detailApprovedPayment);
 
             return [
@@ -496,7 +496,11 @@ class ZohoController extends Controller
         $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
         $updateContact = $this->updateRecord('Contacts', $dataUpdateContact, $contactEntityId, true);
 
-        $this->processResponse($updateContact, $updateContract);
+        if ($updateContract['result'] == 'error' || $updateContact['result'] == 'error') {
+            return response()->json(["contract" => $updateContract, "contact" => $updateContact], 500);
+        }
+
+        return response()->json(["contract" => $updateContract, "contact" => $updateContact]);
     }
 
     public function updateZohoMP(UpdateContractZohoRequest $request)
@@ -608,7 +612,11 @@ class ZohoController extends Controller
             $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
             $updateContact = $this->updateRecord('Contacts', $dataUpdateContact, $contactEntityId, true);
 
-            $this->processResponse($updateContact, $updateContract);
+            if ($updateContract['result'] == 'error' || $updateContact['result'] == 'error') {
+                return response()->json(["contract" => $updateContract, "contact" => $updateContact], 500);
+            }
+
+            return response()->json(["contract" => $updateContract, "contact" => $updateContact]);
 
         } catch (\Exception $e) {
             $err = [
@@ -1332,7 +1340,8 @@ class ZohoController extends Controller
         return $table;
     }
 
-    public function updateTablePaymentsDetails($contractId,$session,$subscription){
+    public function updateTablePaymentsDetails($contractId, $session, $subscription)
+    {
         $detailApprovedPayment = [
             'Fecha_Cobro' => date('Y-m-d', strtotime($subscription->date_to_pay)),
             'Num_de_orden_o_referencia_ext' => $session->reference,
@@ -1342,7 +1351,7 @@ class ZohoController extends Controller
             'Origen_Pago' => 'SPP',
         ];
 
-        $detailApprovedPayments = $this->buildTablePaymentDetail($contractId,$detailApprovedPayment);
+        $detailApprovedPayments = $this->buildTablePaymentDetail($contractId, $detailApprovedPayment);
 
         return $detailApprovedPayments;
 

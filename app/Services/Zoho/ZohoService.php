@@ -19,12 +19,48 @@ class ZohoService
         $this->client = $client;
     }
 
+    // Función para eliminar elementos duplicados en base a 'Numero_de_cobro'
+    private function removeDuplicatesByNumeroCobro($table)
+    {
+        $uniqueTable = [];
+        $seenCobros = [];
+
+        foreach ($table as $paymentDetail) {
+            $numeroCobro = $paymentDetail['Numero_de_cobro'];
+
+            if (!in_array($numeroCobro, $seenCobros)) {
+                $uniqueTable[] = $paymentDetail;
+                $seenCobros[] = $numeroCobro;
+            }
+        }
+
+        return $uniqueTable;
+    }
+
     public function buildTablePaymentDetail($contractId, $detailApprovedPayment)
     {
         $table = $this->getSaleOrderPaymentDetail($contractId);
-        $table[] = $detailApprovedPayment;
+        // Variable para rastrear si se encontró el número de cuota en $table
 
-        return $table;
+        $uniqueTable = $this->removeDuplicatesByNumeroCobro($table);
+
+        $foundPayment = false;
+
+        foreach ($uniqueTable as $key => $paymentDetail) {
+            if ($paymentDetail['Numero_de_cobro'] == $detailApprovedPayment['Numero_de_cobro']) {
+                // Reemplazar la entrada existente con $detailApprovedPayment
+                $table[$key] = $detailApprovedPayment;
+                $foundPayment = true;
+                break; // Salir del bucle una vez que se reemplace el valor
+            }
+        }
+
+        // Si no se encontró el número de cuota, agregar $detailApprovedPayment al final de $table
+        if (!$foundPayment) {
+            $uniqueTable[] = $detailApprovedPayment;
+        }
+
+        return $uniqueTable;
     }
 
     public function fetchRecordWithValue($module, $field, $value)
@@ -67,7 +103,8 @@ class ZohoService
         return ($answer);
     }
 
-    public function updateTablePaymentsDetails($contractId,$session,$subscription){
+    public function updateTablePaymentsDetails($contractId, $session, $subscription)
+    {
         $detailApprovedPayment = [
             'Fecha_Cobro' => date('Y-m-d', strtotime($subscription->date_to_pay)),
             'Num_de_orden_o_referencia_ext' => $session->reference,
@@ -78,7 +115,7 @@ class ZohoService
         ];
 
         $dataUpdate = [
-            'Paso_5_Detalle_pagos' => $this->buildTablePaymentDetail($contractId,$detailApprovedPayment)
+            'Paso_5_Detalle_pagos' => $this->buildTablePaymentDetail($contractId, $detailApprovedPayment)
         ];
 
         return $this->updateRecord('Sales_Orders', $dataUpdate, $contractId, true);

@@ -350,16 +350,14 @@ class PlaceToPayService
     public function getDatesToPay($dateParsedPaidFirstInstallment, $quotes)
     {
         $datesToPay = [];
-        array_push($datesToPay, $dateParsedPaidFirstInstallment);
+        $datesToPay[] = $dateParsedPaidFirstInstallment;
+
         for ($i = 2; $i <= $quotes; $i++) {
-            array_push(
-                $datesToPay,
-                date_parse(
-                    $this->dateToPay(
-                        $datesToPay[$i - 2]['year'],
-                        $datesToPay[$i - 2]['month'],
-                        $dateParsedPaidFirstInstallment['day']
-                    )
+            $datesToPay[] = date_parse(
+                $this->dateToPay(
+                    $datesToPay[$i - 2]['year'],
+                    $datesToPay[$i - 2]['month'],
+                    $dateParsedPaidFirstInstallment['day']
                 )
             );
         }
@@ -424,8 +422,7 @@ class PlaceToPayService
         return $mesSiguiente->fechaCobro;
     }
 
-    // $placeToPayService->getNameReferenceSubscription(1,680007,'2000339000617515006'); // Llama al método que deseas ejecutar
-    // $placeToPayService->getNameReferenceSubscription(1,680002,'2000339000617515006'); // Llama al método que deseas ejecutar
+
     public function getNameReferenceSubscription($nroQuote, $requestIdSession, $contractId)
     {
         // $requestsSession = PlaceToPayTransaction::where(['requestId' => 680002])->get()->first();
@@ -442,7 +439,7 @@ class PlaceToPayService
             return $nroQuote . '_' . $contractId . '_R_' . count($sessionsRejected);
         }
     }
-    // $placeToPayService->getNameReferenceSession('2000339000617515006'); // Llama al método que deseas ejecutar
+
     public function getNameReferenceSession($contractId)
     {
 
@@ -553,7 +550,7 @@ class PlaceToPayService
     public function revokeTokenSession($requestIdSession)
     {
 
-        $requestSession = PlaceToPayTransaction::where(['requestId' => $requestIdSession])->get()->first();
+        $requestSession = PlaceToPayTransaction::where(['requestId' => $requestIdSession])->first();
 
         $data = [
             "auth" => $this->generateAuthentication(),
@@ -837,19 +834,20 @@ class PlaceToPayService
 
         $responsePayment = $this->billSubscription($data, $cron = true);
 
-        $responsePaymentStatus = $responsePayment['payment'][0]['status']['status'];
+        //$responsePaymentStatus = $responsePayment['payment'][0]['status']['status'];
         $responseZohoUpdate = false;
-        // $responsePaymentStatus = 'REJECTED';
-        // $responsePayment['payment'][0]['status']['status'] = $responsePaymentStatus;
+        $responsePaymentStatus = 'REJECTED';
+
 
 
         if ($responsePaymentStatus === 'APPROVED') {
             // Actualizo el transactions, campo: installments_paid
             PlaceToPayTransaction::incrementInstallmentsPaid($session->id);
+            $subscriptionToPay->update(['reference' => $responsePayment]);
             //Actualizo zoho
 
             $zohoService = new ZohoService($this->zohoClient);
-           $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscriptionToPay);
+            $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscriptionToPay);
         }
 
         if ($responsePaymentStatus === 'REJECTED') {
@@ -879,89 +877,83 @@ class PlaceToPayService
         ];
     }
 
-    //Reintenta los pagos que se estan atrasando hasta completar los intentos fallidos.
-    public function reintentodeRechazados()
-    {
-
-    }
-
     //Refresca las sessions y las subscriptions de estado PENDING.
     public function refreshPendings()
     {
         $sessions = PlaceToPayTransaction::whereIn('status', ['OK', 'PENDING'])->get();
+
         foreach ($sessions as $session) {
-            $sessionFromPTP = $this->getByRequestId($session->requestId, $cron = true);
+            $isSubscription = strpos($session->type, 'requestSubscription') !== false;
+            $sessionFromPTP = $this->getByRequestId($session->requestId, true, $isSubscription);
+            $statusSessionPTP = $sessionFromPTP['status']['status'] ?? false;
+
             //Actualizar session
-            if (isset($sessionFromPTP['status']['status'])) {
+            if ($statusSessionPTP) {
+
                 $session->update([
                     'status' => $sessionFromPTP['status']['status'],
                     'reason' => $sessionFromPTP['status']['reason'],
                     'message' => $sessionFromPTP['status']['message'],
                     'date' => $sessionFromPTP['status']['date'],
                 ]);
-                if($sessionFromPTP['status']['status'] === 'FAILED'){
+
+                if ($statusSessionPTP === 'FAILED') {
                     continue;
                 }
-                // //Guardar el cardToken
-                if ($sessionFromPTP['status']['status'] === "APPROVED") {
-                    if (isset($sessionFromPTP['subscription'])) {
-                        foreach ($sessionFromPTP['subscription']['instrument'] as $instrument) {
-                            if ($instrument['keyword'] === "token") {
-                                PlaceToPayTransaction::where(['requestId' => $sessionFromPTP["requestId"]])
-                                    ->update(
-                                        [
-                                            'token_collect_para_el_pago' => $instrument['value']
-                                        ]
-                                    );
-                                //Loque sigue lo maneja otra regla:
-                                //Realizar el primer pago.
-                                //Creacion de cuotas.
-                            }
-                        }
-                    }
+
+                // Guardar el cardToken
+                if ($statusSessionPTP === "APPROVED") {
+                    $session->approvedTokenCollect($sessionFromPTP['subscription']);
+
+                    //Loque sigue lo maneja otra regla:
+                    //Realizar el primer pago.
+                    //Creacion de cuotas.
+                    $this->createInstallmentsWithoutPay($session);
+
                 }
+
                 //Si pasa a REJECTED cancelar cardToken
-                if ($sessionFromPTP['status']['status'] === "REJECTED") {
-                    if (isset($sessionFromPTP['subscription'])) {
-                        foreach ($sessionFromPTP['subscription']['instrument'] as $instrument) {
-                            if ($instrument['keyword'] === "token") {
-                                PlaceToPayTransaction::where(
-                                    ['requestId' => $sessionFromPTP["requestId"]]
-                                )->update(
-                                        [
-                                            'token_collect_para_el_pago' => 'CARD_REJECTED_' . $instrument['value']
-                                        ]
-                                    );
-                            }
-                        }
-                    }
+                if ($statusSessionPTP === "REJECTED") {
+                    $session->rejectTokenCollect($sessionFromPTP['subscription']);
                 }
 
             }
         }
+
         $subscriptions = PlaceToPaySubscription::whereIn('status', ['OK', 'PENDING'])->get();
         foreach ($subscriptions as $subscription) {
-            $subscriptionFromPTP = $this->getByRequestId($subscription->requestId, $cron = true);
-            //Actualizar subscription
-            if (isset($subscriptionFromPTP['status']['status'])) {
-                $updateSubscription = PlaceToPayTransaction::where(['requestId' => $subscriptionFromPTP['requestId']])
-                    ->update([
-                        'status' => $subscriptionFromPTP['status']['status'],
-                        'reason' => $subscriptionFromPTP['status']['reason'],
-                        'message' => $subscriptionFromPTP['status']['message'],
-                        'date' => $subscriptionFromPTP['status']['date'],
-                    ]);
+            $session = $subscription->transaction;
+            $subscriptionFromPTP = $this->getByRequestId($subscription->requestId, true);
+            $statusPaymentPTP = $subscriptionFromPTP['status']['status'] ?? false;
 
-                if ($subscriptionFromPTP['status']['status'] === "APPROVED") { //Si pasa a APPROVED: sumo en la transaccion un pago exitoso.
-                    PlaceToPayTransaction::incrementInstallmentsPaid($subscription->transaction->id);
+            //Actualizar session
+            if ($statusPaymentPTP) {
+
+                $subscription->update([
+                    'status' => $statusPaymentPTP,
+                    'reason' => $subscriptionFromPTP['status']['reason'],
+                    'message' => $subscriptionFromPTP['status']['message'],
+                    'date' => $subscriptionFromPTP['status']['date'],
+                ]);
+
+
+                // Guardar el cardToken
+                if ($statusPaymentPTP === "APPROVED") {
+                    //$session->approvedTokenCollect($sessionFromPTP['subscription']);
+
+                    //Loque sigue lo maneja otra regla:
+                    //Realizar el primer pago.
+                    //Creacion de cuotas.
 
                     $zohoService = new ZohoService($this->zohoClient);
-                    $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($subscription->transaction->contract_id, $subscription->transaction, $subscription);
-                    $this->createInstallmentsWithoutPay($subscription->transaction);
-                    //Si  otra cuota
-                }
-                if ($subscriptionFromPTP['status']['status'] === "REJECTED") { //Si pasa a REJECTED: sumo en la subscription un pago fallido
+                    $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscription);
 
+                    $this->createInstallmentsWithoutPay($subscription->transaction);
+                }
+
+                //Si pasa a REJECTED cancelar cardToken
+                if ($statusPaymentPTP === "REJECTED") {
+                    //$session->rejectTokenCollect($sessionFromPTP['subscription']);
 
                     $howFailedAttempts = PlaceToPaySubscription::incrementFailedPaymentAttempts($subscription->id);
 
@@ -971,29 +963,12 @@ class PlaceToPayService
                     } else {
                         PlaceToPayTransaction::suspend($session);
                     }
-
                 }
-            }
-        }
-    }
-    //Se encarga de tomar las actualizaciones de 'refreshPending()' y les realiza el primer pago.
-    public function payFirstInstallments()
-    {
 
-        //Busca las sessions que NO tengan registros de subscriptions asociados
-        $sessions = PlaceToPayTransaction::whereNotIn('id', function ($query) {
-            $query->select('transactionId')->from('placetopay_subscriptions');
-        })->get();
-        foreach ($sessions as $sessionToFirstPay) {
-            if ($sessionToFirstPay->status === 'APPROVED') {
-                // Pagar primer cuota.
-                // Guardar registro con estado.
-                // Si es rejected cancelar tarjeta.
-                // Si es aprroved crear demas cuotas.
-                // $sessionToFirstPay->token_collect_para_el_pago;
             }
         }
     }
+
     //Cobros que se realizan a tiempo, sin interrupciones de pago.
     public function stageOne()
     {
@@ -1001,12 +976,13 @@ class PlaceToPayService
         $today = Carbon::now();
         $subscriptionsToPay = PlaceToPaySubscription::whereDate('date_to_pay', '<=', $today)->where('status', null)->where('nro_quote', '>=', 2)->get();
         $responseCommand = [
-          "sessions" => $subscriptionsToPay->toArray(),
-          "transactions" => [],
+            "sessions" => [],
+            "transactions" => [],
             "responsePayIndividual" => []
         ];
 
         foreach ($subscriptionsToPay as $subscriptionToPay) {
+            $responseCommand['sessions'][] = $subscriptionToPay->transaction->toArray();
             $subsSession = $subscriptionToPay->transaction->subscriptions;
             $canPay = true;
 

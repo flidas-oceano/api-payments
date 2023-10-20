@@ -84,6 +84,31 @@ class PlaceToPayTransaction extends Model
         $diferencia = $this->quotes - $this->installments_paid;
         return $diferencia;
     }
+
+    public function rejectTokenCollect($subscription){
+        if (isset($subscription)) {
+            foreach ($subscription['instrument'] as $instrument) {
+                if ($instrument['keyword'] === "token") {
+                    $this->update([
+                        'token_collect_para_el_pago' => 'CARD_REJECTED_' . $instrument['value']
+                    ]);
+                }
+            }
+        }
+    }
+
+    public function approvedTokenCollect($subscription){
+        if (isset($subscription)) {
+            foreach ($subscription['instrument'] as $instrument) {
+                if ($instrument['keyword'] === "token") {
+                    $this->update(
+                        [
+                            'token_collect_para_el_pago' => $instrument['value']
+                        ]);
+                }
+            }
+        }
+    }
     public function subscriptions()
     {
         return $this->hasMany(PlaceToPaySubscription::class, 'transactionId');

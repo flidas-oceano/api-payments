@@ -82,6 +82,8 @@ class PlaceToPaySubscription extends Model
     public static function updateSubscription($id, $response, $payment)
     {
         $sub = self::find($id);
+        // Obtener la fecha actual de date_to_pay y sumar un día
+        $newDateToPay = date('Y-m-d 00:00:00', strtotime($sub->date_to_pay . ' +1 day'));
         $sub->update([
             'status' => $response['payment'][0]['status']['status'],
             'message' => $response['payment'][0]['status']['message'],
@@ -92,6 +94,7 @@ class PlaceToPaySubscription extends Model
             'requestId' => $response['requestId'],
             'currency' => $payment['amount']['currency'],
             'total' => $payment['amount']['total'],
+            'date_to_pay' => $newDateToPay
         ]);
         return $sub;
     }
@@ -145,7 +148,7 @@ class PlaceToPaySubscription extends Model
     {
         return [
             "reference" => $reference,
-            "description" => "Prueba suscripcion contrato de OceanoMedicina"
+            "description" => "Prueba suscripcion contrato de MSK"
         ];
     }
 
@@ -157,10 +160,10 @@ class PlaceToPaySubscription extends Model
             "buyer" => $payer,
             "subscription" => $subscription,
             "expiration" => $expiration,
-            "returnUrl" => "https://dnetix.co/p2p/client",
+            "returnUrl" => "https://msklatam.com/ec/gracias",
             "ipAddress" => $request->ip(),
             "userAgent" => $request->header('User-Agent'),
-           // "skipResult" => true
+            // "skipResult" => true
         ];
     }
 
@@ -168,7 +171,7 @@ class PlaceToPaySubscription extends Model
     {
         return [
             "reference" => $reference,
-            "description" => "",
+            "description" => "Pago de cuota " . $reference . " - " . $subscriptionToPay->currency . " " . $subscriptionToPay->total,
             "amount" => [
                 "currency" => $subscriptionToPay->currency,
                 "total" => $subscriptionToPay->total
@@ -189,7 +192,7 @@ class PlaceToPaySubscription extends Model
                 ]
             ],
             "expiration" => $expiration,
-            "returnUrl" => "https://dnetix.co/p2p/client",
+            "returnUrl" => "https://msklatam.com/ec/gracias",
         ];
     }
 
