@@ -930,9 +930,9 @@ class PlaceToPayService
         foreach ($subscriptions as $subscription) {
             $session = $subscription->transaction;
 
-            $isSubscription = strpos($session->type, 'requestSubscription') !== false;
+            //$isSubscription = strpos($session->type, 'requestSubscription') !== false;
 
-            $subscriptionFromPTP = $this->getByRequestId($subscription->requestId, true, $isSubscription);
+            $subscriptionFromPTP = $this->getByRequestId($subscription->requestId, true, true);
             $resultCommand['payments'][] = ["ptp" => $subscriptionFromPTP, "bd" => $subscription->toArray()];
 
             $statusPaymentPTP = $subscriptionFromPTP['status']['status'] ?? false;
