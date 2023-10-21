@@ -91,6 +91,31 @@ class PlaceToPayService
             }
         }
 
+        if ($response['status']['status'] === 'PENDING') {
+            // Si el pago es pending, va a guardar y esperar a que sea APROBADO o RECHAZADO el pago para continuar con el flow
+            $pendingPayment = PlaceToPaySubscription::updateOrCreate(['requestId' => $response['requestId']], [
+                'transactionId' => $transaccion->id,
+                'nro_quote' => $quoteToPay,
+                'date' => $response['status']['date'],
+                'requestId' => $response['requestId'],
+                'total' => $response['request']['payment']['amount']['total'],
+                'currency' => $response['request']['payment']['amount']['currency'],
+                'status' => $response['status']['status'],
+                'date_to_pay' => $response['status']['date'],
+                'reason' => $response['status']['reason'],
+                'message' => $response['status']['message'],
+                'authorization' => $response['payment'][0]['authorization'] ?? null,
+                'reference' => $response['request']['payment']['reference'] ?? null,
+            ]);
+
+            return [
+                "pendingPayment" => $pendingPayment,
+                "response" => $response,
+                "data" => $data,
+            ];
+
+        }
+
         $request->nro_quote = $quoteToPay;
 
         $newPayment = null;
@@ -116,8 +141,9 @@ class PlaceToPayService
         $firstQuote = $transaction->subscriptions->first();
 
         if ($firstQuote !== null) {
+            $subscriptionByRequestId = $this->getByRequestId($firstQuote->requestId, false, true);
 
-            $isPendingQuote = $firstQuote->isPending($transaction);
+            $isPendingQuote = $firstQuote->isPending($transaction, $subscriptionByRequestId);
 
             if (is_array($isPendingQuote)) {
                 $result = $this->pagarCuotaSuscripcion($transaction, $firstQuote->nro_quote, $renewSuscription); //TODO: help

@@ -165,6 +165,8 @@ Route::prefix("/placetopay")->group(function () {
 
     Route::post('/notificationUpdate', [PlaceToPayController::class, 'notificationUpdate']);
 
+    Route::get('/getStatus/{request_id}', [PlaceToPayController::class, 'getStatusByRequestId']);
+
 });
 
 

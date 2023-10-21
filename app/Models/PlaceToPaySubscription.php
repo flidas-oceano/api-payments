@@ -240,11 +240,10 @@ class PlaceToPaySubscription extends Model
         $subscription->update(['status' => 'SUSPEND']);
     }
 
-    public function isPending($transaction)
+    public function isPending($transaction, $subscriptionByRequestId)
     {
         if (($this->status ?? null) === 'PENDING') {
             //Actualizar la primer cuota que pasa de PENDING a APPROVED
-            $subscriptionByRequestId = $this->getByRequestId($this->requestId, $cron = false, $isSubscription = true);
 
             if (($subscriptionByRequestId['payment'][0]['status']['status'] ?? null) === 'APPROVED') {
 
@@ -275,7 +274,7 @@ class PlaceToPaySubscription extends Model
                 return $result;
 
             } else {
-                return $subscriptionByRequestId['payment'][0]['status']['status'];
+                return $subscriptionByRequestId['payment'][0]['status']['status'] ?? $subscriptionByRequestId['status']['status'];
             }
         } else {
             return $this->status;

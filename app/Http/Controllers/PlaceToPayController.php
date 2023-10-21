@@ -455,49 +455,36 @@ class PlaceToPayController extends Controller
     }
     public function notificationUpdate(Request $request)
     {
-        try {
-            if ($this->placeTopayService->validateSignature($request)) {
+        Log::channel("slack")->warning(print_r($request->all(), true));
+        if ($this->placeTopayService->validateSignature($request)) {
 
-                PlaceToPayTransaction::where(['requestId' => $request['requestId']])
-                    ->update([
-                        'requestId' => $request['requestId'],
-                        'status' => $request['status']['status'],
-                        'message' => $request['status']['message'],
-                        'reason' => $request['status']['reason'],
-                        'date' => $request['status']['date'],
-                    ]);
-
-                $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();
-                if ($request['status']['status'] === 'APPROVED') {
-                    //TODO: Realizas el primer pago si es subscripcion
-                }
-
-                return response()->json([
-                    'result' => 'SUCCESS',
-                    'message' => 'Sesion actualizada.',
-                    'notification' => $request,
-                    'session' => $session
+            PlaceToPayTransaction::where(['requestId' => $request['requestId']])
+                ->update([
+                    'requestId' => $request['requestId'],
+                    'status' => $request['status']['status'],
+                    'message' => $request['status']['message'],
+                    'reason' => $request['status']['reason'],
+                    'date' => $request['status']['date'],
                 ]);
+
+            $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();
+            if ($request['status']['status'] === 'APPROVED') {
+                //TODO: Realizas el primer pago si es subscripcion
             }
 
             return response()->json([
-                'result' => 'FAILED',
-                'message' => 'Signature no valido.',
-            ], 400);
-        } catch (\Exception $e) {
-            $err = [
-                'message' => $e->getMessage(),
-                'exception' => get_class($e),
-                'line' => $e->getLine(),
-                'file' => $e->getFile(),
-                // 'trace' => $e->getTraceAsString(),
-            ];
-
-            Log::error("Error en notificationUpdate: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
-            return response()->json([
-                $err
-            ], 400);
+                'result' => 'SUCCESS',
+                'message' => 'Sesion actualizada.',
+                'notification' => $request,
+                'session' => $session
+            ]);
         }
+
+        return response()->json([
+            'result' => 'FAILED',
+            'message' => 'Signature no valido.',
+        ], 400);
+
     }
 
     public function updateStatusSessionSubscription($reference)
@@ -507,6 +494,7 @@ class PlaceToPayController extends Controller
         try {
             $sessionStatusInPtp = $this->placeTopayService->getByRequestId($session->requestId, $cron = false, $isSubscription = true);
 
+
             $session->update([
                 'status' => $sessionStatusInPtp['status']['status'],
                 'reason' => $sessionStatusInPtp['status']['reason'],
@@ -514,7 +502,7 @@ class PlaceToPayController extends Controller
                 'date' => $sessionStatusInPtp['status']['date'],
             ]);
 
-            return response()->json(['reference' => $reference, 'updateTo' => $sessionStatusInPtp['status']['status']]);
+            return response()->json(['reference' => $reference, 'updateTo' => $sessionStatusInPtp['status']['status'], 'ptpResponse' => $sessionStatusInPtp]);
 
         } catch (\Exception $e) {
             return response()->json($e, 500);
@@ -574,6 +562,28 @@ class PlaceToPayController extends Controller
                 $err
             ]);
         }
+    }
+
+    public function getStatusByRequestId(Request $request, $request_id)
+    {
+        $subscriptionFromPTP = $this->placeTopayService->getByRequestId($request_id, true, true);
+        $subscription = PlaceToPaySubscription::where('requestId', $request_id)->first();
+        $session = $subscription->transaction->toArray();
+
+        if ($subscriptionFromPTP['status']['status'] !== 'PENDING') {
+            $subscription->update([
+                'status' => $subscriptionFromPTP['status']['status'],
+                'date' => $subscriptionFromPTP['status']['date'],
+                'reason' => $subscriptionFromPTP['status']['reason'],
+                'message' => $subscriptionFromPTP['status']['message'],
+            ]);
+        }
+
+        return response()->json([
+            'ptp' => $subscriptionFromPTP,
+            'payment' => $subscription->toArray(),
+            'session' => $session
+        ]);
     }
 
 

@@ -85,7 +85,8 @@ class PlaceToPayTransaction extends Model
         return $diferencia;
     }
 
-    public function rejectTokenCollect($subscription){
+    public function rejectTokenCollect($subscription)
+    {
         if (isset($subscription)) {
             foreach ($subscription['instrument'] as $instrument) {
                 if ($instrument['keyword'] === "token") {
@@ -97,14 +98,16 @@ class PlaceToPayTransaction extends Model
         }
     }
 
-    public function approvedTokenCollect($subscription){
+    public function approvedTokenCollect($subscription)
+    {
         if (isset($subscription)) {
             foreach ($subscription['instrument'] as $instrument) {
                 if ($instrument['keyword'] === "token") {
                     $this->update(
                         [
                             'token_collect_para_el_pago' => $instrument['value']
-                        ]);
+                        ]
+                    );
                 }
             }
         }
@@ -184,7 +187,7 @@ class PlaceToPayTransaction extends Model
 
             if ($statusPayment !== 'APPROVED') {
                 self::updateSubscriptionStatus($firstSubscription, $sessionSubscription);
-                $isTokenRejected = !$service->placeTopayService->isRejectedTokenTransaction($transaction);
+                $isTokenRejected = !$service->isRejectedTokenTransaction($transaction);
 
                 if ($statusPayment === 'REJECTED' && $isTokenRejected) {
                     $transaction->update([
@@ -257,6 +260,7 @@ class PlaceToPayTransaction extends Model
 
                     return [
                         "updateRequestSession" => $transaction,
+                        "payment" => $result,
                         "paymentDate" => now(),
                         "result" => self::$messageOfPtp[$statusPayment],
                         "statusPayment" => $statusPayment,
