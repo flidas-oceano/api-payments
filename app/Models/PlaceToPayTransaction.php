@@ -247,6 +247,14 @@ class PlaceToPayTransaction extends Model
 
                     /** @var PlaceToPayService $service */
                     $result = $service->payFirstQuote($sessionSubscription["requestId"], $renewSuscription);
+                }
+            }
+        } elseif ($transaction->type === 'payment') {
+            $result = ['response' => $sessionSubscription];
+        } else {
+            // Handle the default case
+            return ["sessionPtp" => $sessionSubscription, 'transaction' => $transaction];
+        }
 
                     if (isset($result['response']['status']['status'])) {
                         $statusPayment = $result['response']['status']['status'];
@@ -256,17 +264,16 @@ class PlaceToPayTransaction extends Model
                         $statusPayment = $result['status'];
                     }
 
-                    return [
-                        "updateRequestSession" => $transaction,
-                        "payment" => $result,
-                        "paymentDate" => now(),
-                        "result" => self::$messageOfPtp[$statusPayment],
-                        "statusPayment" => $statusPayment,
-                    ];
-                }
-            }
-        } else {
-            return ["sessionPtp" => $sessionSubscription, 'transaction' => $transaction];
-        }
+        return [
+            "updateRequestSession" => $transaction,
+            "payment" => $result, // You may uncomment this if needed
+            "paymentDate" => now(),
+            "result" => self::$messageOfPtp[$statusPayment],
+            "statusPayment" => $statusPayment,
+        ];
+    }
+
+    public function isOneTimePayment(){
+        return $this->type === 'payment';
     }
 }
