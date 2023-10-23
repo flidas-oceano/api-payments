@@ -223,16 +223,14 @@ class PlaceToPayService
         }
     }
     //Utils
-    public function validateSignature($request)
+    public function validateSignature($request, $type)
     {
+        Log::debug('validateSignature-> Valor de $session:', [$request]);
 
-        $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();
-        Log::debug('validateSignature-> Valor de $session:', [$session]);
-        $string = $session->type;
-        if (stripos($string, "Subscription") !== false) {
-            $secretKey = $this->secret_su;
-        } else {
+        if ($type === 'payment') {
             $secretKey = $this->secret_pu;
+        }else{
+            $secretKey = $this->secret_su;
         }
 
         //Encriptamos
@@ -820,5 +818,19 @@ class PlaceToPayService
         }
 
         return $numeroMasLargo;
+    }
+
+    public function isOneTimePaymentOrQuoteOrSession($reference)
+    {
+        // $entrada = "1_{entity_Id_crm}_RT_6";
+        $partes = explode('_', $reference);
+        // Verifica si el primer elemento es un número y si es menor que 24
+        if (is_numeric($partes[0]) && (int)$partes[0] <= 24) {
+            //PlaceToPaySubscription::
+            return 'quote'; //subscription
+        } else {
+            $type = PlaceToPayTransaction::where('reference', $reference)->first()->type;
+            return $type;
+        }
     }
 }
