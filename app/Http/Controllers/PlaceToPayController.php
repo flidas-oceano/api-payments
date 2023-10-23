@@ -388,40 +388,22 @@ class PlaceToPayController extends Controller
     {
         //TODO: Refacfor pago unico
         try {
-            $payer = [
-                "name" => $request['payer']['name'],
-                "surname" => $request['payer']['surname'],
-                "email" => $request['payer']['email'],
-                "document" => $request['payer']['document'],
-                "documentType" => $request['payer']['documentType'],
-                "mobile" => $request['payer']['mobile'],
-                "address" => [
-                    //domicilio
-                    // "country" => $request['country'],
-                    // "state" => $request['state'],
-                    // "city" => $request['city'],
-                    // "postalCode" => $request['postalCode'],
-                    "street" => $request['payer']['address']['street'],
-                    // "phone" => $request['phone'],//+573214445566
-                ]
-            ];
-            $payment = [
+            $payer = PlaceToPaySubscription::generatePayerPaymentSession($request);
 
-                "reference" => $this->placeTopayService->getNameReferenceSession($request['so']),
-                // "reference" => $request['so'],
-                "description" => "Prueba contrato de OceanoMedicina",
-                "amount" => [
-                    "currency" => "USD",
-                    "total" => $request['payment']['total'],
-                ]
+            $reference = $this->placeTopayService->getNameReferenceSession($request['so']);
+            $payment = PlaceToPaySubscription::generateDetailPaymentSession($reference);
+            $payment["description"] = "Prueba Pago Unico de OceanoMedicina";
+            $payment["amount"] = [
+                "currency" => "USD",
+                "total" => $request['payment']['total'],
             ];
             $data = [
                 "auth" => $this->placeTopayService->generateAuthentication(),
                 "locale" => "es_CO",
-                "payer" => $payer,
+                "buyer" => $payer,
                 "payment" => $payment,
                 "expiration" => $this->placeTopayService->getDateExpiration(),
-                "returnUrl" => "https://dnetix.co/p2p/client",
+                "returnUrl" => "https://msklatam.com/ec/gracias",
                 "ipAddress" => $request->ip(),
                 // Usar la dirección IP del cliente
                 "userAgent" => $request->header('User-Agent')
@@ -437,15 +419,13 @@ class PlaceToPayController extends Controller
                     'date' => $result['status']['date'],
                     'requestId' => $result['requestId'],
                     'processUrl' => $this->placeTopayService->reduceUrl($result['processUrl']),
-                    // 'contact_id' =>         $lead->contact_id,
-                    // 'lead_id' =>            $lead->id,
-                    // 'authorization' => ,
                     'total' => $data['payment']['amount']['total'],
                     'currency' => $data['payment']['amount']['currency'],
                     'reference' => $data['payment']['reference'],
                     'type' => "payment",
-                    // 'token_collect_para_el_pago' => ,
                     'expiration_date' => $data['expiration'],
+                    'paymentData' => json_encode($payer, JSON_UNESCAPED_SLASHES),
+                    'contract_id' => $request->contractId
                 ]);
                 $getById = $this->placeTopayService->getByRequestId($result['requestId']);
                 $placeToPayTransaction = PlaceToPayTransaction::where(["requestId" => $result['requestId']])
@@ -453,11 +433,10 @@ class PlaceToPayController extends Controller
                         'status' => $getById['status']['status'],
                         'reason' => $getById['status']['reason'],
                         'message' => $getById['status']['message'],
+                        'date' => $getById['status']['date'],
                     ]);
             }
 
-            // Aquí puedes procesar la respuesta como desees
-            // Por ejemplo, devolverla como una respuesta JSON
             return response()->json([$result, $getById]);
         } catch (\Exception $e) {
             $err = [
