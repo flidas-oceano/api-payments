@@ -158,7 +158,6 @@ class PlaceToPayController extends Controller
             'requestId.required' => 'El campo requestId es obligatorio.',
         ]);
 
-
         try {
 
             $transaction = PlaceToPayTransaction::where(['requestId' => $request->requestId])->first();
@@ -196,6 +195,8 @@ class PlaceToPayController extends Controller
             }
 
             if (isset($isApproveSession['statusPayment']) && $isApproveSession['statusPayment'] == 'APPROVED') {
+                if ( $transaction->type === 'payment' )
+                    return response()->json($isApproveSession);
                 $this->placeTopayService->createRemainingInstallments($isApproveSession['paymentDate'], $transaction);
                 return response()->json($isApproveSession);
             }
