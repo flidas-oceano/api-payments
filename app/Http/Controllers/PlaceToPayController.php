@@ -514,9 +514,9 @@ class PlaceToPayController extends Controller
 
         try {
             $sessionStatusInPtp = $this->placeTopayService->getByRequestId($session->requestId, false, true);
-            $paymentOfSession = $session->subscriptions->first()->toArray();
+            $paymentOfSession = $session->subscriptions->first();
             $session->update([
-                'status' => $paymentOfSession['status'],
+                'status' => $paymentOfSession->status,
                 'reason' => $sessionStatusInPtp['status']['reason'],
                 'message' => $sessionStatusInPtp['status']['message'],
                 'date' => $sessionStatusInPtp['status']['date'],
