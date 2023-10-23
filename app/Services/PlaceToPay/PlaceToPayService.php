@@ -43,82 +43,75 @@ class PlaceToPayService
 
         return $expirationDate;
     }
-    public function pagarCuotaSuscripcionAnticipo()
-    {
+
+    public function paymentIsPending($response,$data, $sessionId, $quoteToPay){
+        $pendingPayment = PlaceToPaySubscription::updateOrCreate(['requestId' => $response['requestId']], [
+            'transactionId' => $sessionId,
+            'nro_quote' => $quoteToPay,
+            'date' => $response['status']['date'],
+            'requestId' => $response['requestId'],
+            'total' => $response['request']['payment']['amount']['total'],
+            'currency' => $response['request']['payment']['amount']['currency'],
+            'status' => $response['status']['status'],
+            'date_to_pay' => $response['status']['date'],
+            'reason' => $response['status']['reason'],
+            'message' => $response['status']['message'],
+            'authorization' => $response['payment'][0]['authorization'] ?? null,
+            'reference' => $response['request']['payment']['reference'] ?? null,
+        ]);
+
+        return [
+            "pendingPayment" => $pendingPayment,
+            "response" => $response,
+            "data" => $data,
+        ];
     }
-    public function payInstallmentsSubscriptions()
-    {
-        PlaceToPaySubscription::where('status', '!=', 'APPROVED')->get();
-    }
+
     public function pagarCuotaSuscripcion($request, $nro_quote, $renewSub)
     {
-        $requestSubscriptionById = $this->getByRequestId($request['requestId'], $cron = false, $isSubscription = true);
+        $requestSubscriptionById = $this->getByRequestId($request['requestId'], false, true);
+        $transaction = PlaceToPayTransaction::find($request->id);
 
-        $transaccion = PlaceToPayTransaction::find($request->id);
-
-        // pagar primer cuota de subscripcion normal, no anticipo
         $payer = PlaceToPaySubscription::generatePayerPayment($requestSubscriptionById);
 
-        $quoteToPay = $renewSub ? $transaccion->subscriptions->first()->nro_quote : $nro_quote;
+        $quoteToPay = $renewSub ? $transaction->subscriptions->first()->nro_quote : $nro_quote;
 
         $reference = $this->getNameReferenceSubscription($quoteToPay, $requestSubscriptionById['requestId'], $request['reference']);
 
-        $subscriptionToPay = new stdClass();
-        $subscriptionToPay->currency = $request->currency;
+        $subscriptionAmountToPay = new stdClass();
+        $subscriptionAmountToPay->currency = $request->currency;
 
         if ($renewSub) {
-            $subscriptionToPay->total = $request->remaining_installments;
+            $subscriptionAmountToPay->total = $request->remaining_installments;
         } else {
-            $subscriptionToPay->total = $transaccion->first_installment ?? $request->remaining_installments;
+            $subscriptionAmountToPay->total = $transaccion->first_installment ?? $request->remaining_installments;
         }
 
-        $payment = PlaceToPaySubscription::generatePayment($reference, $subscriptionToPay);
-
-        $auth = $this->generateAuthentication($isSubscription = true);
+        $payment = PlaceToPaySubscription::generatePayment($reference, $subscriptionAmountToPay);
+        $auth = $this->generateAuthentication(true);
         $expiration = $this->getDateExpiration();
         $token = $request->token_collect_para_el_pago;
 
+        // Data enviada a PlaceToPay para cobrar
         $data = PlaceToPaySubscription::generateDataPayment($auth, $payer, $payment, $token, $expiration);
-
-        $response = $this->billSubscription($data, $cron = false);
+        $response = $this->billSubscription($data, false);
 
         if (($response['payment'][0]['status']['status'] ?? null) === 'APPROVED') {
             // Actualizo el transactions, campo: installments_paid
-            PlaceToPayTransaction::incrementInstallmentsPaid($transaccion->id);
+            PlaceToPayTransaction::incrementInstallmentsPaid($transaction->id);
 
-            if ($transaccion->paymentLinks()->first() !== null) {
-                $transaccion->paymentLinks()->first()->update(['status' => 'Aprobado']);
+            if ($transaction->paymentLinks()->first() !== null) {
+                $transaction->paymentLinks()->first()->update(['status' => 'Aprobado']);
             }
         }
 
         if ($response['status']['status'] === 'PENDING') {
             // Si el pago es pending, va a guardar y esperar a que sea APROBADO o RECHAZADO el pago para continuar con el flow
-            $pendingPayment = PlaceToPaySubscription::updateOrCreate(['requestId' => $response['requestId']], [
-                'transactionId' => $transaccion->id,
-                'nro_quote' => $quoteToPay,
-                'date' => $response['status']['date'],
-                'requestId' => $response['requestId'],
-                'total' => $response['request']['payment']['amount']['total'],
-                'currency' => $response['request']['payment']['amount']['currency'],
-                'status' => $response['status']['status'],
-                'date_to_pay' => $response['status']['date'],
-                'reason' => $response['status']['reason'],
-                'message' => $response['status']['message'],
-                'authorization' => $response['payment'][0]['authorization'] ?? null,
-                'reference' => $response['request']['payment']['reference'] ?? null,
-            ]);
-
-            return [
-                "pendingPayment" => $pendingPayment,
-                "response" => $response,
-                "data" => $data,
-            ];
-
+            $paymentPending = $this->paymentIsPending($response, $data, $transaction->id, $quoteToPay);
+            return $paymentPending;
         }
 
         $request->nro_quote = $quoteToPay;
-
-        $newPayment = null;
 
         if ($renewSub) {
             $newPayment = PlaceToPaySubscription::updateWith($request, $response, $transaccion->subscriptions->first()->id);
@@ -143,10 +136,16 @@ class PlaceToPayService
         if ($firstQuote !== null) {
             $subscriptionByRequestId = $this->getByRequestId($firstQuote->requestId, false, true);
 
+            /** @var PlaceToPaySubscription $firstQuote */
             $isPendingQuote = $firstQuote->isPending($transaction, $subscriptionByRequestId);
 
+            /*
+              return $this->isApprovedPayment($transaction,$subscriptionByRequestId);
+             *
+             * */
+
             if (is_array($isPendingQuote)) {
-                $result = $this->pagarCuotaSuscripcion($transaction, $firstQuote->nro_quote, $renewSuscription); //TODO: help
+                $result = $this->pagarCuotaSuscripcion($transaction, $firstQuote->nro_quote, $renewSuscription);
                 return $result;
             }
 
@@ -159,73 +158,6 @@ class PlaceToPayService
         return $result;
     }
 
-    public function payFirstQuoteCreateRestQuotesByRequestId($requestIdRequestSubscription) // TODO: ya no se usa
-    {
-        $requestsSubscription = PlaceToPayTransaction::where(['requestId' => $requestIdRequestSubscription])->first();
-
-        $subscription = $requestsSubscription->subscriptions->first();
-
-        if (($subscription->status ?? null) === 'PENDING') {
-            //Actualizar la primer cuota que pasa de PENDING a APPROVED
-            $subscriptionByRequestId = $this->getByRequestId($subscription->requestId, $cron = false, $isSubscription = true);
-            if (($subscriptionByRequestId['payment'][0]['status']['status'] ?? null) === 'APPROVED') {
-
-                $requestSubscriptionById = $this->getByRequestId($requestsSubscription['requestId'], $cron = false, $isSubscription = true);
-
-                if (($subscriptionByRequestId['payment'][0]['status']['status'] ?? null) === 'APPROVED') {
-                    // Actualizo el transactions, campo: installments_paid
-                    $subscription->update(['installments_paid' => $subscription->installments_paid + 1]);
-
-                    if ($subscription->paymentLinks()->first() !== null) {
-                        $subscription->paymentLinks()->first()->update(['status' => 'Contrato Efectivo']);
-                    }
-                }
-
-                $updatePayment = PlaceToPaySubscription::updateWith($subscription, $subscriptionByRequestId, null);
-
-                // guardas registro primer cuota
-
-                $result = [
-                    "newPayment" => $updatePayment,
-                    "response" => $requestSubscriptionById,
-                    // "data" => $data,
-                ];
-
-                // creas todas las cuotas restantes, si hay
-                if (($result['response']['status']['status'] ?? null) === 'APPROVED') {
-                    // $responseUpdateZohoPlaceToPay = $this->zohoController->updateZohoPlaceToPay($result,$requestIdRequestSubscription);
-                    $this->createRemainingInstallments($result, $requestsSubscription);
-                }
-
-                return $result;
-            }
-        } else {
-            // Crear la primer cuota directametne
-            if (!(count($requestsSubscription->subscriptions) === $requestsSubscription->quotes)) {
-                //No estan creadas todas las cuotas de la suscripcion
-
-                //empiezo pagando la primer cuota
-                $result = $this->pagarCuotaSuscripcion($requestsSubscription, 1, $requestsSubscription->transaction_id);
-
-                if (($result['response']['status']['status'] ?? null) === 'REJECTED') {
-                    if (!$this->isRejectedTokenTransaction($requestsSubscription)) {
-                        // Marca como invalido el token
-                        $requestsSubscription->update([
-                            'token_collect_para_el_pago' => 'CARD_REJECTED_' . $requestsSubscription->token_collect_para_el_pago
-                        ]);
-                    }
-                }
-
-                // creas todas las cuotas restantes, si hay
-                if (($result['response']['status']['status'] ?? null) === 'APPROVED') {
-                    // $responseUpdateZohoPlaceToPay = $this->zohoController->updateZohoPlaceToPay($result,$requestIdRequestSubscription);
-                    $this->createRemainingInstallments($result, $requestsSubscription);
-                }
-
-                return $result;
-            }
-        }
-    }
     public function createRemainingInstallments($paymentDate, $requestsSubscription)
     {
 
@@ -652,44 +584,6 @@ class PlaceToPayService
     ///End URLS
 
     // Cronologia de cobro
-    public function createInstallments()
-    {
-        $requestsSubscription = PlaceToPayTransaction::where(['type' => 'requestSubscription', 'status' => 'APPROVED'])->get();
-        foreach ($requestsSubscription as $request) {
-
-            //ver si ya se crearon las cuotas
-            if (!(count($request->subscriptions) === $request->quotes)) {
-                //No estan creadas todas las cuotas de la suscripcion
-
-                //empiezo pagando la primer cuota
-                $success = false;
-                //es anticipo ?
-                if ($request->first_installment !== null)
-                    $success = $this->pagarCuotaSuscripcionAnticipo($request);
-                else
-                    $success = $this->pagarCuotaSuscripcion($request, 1, $request->transaction_id);
-
-                // creas todas las cuotas restantes, si hay
-                if ($success) {
-                    // pagar cuotas
-                    if ($request->quotes > 1) {
-                        for ($i = 2; $i <= $request->quotes; $i++) {
-                            PlaceToPaySubscription::create([
-                                'transactionId' => $request->id,
-                                'nro_quote' => $i,
-                                // 'date' => $response['status']['date'],
-                                // 'requestId' => $response['status']['status'],
-                                'total' => $request->remaining_installments,
-                                'currency' => $request->currency,
-                                // 'type' => 'subscription',
-                            ]);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    // Cronologia de cobro
     public function createInstallmentsWithoutPay($session)
     {
         //ver si ya se crearon las cuotas
@@ -705,146 +599,6 @@ class PlaceToPayService
                 ]);
             }
         }
-    }
-
-    public function payInstallments()
-    {
-        // Log::channel('placetopay')->info('Se ejecuta la regla de payInstallments.');
-        // $subscriptions = PlaceToPaySubscription::where('status', '!=', 'APPROVED')->orWhereNull('status')->get();
-
-        $subscriptions = PlaceToPaySubscription::where('status', null)->get();
-
-        //Si tengo las cuotas al dia, puedo realizar el pago
-
-        $today = Carbon::now();
-        foreach ($subscriptions as $subscription) {
-            // $subscription = $subscriptions->first()
-            // $dateToPay = Carbon::parse($subscription->date_to_pay);
-            $dateToPay = Carbon::parse($subscription->date_to_pay); // Convierte la fecha_to_pay a objeto Carbon
-            if ($dateToPay->isSameDay($today)) {
-
-                // La fecha_to_pay es igual al día de hoy
-                // Realiza la acción que deseas para esta subscripción
-                // Por ejemplo, imprime los detalles de la subscripción
-
-                // Preguntar si tiene las cuotas al dia
-                // Tomar la cuota de hoy y buscar las anteriores o solo una anterior.
-                // verificar que esten todas pagas.
-
-                ///if(!$cuotaAnterior->estaPaga()){
-                // Paga normalmente la de este mes
-                // }else{
-                //  Definir el procedimiento
-                //  porque puedo ver las anteriores y o solo la anterior a ver si estan o esta impaga
-                //  pagaria todas desde principio a fin al mismo tiempo o escalado renovando la fecha de cobro para cada una ?
-                //  pagaria la de este mes y despues me fijo que hago con las demas cuotas impagas o no pago la de este mes hasta que se paguen las demas?
-                // }
-
-                //es anticipo ?
-                if ($subscription->transaction->first_installment !== null)
-                    $result = $this->pagarCuotaSuscripcionAnticipo($subscription->transaction);
-                else {
-                    // $result = $this->pagarCuotaSuscripcion($subscription->transaction, $subscription->nro_quote);
-
-                    $request = $subscription->transaction;
-                    $nro_quote = $subscription->nro_quote;
-
-                    $requestSubscriptionById = $this->getByRequestId($request['requestId']);
-                    // pagar primer cuota de subscripcion normal, no anticipo
-                    $payer = [
-                        "name" => $requestSubscriptionById['request']['payer']['name'],
-                        //$request->lead->name
-                        "surname" => $requestSubscriptionById['request']['payer']['surname'],
-                        //$request->lead->username
-                        "email" => $requestSubscriptionById['request']['payer']['email'],
-                        //$request->lead->email
-                        "document" => $requestSubscriptionById['request']['payer']['document'],
-                        //contact->dni,rut,rfc,mui
-                        "documentType" => $requestSubscriptionById['request']['payer']['documentType'],
-                        "mobile" => $requestSubscriptionById['request']['payer']['mobile'],
-                        // "address" => [ //domicilio
-                        //     // "country" => $request['country'],
-                        //     // "state" => $request['state'],
-                        //     // "city" => $request['city'],
-                        //     // "postalCode" => $request['postalCode'],
-                        //     "street" => $requestSubscriptionById['request']['payer']['address']['street'],
-                        //     // "phone" => $request['phone'],//+573214445566
-                        // ]
-                    ];
-                    $payment = [
-                        "reference" => $nro_quote . '_' . $request['reference'],
-                        "description" => "Prueba pago de cuota subscripcion",
-                        "amount" => [
-                            "currency" => $request['currency'],
-                            "total" => $request['remaining_installments']
-                        ]
-                    ];
-                    $data = [
-                        "auth" => $this->generateAuthentication(),
-                        "locale" => "es_CO",
-                        "payer" => $payer,
-                        "payment" => $payment,
-                        "instrument" => [
-                            "token" => [
-                                "token" => $request['token_collect_para_el_pago']
-                            ]
-                        ],
-                        "expiration" => $this->getDateExpiration(),
-                        // "returnUrl" => "https://dnetix.co/p2p/client",
-                        // "ipAddress" => $request->ip(), // Usar la dirección IP del cliente
-                        // "userAgent" => $request->header('User-Agent')
-                    ];
-
-                    $response = $this->billSubscription($data, $cron = true);
-
-                    if ($response['payment'][0]['status'] ?? null !== 'APPROVED') {
-                        // Actualizo el transactions, campo:
-                        PlaceToPayTransaction::incrementInstallmentsPaid($request->id);
-                        //PlaceToPayTransaction::find($request->id)->update(['installments_paid' => DB::raw('COALESCE(installments_paid, 0) + 1')]);
-                    }
-
-                    if (($response['status']['status'] ?? null) === 'FAILED') {
-                        $paidaySubscription = PlaceToPaySubscription::find($subscription->id)->update([
-                            'status' => $response['status']['status'],
-                            'reason' => $response['status']['reason'],
-                            'message' => $response['status']['message'],
-                            'date' => $response['status']['date'],
-                        ]);
-                    } else {
-                        // guardas registro primer cuota
-                        $paidaySubscription = PlaceToPaySubscription::find($subscription->id)->update([
-                            // 'transactionId' => $request->id,
-                            'status' => $response['status']['status'],
-                            'reason' => $response['status']['reason'],
-                            'message' => $response['status']['message'],
-                            'date' => $response['status']['date'],
-                            'requestId' => $response['requestId'],
-
-                            'authorization' => $response['payment'][0]['authorization'] ?? null,
-                            //TODO: siempre lo veo como : 999999
-                            // 'total' => $response['request']['payment']['amount']['total'],
-                            // 'currency' => $response['request']['payment']['amount']['currency'],
-                            'nro_quote' => $nro_quote,
-                            'reference' => $response['payment'][0]['reference'] ?? null,
-                            // 'type' => , //TODO: me parece que es mejor borrarlo de la tabla. O usarl para: subscription, advancedInstallment
-                            // 'expiration_date' => , //TODO: definir cuando se espera que expire una cuota.
-                            'date_to_pay' => $response['status']['date'],
-                        ]);
-
-                        // Log::channel('placetopay')->info('Se intento realizar el pago de este id: .'.$paidaySubscription->id);
-                    }
-
-                }
-
-                // $this->pagarCuotaSuscripcion(['requestId' => $subscription->transaction->requestId], 2);
-
-                // $result = $placeToPayService->pagarCuotaSuscripcion($subscription->transaction, $subscription->nro_quote);
-
-            }
-        }
-
-        // $query = PlaceToPaySubscription::where('status', '!=', 'APPROVED');
-        // $sql = $query->toSql();
     }
 
     public function payIndividualPayment($subscriptionToPay)

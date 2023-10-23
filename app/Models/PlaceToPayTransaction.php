@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\PlaceToPay\PlaceToPayService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -244,16 +245,13 @@ class PlaceToPayTransaction extends Model
                 if ($instrument['keyword'] === "token") {
                     $transaction->update(['token_collect_para_el_pago' => $instrument['value']]);
 
+                    /** @var PlaceToPayService $service */
                     $result = $service->payFirstQuote($sessionSubscription["requestId"], $renewSuscription);
-
-                    // $result = $service->payFirstQuoteCreateRestQuotesByRequestId($sessionSubscription["requestId"]);
-
-                    $statusPayment = 'DESCONOCIDO';
 
                     if (isset($result['response']['status']['status'])) {
                         $statusPayment = $result['response']['status']['status'];
-                    } elseif (isset($result['response']['payment'][0]['status']['status'])) {
-                        $statusPayment = $result['response']['payment'][0]['status']['status'] ?? 'DESCONOCIDO';
+                    } elseif (isset($result['response']['payment'])) {
+                        $statusPayment = $result['response']['payment'][0]['status']['status'] ;
                     } elseif (isset($result['message'])) {
                         $statusPayment = $result['status'];
                     }

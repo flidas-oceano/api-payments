@@ -184,9 +184,30 @@ class PlaceToPayController extends Controller
 
             $transaction->save();
 
-            if (isset($isApproveSession['updateRequestSession'])) {
+
+            if (isset($isApproveSession['statusPayment']) && $isApproveSession['statusPayment'] == 'PENDING') {
+                    return response()->json([
+                        "result" => $isApproveSession['result'],
+                        "statusPayment" => $isApproveSession['statusPayment'],
+                        "payment" => $isApproveSession['payment'],
+                        "statusSession" => $statusSession,
+                        "sessionPTP" => $sessionSubscription,
+                    ]);
+            }
+
+            if (isset($isApproveSession['statusPayment']) && $isApproveSession['statusPayment'] == 'APPROVED') {
                 $this->placeTopayService->createRemainingInstallments($isApproveSession['paymentDate'], $transaction);
                 return response()->json($isApproveSession);
+            }
+
+            if (isset($isApproveSession['statusPayment']) && $isApproveSession['statusPayment'] == 'REJECTED') {
+                return response()->json([
+                    "result" => $isApproveSession['result'],
+                    "statusPayment" => $isApproveSession['statusPayment'],
+                    "payment" => $isApproveSession['payment'],
+                    "statusSession" => $statusSession,
+                    "sessionPTP" => $sessionSubscription,
+                ]);
             }
 
             if (isset($isApproveSession['sessionPtp'])) {
@@ -492,17 +513,21 @@ class PlaceToPayController extends Controller
         $session = PlaceToPayTransaction::where('reference', $reference)->first();
 
         try {
-            $sessionStatusInPtp = $this->placeTopayService->getByRequestId($session->requestId, $cron = false, $isSubscription = true);
-
-
+            $sessionStatusInPtp = $this->placeTopayService->getByRequestId($session->requestId, false, true);
+            $paymentOfSession = $session->subscriptions->first()->toArray();
             $session->update([
-                'status' => $sessionStatusInPtp['status']['status'],
+                'status' => $paymentOfSession['status'],
                 'reason' => $sessionStatusInPtp['status']['reason'],
                 'message' => $sessionStatusInPtp['status']['message'],
                 'date' => $sessionStatusInPtp['status']['date'],
             ]);
 
-            return response()->json(['reference' => $reference, 'updateTo' => $sessionStatusInPtp['status']['status'], 'ptpResponse' => $sessionStatusInPtp]);
+            return response()->json([
+                'reference' => $reference,
+                'updateTo' => $sessionStatusInPtp['status']['status'],
+                'ptpResponse' => $sessionStatusInPtp,
+                'payment' => $paymentOfSession
+            ]);
 
         } catch (\Exception $e) {
             return response()->json($e, 500);
