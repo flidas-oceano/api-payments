@@ -493,10 +493,12 @@ class PlaceToPayController extends Controller
         $session = PlaceToPayTransaction::where('reference', $reference)->first();
 
         try {
-            $sessionStatusInPtp = $this->placeTopayService->getByRequestId($session->requestId, false, true);
+            $sessionStatusInPtp = $this->placeTopayService->getByRequestId($session->requestId, false, $session->isSubscription());
+
             $paymentOfSession = $session->subscriptions->first();
+
             $session->update([
-                'status' => $paymentOfSession->status,
+                'status' => $session->isSubscription() ? $paymentOfSession->status: $session->status ,
                 'reason' => $sessionStatusInPtp['status']['reason'],
                 'message' => $sessionStatusInPtp['status']['message'],
                 'date' => $sessionStatusInPtp['status']['date'],
@@ -506,7 +508,7 @@ class PlaceToPayController extends Controller
                 'reference' => $reference,
                 'updateTo' => $sessionStatusInPtp['status']['status'],
                 'ptpResponse' => $sessionStatusInPtp,
-                'payment' => $paymentOfSession
+                'payment' => $session->isSubscription() ? $paymentOfSession->status: $session->status
             ]);
 
         } catch (\Exception $e) {
