@@ -456,10 +456,13 @@ class PlaceToPayController extends Controller
     }
     public function notificationUpdate(Request $request)
     {
-        Log::channel("slack")->warning(print_r($request->all(), true));
-        if ($this->placeTopayService->validateSignature($request)) {
+        $type = $this->placeTopayService->isOneTimePaymentOrQuoteOrSession($request->reference);
 
-            PlaceToPayTransaction::where(['requestId' => $request['requestId']])
+        Log::channel("slack")->warning("NotificationUpdate: ".print_r($request->all(), true));
+        if ($this->placeTopayService->validateSignature($request, $type)) {
+
+            if ($type === 'quote' ) {
+                PlaceToPaySubscription::where(['requestId' => $request['requestId']])
                 ->update([
                     'requestId' => $request['requestId'],
                     'status' => $request['status']['status'],
@@ -467,17 +470,22 @@ class PlaceToPayController extends Controller
                     'reason' => $request['status']['reason'],
                     'date' => $request['status']['date'],
                 ]);
-
-            $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();
-            if ($request['status']['status'] === 'APPROVED') {
-                //TODO: Realizas el primer pago si es subscripcion
+            }else{
+                PlaceToPayTransaction::where(['requestId' => $request['requestId']])
+                ->update([
+                    'requestId' => $request['requestId'],
+                    'status' => $request['status']['status'],
+                    'message' => $request['status']['message'],
+                    'reason' => $request['status']['reason'],
+                    'date' => $request['status']['date'],
+                ]);
             }
 
             return response()->json([
                 'result' => 'SUCCESS',
                 'message' => 'Sesion actualizada.',
                 'notification' => $request,
-                'session' => $session
+                '$type' => $type
             ]);
         }
 
@@ -592,6 +600,5 @@ class PlaceToPayController extends Controller
             'session' => $session
         ]);
     }
-
 
 }
