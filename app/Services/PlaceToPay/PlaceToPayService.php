@@ -686,6 +686,9 @@ class PlaceToPayService
                 if ($statusSessionPTP === 'FAILED') {
                     continue;
                 }
+                if ($session->isOneTimePayment()) {
+                    continue;
+                }
 
                 // Guardar el cardToken
                 if ($statusSessionPTP === "APPROVED") {
@@ -695,7 +698,6 @@ class PlaceToPayService
                     //Realizar el primer pago.
                     //Creacion de cuotas.
                     $this->createInstallmentsWithoutPay($session);
-
                 }
 
                 //Si pasa a REJECTED cancelar cardToken
