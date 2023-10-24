@@ -456,75 +456,90 @@ class PlaceToPayController extends Controller
     }
     public function notificationUpdate(Request $request)
     {
+        try{
+            // Log::channel('placetopay')->info("Payment request failed: Reason: $errorReason, Message: $errorMessage, Date: $errorDate, Data: $dataAsString");
 
-        $type = $this->placeTopayService->isOneTimePaymentOrQuoteOrSession($request->reference);
+            $type = $this->placeTopayService->isOneTimePaymentOrQuoteOrSession($request);
 
-        Log::channel("slack")->warning("NotificationUpdate: ".print_r($request->all(), true));
-        if ($this->placeTopayService->validateSignature($request, $type)) {
+            Log::channel("slack")->warning("NotificationUpdate: ".print_r($request->all(), true));
+            if ($this->placeTopayService->validateSignature($request, $type)) {
 
 
-            if ($type !== 'quote' ) {
-                $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->first();
-                $session->update([
-                    'requestId' => $request['requestId'],
-                    'status' => $request['status']['status'],
-                    'message' => $request['status']['message'],
-                    'reason' => $request['status']['reason'],
-                    'date' => $request['status']['date'],
-                ]);
+                if ($type !== 'quote' ) {
+                    $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->first();
+                    $session->update([
+                        'requestId' => $request['requestId'],
+                        'status' => $request['status']['status'],
+                        'message' => $request['status']['message'],
+                        'reason' => $request['status']['reason'],
+                        'date' => $request['status']['date'],
+                    ]);
 
-                if($session->isOneTimePayment()){
+                    if($session->isOneTimePayment()){
+                        if ($request['status']['status'] === "APPROVED") {
+                            $this->placeTopayService->updateZoho($session->transaction, $quote = null);
+                        }
+                    }
+
+                    if($session->isSubscription()){//deberia ser una requestSubscription
+
+                    }
+                }
+                if ( $type === 'quote' ){
+                    $subscriptionFromPTP = $this->getByRequestId($request->requestId, false, true);
+                    $quote = PlaceToPaySubscription::where(['requestId' => $request['requestId']])->first();
+                    $quote->update([
+                        'requestId' => $request['requestId'],
+                        'status' => $request['status']['status'],
+                        'message' => $request['status']['message'],
+                        'reason' => $request['status']['reason'],
+                        'date' => $request['status']['date'],
+                    ]);
+
                     if ($request['status']['status'] === "APPROVED") {
-                        $this->placeTopayService->updateZoho($session->transaction, $quote = null);
+                        $quote->isApprovedPayment($quote->transaction, $subscriptionFromPTP);
+                        $this->placeTopayService->updateZoho($quote->transaction,$quote);
                     }
+                    //Si pasa a REJECTED cancelar cardToken
+                    if ($request['status']['status'] === "REJECTED") {
+                        $howFailedAttempts = PlaceToPaySubscription::incrementFailedPaymentAttempts($quote->id);
+
+                        if (!($howFailedAttempts > 2)) {
+                            $payment = $quote->transaction->paymentData;
+                            $updatedSubscription = PlaceToPaySubscription::duplicateAndReject($quote->id, $subscriptionFromPTP, $payment);
+                        } else {
+                            PlaceToPayTransaction::suspend($quote->transaction);
+                        }
+                    }
+
                 }
 
-                if($session->isSubscription()){//deberia ser una requestSubscription
-
-                }
-            }
-            if ( $type === 'quote' ){
-                $subscriptionFromPTP = $this->getByRequestId($request->requestId, false, true);
-                $quote = PlaceToPaySubscription::where(['requestId' => $request['requestId']])->first();
-                $quote->update([
-                    'requestId' => $request['requestId'],
-                    'status' => $request['status']['status'],
-                    'message' => $request['status']['message'],
-                    'reason' => $request['status']['reason'],
-                    'date' => $request['status']['date'],
+                return response()->json([
+                    'result' => 'SUCCESS',
+                    'message' => 'Sesion actualizada.',
+                    'notification' => $request,
+                    '$type' => $type
                 ]);
-
-                if ($request['status']['status'] === "APPROVED") {
-                    $quote->isApprovedPayment($quote->transaction, $subscriptionFromPTP);
-                    $this->placeTopayService->updateZoho($quote->transaction,$quote);
-                }
-                //Si pasa a REJECTED cancelar cardToken
-                if ($request['status']['status'] === "REJECTED") {
-                    $howFailedAttempts = PlaceToPaySubscription::incrementFailedPaymentAttempts($quote->id);
-
-                    if (!($howFailedAttempts > 2)) {
-                        $payment = $quote->transaction->paymentData;
-                        $updatedSubscription = PlaceToPaySubscription::duplicateAndReject($quote->id, $subscriptionFromPTP, $payment);
-                    } else {
-                        PlaceToPayTransaction::suspend($quote->transaction);
-                    }
-                }
-
             }
 
             return response()->json([
-                'result' => 'SUCCESS',
-                'message' => 'Sesion actualizada.',
-                'notification' => $request,
-                '$type' => $type
-            ]);
+                'result' => 'FAILED',
+                'message' => 'Signature no valido.',
+            ], 400);
+        } catch (\Exception $e) {
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString(),
+            ];
+
+            Log::error("Error en notificationUpdate: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ], 400);
         }
-
-        return response()->json([
-            'result' => 'FAILED',
-            'message' => 'Signature no valido.',
-        ], 400);
-
     }
 
     public function updateStatusSessionSubscription($reference)
