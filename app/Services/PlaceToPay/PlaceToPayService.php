@@ -824,7 +824,6 @@ class PlaceToPayService
             return 'quote'; //subscription
         } else {
             $session = PlaceToPayTransaction::where('requestId', $request->requestId)->first();
-            Log::channel('placetopay')->debug("isOneTimePaymentOrQuoteOrSession(): session: ". print_r($session->all(), true));
             return $session->type;
         }
     }
