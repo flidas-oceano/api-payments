@@ -486,7 +486,7 @@ class PlaceToPayController extends Controller
                     }
                 }
                 if ( $type === 'quote' ){
-                    $subscriptionFromPTP = $this->getByRequestId($request->requestId, false, true);
+                    $subscriptionFromPTP = $this->placeTopayService->getByRequestId($request->requestId, false, true);
                     $quote = PlaceToPaySubscription::where(['requestId' => $request['requestId']])->first();
                     $quote->update([
                         'requestId' => $request['requestId'],
