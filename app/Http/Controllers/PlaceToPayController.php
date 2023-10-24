@@ -505,7 +505,7 @@ class PlaceToPayController extends Controller
                         $howFailedAttempts = PlaceToPaySubscription::incrementFailedPaymentAttempts($quote->id);
 
                         if (!($howFailedAttempts > 2)) {
-                            $payment = $quote->transaction->paymentData;
+                            $payment = $quote->transaction->paymentData();
                             $updatedSubscription = PlaceToPaySubscription::duplicateAndReject($quote->id, $subscriptionFromPTP, $payment);
                         } else {
                             PlaceToPayTransaction::suspend($quote->transaction);

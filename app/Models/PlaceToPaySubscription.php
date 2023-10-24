@@ -275,4 +275,3 @@ class PlaceToPaySubscription extends Model
         return $payment;
     }
 }
-

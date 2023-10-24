@@ -154,6 +154,10 @@ class PlaceToPayTransaction extends Model
             ->get()
             ->first();
     }
+    public function getPaymentData()
+    {
+        return json_decode($this->paymentData);
+    }
     public static function getPaymentDataByRequestId($requestId)
     {
         $session = self::where(['requestId' => $requestId])->first();
