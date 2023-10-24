@@ -253,7 +253,7 @@ class PlaceToPaySubscription extends Model
 
     public function isApprovedPayment($transaction, $subscriptionByRequestId){
             // Actualizo el transactions, campo: installments_paid
-            $this->update(['installments_paid' => $this->installments_paid + 1]);
+            $transaction->update(['installments_paid' => $transaction->installments_paid + 1]);
 
             if ($transaction->paymentLinks()->first() !== null) {
                 $transaction->paymentLinks()->first()->update(['status' => 'Contrato Efectivo']);
