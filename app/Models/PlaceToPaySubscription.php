@@ -242,8 +242,9 @@ class PlaceToPaySubscription extends Model
             //Actualizar la primer cuota que pasa de PENDING a APPROVED
             return $subscriptionByRequestId['payment'][0]['status']['status'] ?? $subscriptionByRequestId['status']['status'];
 
-            if($paymentStatus === 'APPROVED'){
-            }
+            // if($paymentStatus === 'APPROVED'){
+
+            // }
 
         } else {
             return $this->status;

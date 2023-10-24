@@ -730,15 +730,8 @@ class PlaceToPayService
 
                 // Guardar el cardToken
                 if ($statusPaymentPTP === "APPROVED") {
-                    //$session->approvedTokenCollect($sessionFromPTP['subscription']);
-
-                    //Loque sigue lo maneja otra regla:
-                    //Realizar el primer pago.
-                    //Creacion de cuotas.
-
                     $zohoService = new ZohoService($this->zohoClient);
                     $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscription);
-
                     $this->createInstallmentsWithoutPay($subscription->transaction);
                 }
 
@@ -832,5 +825,10 @@ class PlaceToPayService
             $type = PlaceToPayTransaction::where('reference', $reference)->first()->type;
             return $type;
         }
+    }
+
+    public function updateZoho($session, $subscriptionToPay = null){
+        $zohoService = new ZohoService($this->zohoClient);
+        $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscriptionToPay);
     }
 }

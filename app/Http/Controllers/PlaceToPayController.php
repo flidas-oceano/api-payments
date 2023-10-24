@@ -456,29 +456,60 @@ class PlaceToPayController extends Controller
     }
     public function notificationUpdate(Request $request)
     {
+
         $type = $this->placeTopayService->isOneTimePaymentOrQuoteOrSession($request->reference);
 
         Log::channel("slack")->warning("NotificationUpdate: ".print_r($request->all(), true));
         if ($this->placeTopayService->validateSignature($request, $type)) {
 
-            if ($type === 'quote' ) {
-                PlaceToPaySubscription::where(['requestId' => $request['requestId']])
-                ->update([
+
+            if ($type !== 'quote' ) {
+                $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->first();
+                $session->update([
                     'requestId' => $request['requestId'],
                     'status' => $request['status']['status'],
                     'message' => $request['status']['message'],
                     'reason' => $request['status']['reason'],
                     'date' => $request['status']['date'],
                 ]);
-            }else{
-                PlaceToPayTransaction::where(['requestId' => $request['requestId']])
-                ->update([
+
+                if($session->isOneTimePayment()){
+                    if ($request['status']['status'] === "APPROVED") {
+                        $this->placeTopayService->updateZoho($session->transaction, $quote = null);
+                    }
+                }
+
+                if($session->isSubscription()){//deberia ser una requestSubscription
+
+                }
+            }
+            if ( $type === 'quote' ){
+                $subscriptionFromPTP = $this->getByRequestId($request->requestId, false, true);
+                $quote = PlaceToPaySubscription::where(['requestId' => $request['requestId']])->first();
+                $quote->update([
                     'requestId' => $request['requestId'],
                     'status' => $request['status']['status'],
                     'message' => $request['status']['message'],
                     'reason' => $request['status']['reason'],
                     'date' => $request['status']['date'],
                 ]);
+
+                if ($request['status']['status'] === "APPROVED") {
+                    $quote->isApprovedPayment($quote->transaction, $subscriptionFromPTP);
+                    $this->placeTopayService->updateZoho($quote->transaction,$quote);
+                }
+                //Si pasa a REJECTED cancelar cardToken
+                if ($request['status']['status'] === "REJECTED") {
+                    $howFailedAttempts = PlaceToPaySubscription::incrementFailedPaymentAttempts($quote->id);
+
+                    if (!($howFailedAttempts > 2)) {
+                        $payment = $quote->transaction->paymentData;
+                        $updatedSubscription = PlaceToPaySubscription::duplicateAndReject($quote->id, $subscriptionFromPTP, $payment);
+                    } else {
+                        PlaceToPayTransaction::suspend($quote->transaction);
+                    }
+                }
+
             }
 
             return response()->json([

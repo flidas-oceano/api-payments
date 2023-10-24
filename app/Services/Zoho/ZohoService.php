@@ -109,12 +109,29 @@ class ZohoService
 
     public function updateTablePaymentsDetails($contractId, $session, $subscription)
     {
+
+        if($session->isOneTimePayment()){
+            $Fecha_Cobro = date('Y-m-d', strtotime($session->date));
+            $Cobro_ID = $session->reference;
+            $Monto = $session->total;
+            $Numero_de_cobro = 1;
+            $Fecha_de_primer_cobro = date('Y-m-d', strtotime($session->date));
+            $stripe_subscription_id = $session->reference;
+        }else{
+            $Fecha_Cobro = date('Y-m-d', strtotime($subscription->date_to_pay));
+            $Cobro_ID = $subscription->reference;
+            $Monto = $subscription->total;
+            $Numero_de_cobro = $subscription->nro_quote;
+            $Fecha_de_primer_cobro = date('Y-m-d', strtotime($subscription->date_to_pay));
+            $stripe_subscription_id = $session->reference;
+        }
+
         $detailApprovedPayment = [
-            'Fecha_Cobro' => date('Y-m-d', strtotime($subscription->date_to_pay)),
+            'Fecha_Cobro' => $Fecha_Cobro,
             'Num_de_orden_o_referencia_ext' => $session->reference,
-            'Cobro_ID' => $subscription->reference,
-            'Monto' => $subscription->total,
-            'Numero_de_cobro' => $subscription->nro_quote,
+            'Cobro_ID' => $Cobro_ID,
+            'Monto' => $Monto,
+            'Numero_de_cobro' => $Numero_de_cobro,
             'Origen_Pago' => 'SPP',
         ];
 
