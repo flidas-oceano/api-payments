@@ -813,8 +813,9 @@ class PlaceToPayService
         return $numeroMasLargo;
     }
 
-    public function isOneTimePaymentOrQuoteOrSession($reference)
+    public function isOneTimePaymentOrQuoteOrSession($request)
     {
+        $reference = $request->reference;
         // $entrada = "1_{entity_id_crm}_RT_6";
         $partes = explode('_', $reference);
         // Verifica si el primer elemento es un número y si es menor que 24
@@ -822,7 +823,8 @@ class PlaceToPayService
             //PlaceToPaySubscription::
             return 'quote'; //subscription
         } else {
-            $session = PlaceToPayTransaction::where('reference', $reference)->first();
+            $session = PlaceToPayTransaction::where('requestId', $request->requestId)->first();
+            Log::channel('placetopay')->debug("isOneTimePaymentOrQuoteOrSession(): session: ". print_r($session->all(), true));
             return $session->type;
         }
     }
