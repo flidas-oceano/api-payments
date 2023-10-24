@@ -746,43 +746,37 @@ class ZohoController extends Controller
 
     public function obtainData(Request $request)
     {
-
         $data = $request->all();
-
-        $key = $data['key'];
         $id = $data['id'];
 
-        $answer = [];
-        $answer['detail'] = 'wrong key';
-        $answer['status'] = 'error';
+        $answer = [
+            'status' => 'error',
+            'detail' => 'Sale not found'
+        ];
 
-        if ($key == '9j9fj0Do204==3fja134') {
-            $sale = $this->zohoService->fetchRecordWithValue('Sales_Orders', 'id', $id, true);
+        $sale = $this->zohoService->fetchRecordWithValue('Sales_Orders', 'id', $id, true);
+
+        if ($sale == 'error') {
+            $sale = $this->zohoService->fetchRecordWithValue('Sales_Orders', 'SO_Number', $id, true);
 
             if ($sale == 'error') {
-                $sale = $this->zohoService->fetchRecordWithValue('Sales_Orders', 'SO_Number', $id, true);
-
-                if ($sale == 'error') {
-                    $answer['detail'] = 'Sale not found';
-                    $answer['status'] = 'error';
-                    return $answer;
-                }
+                return $answer;
             }
 
-            $answer['products'] = Contract::getProducts($sale->getLineItems());
-            $answer['sale'] = $sale->getData();
-
-            $contactId = $sale->getFieldValue('Contact_Name')->getEntityId();
-            $contact = $this->zohoService->fetchRecordWithValue('Contacts', 'id', $contactId, true);
-
-            $answer['contact'] = $contact->getData();
-            $answer['status'] = 'ok';
         }
 
-        if ($answer['status'] == 'error')
-            return response()->json($answer, 500);
-        else
-            return response()->json($answer);
+        $answer['status'] = 'ok';
+        $answer['detail'] = 'Found';
+
+        $answer['products'] = Contract::getProducts($sale->getLineItems());
+        $answer['sale'] = $sale->getData();
+
+        $contactId = $sale->getFieldValue('Contact_Name')->getEntityId();
+        $contact = $this->zohoService->fetchRecordWithValue('Contacts', 'id', $contactId, true);
+
+        $answer['contact'] = $contact->getData();
+
+        return response()->json($answer);
     }
 
     private function getContractZoho($number)
