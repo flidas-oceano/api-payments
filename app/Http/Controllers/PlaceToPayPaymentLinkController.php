@@ -161,8 +161,10 @@ class PlaceToPayPaymentLinkController extends Controller
     {
         try {
             $paymentLinkPTP = PlaceToPayPaymentLink::where('contract_entity_id', $saleId)->first();
+            $paymentOfLink = $paymentLinkPTP->transaction->subscriptions->first();
 
-            return response()->json(["payer" => $paymentLinkPTP->transaction->paymentData, "checkout" => $paymentLinkPTP]);
+            return response()->json(["payer" => $paymentLinkPTP->transaction->paymentData, "checkout" => $paymentLinkPTP, "payment" => $paymentOfLink]);
+
         } catch (\Exception $e) {
             $err = [
                 'message' => $e->getMessage(),
