@@ -829,6 +829,7 @@ class PlaceToPayService
     }
 
     public function updateZoho($session, $subscriptionToPay = null){
+
         $zohoService = new ZohoService($this->zohoClient);
         $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscriptionToPay);
     }

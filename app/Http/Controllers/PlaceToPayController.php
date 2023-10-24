@@ -461,9 +461,9 @@ class PlaceToPayController extends Controller
 
             $type = $this->placeTopayService->isOneTimePaymentOrQuoteOrSession($request);
 
-            // Log::channel("slack")->warning("NotificationUpdate: ".print_r($request->all(), true));
+            Log::channel("slack")->warning("NotificationUpdate: ".print_r($request->all(), true));
             if ($this->placeTopayService->validateSignature($request, $type)) {
-
+            // if (true) {
 
                 if ($type !== 'quote' ) {
                     $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->first();
@@ -498,7 +498,20 @@ class PlaceToPayController extends Controller
 
                     if ($request['status']['status'] === "APPROVED") {
                         $quote->isApprovedPayment($quote->transaction, $subscriptionFromPTP);
-                        $this->placeTopayService->updateZoho($quote->transaction,$quote);
+                        //createInstallments
+
+                        $data = [
+                            "is_suscri" => $quote->transaction->isSubscription(),
+                            "requestId" => $quote->transaction->requestId,
+                            "adjustment" => 0,
+                            "contractId" => $quote->transaction->contract_id,
+                            "street" => $quote->transaction->getPaymentData()->address->street,
+                        ];
+
+                        $url = env("APP_URL")."/api/updateZohoPTP";
+                        $response = Http::post($url,$data);
+
+                        // $this->placeTopayService->updateZoho($quote->transaction,$quote);
                     }
                     //Si pasa a REJECTED cancelar cardToken
                     if ($request['status']['status'] === "REJECTED") {
