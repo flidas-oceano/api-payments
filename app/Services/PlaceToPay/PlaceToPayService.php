@@ -815,15 +815,15 @@ class PlaceToPayService
 
     public function isOneTimePaymentOrQuoteOrSession($reference)
     {
-        // $entrada = "1_{entity_Id_crm}_RT_6";
+        // $entrada = "1_{entity_id_crm}_RT_6";
         $partes = explode('_', $reference);
         // Verifica si el primer elemento es un número y si es menor que 24
         if (is_numeric($partes[0]) && (int)$partes[0] <= 24) {
             //PlaceToPaySubscription::
             return 'quote'; //subscription
         } else {
-            $type = PlaceToPayTransaction::where('reference', $reference)->first()->type;
-            return $type;
+            $session = PlaceToPayTransaction::where('reference', $reference)->first();
+            return $session->type;
         }
     }
 
