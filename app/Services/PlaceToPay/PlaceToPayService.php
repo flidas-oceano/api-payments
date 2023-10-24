@@ -223,16 +223,14 @@ class PlaceToPayService
         }
     }
     //Utils
-    public function validateSignature($request)
+    public function validateSignature($request, $type)
     {
+        Log::debug('validateSignature-> Valor de $session:', [$request]);
 
-        $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();
-        Log::debug('validateSignature-> Valor de $session:', [$session]);
-        $string = $session->type;
-        if (stripos($string, "Subscription") !== false) {
-            $secretKey = $this->secret_su;
-        } else {
+        if ($type === 'payment') {
             $secretKey = $this->secret_pu;
+        }else{
+            $secretKey = $this->secret_su;
         }
 
         //Encriptamos
@@ -686,6 +684,9 @@ class PlaceToPayService
                 if ($statusSessionPTP === 'FAILED') {
                     continue;
                 }
+                if ($session->isOneTimePayment()) {
+                    continue;
+                }
 
                 // Guardar el cardToken
                 if ($statusSessionPTP === "APPROVED") {
@@ -695,7 +696,6 @@ class PlaceToPayService
                     //Realizar el primer pago.
                     //Creacion de cuotas.
                     $this->createInstallmentsWithoutPay($session);
-
                 }
 
                 //Si pasa a REJECTED cancelar cardToken
@@ -730,15 +730,8 @@ class PlaceToPayService
 
                 // Guardar el cardToken
                 if ($statusPaymentPTP === "APPROVED") {
-                    //$session->approvedTokenCollect($sessionFromPTP['subscription']);
-
-                    //Loque sigue lo maneja otra regla:
-                    //Realizar el primer pago.
-                    //Creacion de cuotas.
-
                     $zohoService = new ZohoService($this->zohoClient);
                     $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscription);
-
                     $this->createInstallmentsWithoutPay($subscription->transaction);
                 }
 
@@ -818,5 +811,25 @@ class PlaceToPayService
         }
 
         return $numeroMasLargo;
+    }
+
+    public function isOneTimePaymentOrQuoteOrSession($request)
+    {
+        $reference = $request->reference;
+        // $entrada = "1_{entity_id_crm}_RT_6";
+        $partes = explode('_', $reference);
+        // Verifica si el primer elemento es un número y si es menor que 24
+        if (is_numeric($partes[0]) && (int)$partes[0] <= 24) {
+            //PlaceToPaySubscription::
+            return 'quote'; //subscription
+        } else {
+            $session = PlaceToPayTransaction::where('requestId', $request->requestId)->first();
+            return $session->type;
+        }
+    }
+
+    public function updateZoho($session, $subscriptionToPay = null){
+        $zohoService = new ZohoService($this->zohoClient);
+        $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscriptionToPay);
     }
 }

@@ -158,7 +158,6 @@ class PlaceToPayController extends Controller
             'requestId.required' => 'El campo requestId es obligatorio.',
         ]);
 
-
         try {
 
             $transaction = PlaceToPayTransaction::where(['requestId' => $request->requestId])->first();
@@ -196,6 +195,8 @@ class PlaceToPayController extends Controller
             }
 
             if (isset($isApproveSession['statusPayment']) && $isApproveSession['statusPayment'] == 'APPROVED') {
+                if ( $transaction->type === 'payment' )
+                    return response()->json($isApproveSession);
                 $this->placeTopayService->createRemainingInstallments($isApproveSession['paymentDate'], $transaction);
                 return response()->json($isApproveSession);
             }
@@ -388,40 +389,22 @@ class PlaceToPayController extends Controller
     {
         //TODO: Refacfor pago unico
         try {
-            $payer = [
-                "name" => $request['payer']['name'],
-                "surname" => $request['payer']['surname'],
-                "email" => $request['payer']['email'],
-                "document" => $request['payer']['document'],
-                "documentType" => $request['payer']['documentType'],
-                "mobile" => $request['payer']['mobile'],
-                "address" => [
-                    //domicilio
-                    // "country" => $request['country'],
-                    // "state" => $request['state'],
-                    // "city" => $request['city'],
-                    // "postalCode" => $request['postalCode'],
-                    "street" => $request['payer']['address']['street'],
-                    // "phone" => $request['phone'],//+573214445566
-                ]
-            ];
-            $payment = [
+            $payer = PlaceToPaySubscription::generatePayerPaymentSession($request);
 
-                "reference" => $this->placeTopayService->getNameReferenceSession($request['so']),
-                // "reference" => $request['so'],
-                "description" => "Prueba contrato de OceanoMedicina",
-                "amount" => [
-                    "currency" => "USD",
-                    "total" => $request['payment']['total'],
-                ]
+            $reference = $this->placeTopayService->getNameReferenceSession($request['so']);
+            $payment = PlaceToPaySubscription::generateDetailPaymentSession($reference);
+            $payment["description"] = "Prueba Pago Unico de OceanoMedicina";
+            $payment["amount"] = [
+                "currency" => "USD",
+                "total" => $request['payment']['total'],
             ];
             $data = [
                 "auth" => $this->placeTopayService->generateAuthentication(),
                 "locale" => "es_CO",
-                "payer" => $payer,
+                "buyer" => $payer,
                 "payment" => $payment,
                 "expiration" => $this->placeTopayService->getDateExpiration(),
-                "returnUrl" => "https://dnetix.co/p2p/client",
+                "returnUrl" => "https://msklatam.com/ec/gracias",
                 "ipAddress" => $request->ip(),
                 // Usar la dirección IP del cliente
                 "userAgent" => $request->header('User-Agent')
@@ -437,15 +420,13 @@ class PlaceToPayController extends Controller
                     'date' => $result['status']['date'],
                     'requestId' => $result['requestId'],
                     'processUrl' => $this->placeTopayService->reduceUrl($result['processUrl']),
-                    // 'contact_id' =>         $lead->contact_id,
-                    // 'lead_id' =>            $lead->id,
-                    // 'authorization' => ,
                     'total' => $data['payment']['amount']['total'],
                     'currency' => $data['payment']['amount']['currency'],
                     'reference' => $data['payment']['reference'],
                     'type' => "payment",
-                    // 'token_collect_para_el_pago' => ,
                     'expiration_date' => $data['expiration'],
+                    'paymentData' => json_encode($payer, JSON_UNESCAPED_SLASHES),
+                    'contract_id' => $request->contractId
                 ]);
                 $getById = $this->placeTopayService->getByRequestId($result['requestId']);
                 $placeToPayTransaction = PlaceToPayTransaction::where(["requestId" => $result['requestId']])
@@ -453,11 +434,10 @@ class PlaceToPayController extends Controller
                         'status' => $getById['status']['status'],
                         'reason' => $getById['status']['reason'],
                         'message' => $getById['status']['message'],
+                        'date' => $getById['status']['date'],
                     ]);
             }
 
-            // Aquí puedes procesar la respuesta como desees
-            // Por ejemplo, devolverla como una respuesta JSON
             return response()->json([$result, $getById]);
         } catch (\Exception $e) {
             $err = [
@@ -476,36 +456,90 @@ class PlaceToPayController extends Controller
     }
     public function notificationUpdate(Request $request)
     {
-        Log::channel("slack")->warning(print_r($request->all(), true));
-        if ($this->placeTopayService->validateSignature($request)) {
+        try{
+            // Log::channel('placetopay')->info("Payment request failed: Reason: $errorReason, Message: $errorMessage, Date: $errorDate, Data: $dataAsString");
 
-            PlaceToPayTransaction::where(['requestId' => $request['requestId']])
-                ->update([
-                    'requestId' => $request['requestId'],
-                    'status' => $request['status']['status'],
-                    'message' => $request['status']['message'],
-                    'reason' => $request['status']['reason'],
-                    'date' => $request['status']['date'],
+            $type = $this->placeTopayService->isOneTimePaymentOrQuoteOrSession($request);
+
+            // Log::channel("slack")->warning("NotificationUpdate: ".print_r($request->all(), true));
+            if ($this->placeTopayService->validateSignature($request, $type)) {
+
+
+                if ($type !== 'quote' ) {
+                    $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->first();
+                    $session->update([
+                        'requestId' => $request['requestId'],
+                        'status' => $request['status']['status'],
+                        'message' => $request['status']['message'],
+                        'reason' => $request['status']['reason'],
+                        'date' => $request['status']['date'],
+                    ]);
+
+                    if($session->isOneTimePayment()){
+                        if ($request['status']['status'] === "APPROVED") {
+                            $this->placeTopayService->updateZoho($session, $quote = null);
+                        }
+                    }
+
+                    if($session->isSubscription()){//deberia ser una requestSubscription
+
+                    }
+                }
+                if ( $type === 'quote' ){
+                    $subscriptionFromPTP = $this->placeTopayService->getByRequestId($request->requestId, false, true);
+                    $quote = PlaceToPaySubscription::where(['requestId' => $request['requestId']])->first();
+                    $quote->update([
+                        'requestId' => $request['requestId'],
+                        'status' => $request['status']['status'],
+                        'message' => $request['status']['message'],
+                        'reason' => $request['status']['reason'],
+                        'date' => $request['status']['date'],
+                    ]);
+
+                    if ($request['status']['status'] === "APPROVED") {
+                        $quote->isApprovedPayment($quote->transaction, $subscriptionFromPTP);
+                        $this->placeTopayService->updateZoho($quote->transaction,$quote);
+                    }
+                    //Si pasa a REJECTED cancelar cardToken
+                    if ($request['status']['status'] === "REJECTED") {
+                        $howFailedAttempts = PlaceToPaySubscription::incrementFailedPaymentAttempts($quote->id);
+
+                        if (!($howFailedAttempts > 2)) {
+                            $payment = $quote->transaction->getPaymentData();
+                            $updatedSubscription = PlaceToPaySubscription::duplicateAndReject($quote->id, $subscriptionFromPTP, $payment);
+                        } else {
+                            PlaceToPayTransaction::suspend($quote->transaction);
+                        }
+                    }
+
+                }
+
+                return response()->json([
+                    'result' => 'SUCCESS',
+                    'message' => 'Sesion actualizada.',
+                    'notification' => $request,
+                    '$type' => $type
                 ]);
-
-            $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->get()->first();
-            if ($request['status']['status'] === 'APPROVED') {
-                //TODO: Realizas el primer pago si es subscripcion
             }
 
             return response()->json([
-                'result' => 'SUCCESS',
-                'message' => 'Sesion actualizada.',
-                'notification' => $request,
-                'session' => $session
-            ]);
+                'result' => 'FAILED',
+                'message' => 'Signature no valido.',
+            ], 400);
+        } catch (\Exception $e) {
+            $err = [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                // 'trace' => $e->getTraceAsString(),
+            ];
+
+            Log::error("Error en notificationUpdate: " . $e->getMessage() . "\n" . json_encode($err, JSON_PRETTY_PRINT));
+            return response()->json([
+                $err
+            ], 400);
         }
-
-        return response()->json([
-            'result' => 'FAILED',
-            'message' => 'Signature no valido.',
-        ], 400);
-
     }
 
     public function updateStatusSessionSubscription($reference)
@@ -513,10 +547,12 @@ class PlaceToPayController extends Controller
         $session = PlaceToPayTransaction::where('reference', $reference)->first();
 
         try {
-            $sessionStatusInPtp = $this->placeTopayService->getByRequestId($session->requestId, false, true);
+            $sessionStatusInPtp = $this->placeTopayService->getByRequestId($session->requestId, false, $session->isSubscription());
+
             $paymentOfSession = $session->subscriptions->first();
+
             $session->update([
-                'status' => $paymentOfSession->status,
+                'status' => $session->isSubscription() ? $paymentOfSession->status: $session->status ,
                 'reason' => $sessionStatusInPtp['status']['reason'],
                 'message' => $sessionStatusInPtp['status']['message'],
                 'date' => $sessionStatusInPtp['status']['date'],
@@ -526,7 +562,7 @@ class PlaceToPayController extends Controller
                 'reference' => $reference,
                 'updateTo' => $sessionStatusInPtp['status']['status'],
                 'ptpResponse' => $sessionStatusInPtp,
-                'payment' => $paymentOfSession
+                'payment' => $session->isSubscription() ? $paymentOfSession->status: $session->status
             ]);
 
         } catch (\Exception $e) {
@@ -610,6 +646,5 @@ class PlaceToPayController extends Controller
             'session' => $session
         ]);
     }
-
 
 }

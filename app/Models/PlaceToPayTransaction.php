@@ -154,6 +154,10 @@ class PlaceToPayTransaction extends Model
             ->get()
             ->first();
     }
+    public function getPaymentData()
+    {
+        return json_decode($this->paymentData);
+    }
     public static function getPaymentDataByRequestId($requestId)
     {
         $session = self::where(['requestId' => $requestId])->first();
@@ -247,6 +251,14 @@ class PlaceToPayTransaction extends Model
 
                     /** @var PlaceToPayService $service */
                     $result = $service->payFirstQuote($sessionSubscription["requestId"], $renewSuscription);
+                }
+            }
+        } elseif ($transaction->type === 'payment') {
+            $result = ['response' => $sessionSubscription];
+        } else {
+            // Handle the default case
+            return ["sessionPtp" => $sessionSubscription, 'transaction' => $transaction];
+        }
 
                     if (isset($result['response']['status']['status'])) {
                         $statusPayment = $result['response']['status']['status'];
@@ -256,17 +268,56 @@ class PlaceToPayTransaction extends Model
                         $statusPayment = $result['status'];
                     }
 
-                    return [
-                        "updateRequestSession" => $transaction,
-                        "payment" => $result,
-                        "paymentDate" => now(),
-                        "result" => self::$messageOfPtp[$statusPayment],
-                        "statusPayment" => $statusPayment,
-                    ];
-                }
-            }
-        } else {
-            return ["sessionPtp" => $sessionSubscription, 'transaction' => $transaction];
+        return [
+            "updateRequestSession" => $transaction,
+            "payment" => $result, // You may uncomment this if needed
+            "paymentDate" => now(),
+            "result" => self::$messageOfPtp[$statusPayment],
+            "statusPayment" => $statusPayment,
+        ];
+    }
+
+    public function isOneTimePayment(){
+        return $this->type === 'payment';
+    }
+
+    public function isApprovedPayment($transaction, $paymentByRequestId){
+        // Actualizo el transactions, campo: installments_paid
+        $this->update(['installments_paid' => $this->installments_paid + 1]);
+
+        if ($this->paymentLinks()->first() !== null) {
+            $this->paymentLinks()->first()->update(['status' => 'Contrato Efectivo']);
         }
+
+        // Actualiza cuota
+        $updatePayment = PlaceToPayTransaction::updateWith($this, $paymentByRequestId, $this->id);
+       // $requestSubscriptionById = $this->getByRequestId($transaction['requestId'], false, true);
+
+        // creas todas las cuotas restantes, si hay
+        $result = [
+            "newPayment" => $updatePayment,
+            "transaction" => $transaction,
+            //"response" => $requestSubscriptionById,
+            // "data" => $data,
+        ];
+
+        return $result;
+    }
+
+    public static function updateWith($request, $data, $sessionId)
+    {
+        $session = self::find($sessionId);
+
+        $session->update([
+            'transactionId' => $request->id,
+            'date' => $data['status']['date'],
+            'status' => $data['status']['status'],
+            'reason' => $data['status']['reason'],
+            'message' => $data['status']['message'],
+            'authorization' => $data['payment'][0]['authorization'] ?? null,
+            'reference' => $data['payment'][0]['reference'] ?? null,
+        ]);
+
+        return $session;
     }
 }

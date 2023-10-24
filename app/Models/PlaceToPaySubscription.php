@@ -212,6 +212,50 @@ class PlaceToPaySubscription extends Model
         ]);
     }
 
+
+
+    public static function suspend($subscription)
+    {
+        $subscription->update(['status' => 'SUSPEND']);
+    }
+
+    public function isPending($transaction, $subscriptionByRequestId)
+    {
+        if ($this->status === 'PENDING') {
+            //Actualizar la primer cuota que pasa de PENDING a APPROVED
+            return $subscriptionByRequestId['payment'][0]['status']['status'] ?? $subscriptionByRequestId['status']['status'];
+
+            // if($paymentStatus === 'APPROVED'){
+
+            // }
+
+        } else {
+            return $this->status;
+        }
+    }
+
+    public function isApprovedPayment($transaction, $subscriptionByRequestId){
+            // Actualizo el transactions, campo: installments_paid
+            $transaction->update(['installments_paid' => $transaction->installments_paid + 1]);
+
+            if ($transaction->paymentLinks()->first() !== null) {
+                $transaction->paymentLinks()->first()->update(['status' => 'Contrato Efectivo']);
+            }
+
+            // Actualiza cuota
+            $updatePayment = PlaceToPaySubscription::updateWith($transaction, $subscriptionByRequestId, $this->id);
+           // $requestSubscriptionById = $this->getByRequestId($transaction['requestId'], false, true);
+
+            // creas todas las cuotas restantes, si hay
+            $result = [
+                "newPayment" => $updatePayment,
+                "transaction" => $transaction,
+                //"response" => $requestSubscriptionById,
+                // "data" => $data,
+            ];
+
+            return $result;
+    }
     public static function updateWith($request, $data, $quoteId)
     {
         $payment = self::find($quoteId);
@@ -229,47 +273,5 @@ class PlaceToPaySubscription extends Model
         ]);
 
         return $payment;
-    }
-
-    public static function suspend($subscription)
-    {
-        $subscription->update(['status' => 'SUSPEND']);
-    }
-
-    public function isPending($transaction, $subscriptionByRequestId)
-    {
-        if ($this->status === 'PENDING') {
-            //Actualizar la primer cuota que pasa de PENDING a APPROVED
-            return $subscriptionByRequestId['payment'][0]['status']['status'] ?? $subscriptionByRequestId['status']['status'];
-
-            if($paymentStatus === 'APPROVED'){
-            }
-
-        } else {
-            return $this->status;
-        }
-    }
-
-    public function isApprovedPayment($transaction, $subscriptionByRequestId){
-            // Actualizo el transactions, campo: installments_paid
-            $this->update(['installments_paid' => $this->installments_paid + 1]);
-
-            if ($this->paymentLinks()->first() !== null) {
-                $this->paymentLinks()->first()->update(['status' => 'Contrato Efectivo']);
-            }
-
-            // Actualiza cuota
-            $updatePayment = PlaceToPaySubscription::updateWith($this, $subscriptionByRequestId, $this->id);
-           // $requestSubscriptionById = $this->getByRequestId($transaction['requestId'], false, true);
-
-            // creas todas las cuotas restantes, si hay
-            $result = [
-                "newPayment" => $updatePayment,
-                "transaction" => $transaction,
-                //"response" => $requestSubscriptionById,
-                // "data" => $data,
-            ];
-
-            return $result;
     }
 }

@@ -372,17 +372,35 @@ class ZohoController extends Controller
             if ($session == null) {
                 return response()->json('No se encontro la session en la DB.', 500);
             }
-            $subscription = $session->lastApprovedSubscription();
-            if ($subscription == null) {
-                return response()->json('No se encontraron subcripciones de cuota 1 pagadas en la DB.', 500);
+
+            if($session->isOneTimePayment()){
+                $Fecha_Cobro = date('Y-m-d', strtotime($session->date));
+                $Cobro_ID = $session->reference;
+                $Monto = $session->total;
+                $Numero_de_cobro = 1;
+                $Fecha_de_primer_cobro = date('Y-m-d', strtotime($session->date));
+                $stripe_subscription_id = $session->reference;
+            }else{
+                $subscription = $session->lastApprovedSubscription();
+                if ($subscription == null) {
+                    return response()->json('No se encontraron subcripciones de cuota 1 pagadas en la DB.', 500);
+                }
+
+                $Fecha_Cobro = date('Y-m-d', strtotime($subscription->date_to_pay));
+                $Cobro_ID = $subscription->reference;
+                $Monto = $subscription->total;
+                $Numero_de_cobro = $subscription->nro_quote;
+                $Fecha_de_primer_cobro = date('Y-m-d', strtotime($subscription->date_to_pay));
+                $stripe_subscription_id = $session->reference;
             }
 
+
             $detailApprovedPayment = [
-                'Fecha_Cobro' => date('Y-m-d', strtotime($subscription->date_to_pay)),
+                'Fecha_Cobro' => $Fecha_Cobro,
                 'Num_de_orden_o_referencia_ext' => $session->reference,
-                'Cobro_ID' => $subscription->reference,
-                'Monto' => $subscription->total,
-                'Numero_de_cobro' => $subscription->nro_quote,
+                'Cobro_ID' => $Cobro_ID,
+                'Monto' => $Monto,
+                'Numero_de_cobro' => $Numero_de_cobro,
                 'Origen_Pago' => 'SPP',
             ];
 
@@ -394,11 +412,11 @@ class ZohoController extends Controller
                 'Seleccione_total_de_pagos_recurrentes' => strval($session->quotes),
                 'Monto_de_cada_pago_restantes' => $session->remaining_installments,
                 'Cantidad_de_pagos_recurrentes_restantes' => strval($session->quotes - 1),
-                'Fecha_de_primer_cobro' => date('Y-m-d', strtotime($subscription->date_to_pay)),
+                'Fecha_de_primer_cobro' => $Fecha_de_primer_cobro,
                 'Status' => 'Aprobado',
                 'M_todo_de_pago' => $gateway,
                 'Modo_de_pago' => $modoDePago,
-                'stripe_subscription_id' => $session->reference,
+                'stripe_subscription_id' => $stripe_subscription_id,
                 'Paso_5_Detalle_pagos' => $detailApprovedPayments
                 // 'session_subscription_requestId' => $session->requestId,
                 // 'cuota_subscription_requestId' => $session->getFirstInstallmentPaid()->requestId,
