@@ -255,8 +255,8 @@ class PlaceToPaySubscription extends Model
             // Actualizo el transactions, campo: installments_paid
             $this->update(['installments_paid' => $this->installments_paid + 1]);
 
-            if ($this->paymentLinks()->first() !== null) {
-                $this->paymentLinks()->first()->update(['status' => 'Contrato Efectivo']);
+            if ($transaction->paymentLinks()->first() !== null) {
+                $transaction->paymentLinks()->first()->update(['status' => 'Contrato Efectivo']);
             }
 
             // Actualiza cuota
