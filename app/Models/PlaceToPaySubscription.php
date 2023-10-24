@@ -212,24 +212,7 @@ class PlaceToPaySubscription extends Model
         ]);
     }
 
-    public static function updateWith($request, $data, $quoteId)
-    {
-        $payment = self::find($quoteId);
 
-        $payment->update([
-            'transactionId' => $request->id,
-            'date' => $data['status']['date'],
-            'status' => $data['status']['status'],
-            'reason' => $data['status']['reason'],
-            'message' => $data['status']['message'],
-            'authorization' => $data['payment'][0]['authorization'] ?? null,
-            'reference' => $data['payment'][0]['reference'] ?? null,
-            // 'type' => , //TODO: me parece que es mejor borrarlo de la tabla. O usarla para diferenciar: subscription, advancedInstallment
-            // 'expiration_date' => , //TODO: definir cuando se espera que expire una cuota.
-        ]);
-
-        return $payment;
-    }
 
     public static function suspend($subscription)
     {
@@ -260,7 +243,7 @@ class PlaceToPaySubscription extends Model
             }
 
             // Actualiza cuota
-            $updatePayment = PlaceToPaySubscription::updateWith($this, $subscriptionByRequestId, $this->id);
+            $updatePayment = PlaceToPaySubscription::updateWith($transaction, $subscriptionByRequestId, $this->id);
            // $requestSubscriptionById = $this->getByRequestId($transaction['requestId'], false, true);
 
             // creas todas las cuotas restantes, si hay
@@ -273,4 +256,23 @@ class PlaceToPaySubscription extends Model
 
             return $result;
     }
+    public static function updateWith($request, $data, $quoteId)
+    {
+        $payment = self::find($quoteId);
+
+        $payment->update([
+            'transactionId' => $request->id,
+            'date' => $data['status']['date'],
+            'status' => $data['status']['status'],
+            'reason' => $data['status']['reason'],
+            'message' => $data['status']['message'],
+            'authorization' => $data['payment'][0]['authorization'] ?? null,
+            'reference' => $data['payment'][0]['reference'] ?? null,
+            // 'type' => , //TODO: me parece que es mejor borrarlo de la tabla. O usarla para diferenciar: subscription, advancedInstallment
+            // 'expiration_date' => , //TODO: definir cuando se espera que expire una cuota.
+        ]);
+
+        return $payment;
+    }
 }
+
