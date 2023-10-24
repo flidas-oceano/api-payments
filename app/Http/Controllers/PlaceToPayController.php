@@ -477,7 +477,7 @@ class PlaceToPayController extends Controller
 
                     if($session->isOneTimePayment()){
                         if ($request['status']['status'] === "APPROVED") {
-                            $this->placeTopayService->updateZoho($session->transaction, $quote = null);
+                            $this->placeTopayService->updateZoho($session, $quote = null);
                         }
                     }
 
