@@ -98,7 +98,6 @@ class Contract extends Model
         }
 
         if ($gateway == 'Placetopay') {
-            // $detailApprovedPayments = $this->zohoService->buildTablePaymentDetail($request->contractId, $detailApprovedPayment);
             $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->first();
             if ($session == null) {
                 return response()->json('No se encontro la session en la DB.', 500);
@@ -135,8 +134,6 @@ class Contract extends Model
             'stripe_subscription_id' => $request->subscriptionId,
         ];
     }
-
-    // self::buildDetailApprovedPayment($request,$gateway,$modoDePago);
 
     public static function buildDetailApprovedPayment($request){
 
