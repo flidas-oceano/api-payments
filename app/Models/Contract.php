@@ -66,5 +66,104 @@ class Contract extends Model
 
         }
         return $answer;
+
     }
+    public static function mappingDataContract($request, $gateway, $session = null)
+    {
+        if (boolval($request->is_suscri)) {
+            $modoDePago = 'Cobro recurrente';
+            if (boolval($request->is_advanceSuscription)) {
+                $modoDePago = $modoDePago . ' con parcialidad';
+            }
+        } else {
+            $modoDePago = 'Cobro total en un pago';
+        }
+
+        if ($gateway == 'CTC') {
+            return [
+                // Contrato
+                'Monto_de_parcialidad' => $request->installment_amount,
+                'Seleccione_total_de_pagos_recurrentes' => strval($request->installments),
+                'Monto_de_cada_pago_restantes' => $request->is_advanceSuscription ? $request->payPerMonthAdvance : $request->installment_amount,
+                'Cantidad_de_pagos_recurrentes_restantes' => strval($request->installments - 1),
+                'Fecha_de_primer_cobro' => date('Y-m-d'),
+                'Status' => 'Aprobado',
+                'M_todo_de_pago' => $gateway,
+                'Modo_de_pago' => $modoDePago,
+
+                //campos CTC
+                'folio_suscripcion' => $request->subscriptionId,
+                'folio_pago' => $request->folio_pago,
+            ];
+        }
+
+        if ($gateway == 'Placetopay') {
+            // $detailApprovedPayments = $this->zohoService->buildTablePaymentDetail($request->contractId, $detailApprovedPayment);
+            $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->first();
+            if ($session == null) {
+                return response()->json('No se encontro la session en la DB.', 500);
+            }
+
+            if($session->isOneTimePayment()){
+                $Fecha_de_primer_cobro = $session->date;
+            }else{
+                $subscription = $session->lastApprovedSubscription();
+                $Fecha_de_primer_cobro = $subscription->date_to_pay;
+            }
+            return [
+                'Monto_de_parcialidad' => $session->first_installment,
+                'Seleccione_total_de_pagos_recurrentes' => strval($session->quotes),
+                'Monto_de_cada_pago_restantes' => $session->remaining_installments,
+                'Cantidad_de_pagos_recurrentes_restantes' => strval($session->quotes - 1),
+                'Fecha_de_primer_cobro' => date('Y-m-d', strtotime($Fecha_de_primer_cobro)),
+                'Status' => 'Aprobado',
+                'M_todo_de_pago' => $gateway,
+                'Modo_de_pago' => $modoDePago,
+                'stripe_subscription_id' => $session->reference,
+            ];
+        }
+
+        return [
+            'Monto_de_parcialidad' => $request->installment_amount,
+            'Seleccione_total_de_pagos_recurrentes' => strval($request->installments),
+            'Monto_de_cada_pago_restantes' => $request->is_advanceSuscription ? $request->payPerMonthAdvance : $request->installment_amount,
+            'Cantidad_de_pagos_recurrentes_restantes' => strval($request->installments - 1),
+            'Fecha_de_primer_cobro' => date('Y-m-d'),
+            'Status' => 'Aprobado',
+            'M_todo_de_pago' => $gateway,
+            'Modo_de_pago' => $modoDePago,
+            'stripe_subscription_id' => $request->subscriptionId,
+        ];
+    }
+
+    // self::buildDetailApprovedPayment($request,$gateway,$modoDePago);
+
+    public static function buildDetailApprovedPayment($request){
+
+        $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->first();
+
+        if($session->isOneTimePayment()){
+            $Fecha_Cobro = date('Y-m-d', strtotime($session->date));
+            $Cobro_ID = $session->reference;
+            $Monto = $session->total;
+            $Numero_de_cobro = 1;
+        }else{
+            $subscription = $session->lastApprovedSubscription();
+            $Fecha_Cobro = date('Y-m-d', strtotime($subscription->date_to_pay));
+            $Cobro_ID = $subscription->reference;
+            $Monto = $subscription->total;
+            $Numero_de_cobro = $subscription->nro_quote;
+        }
+
+        // $detailApprovedPayment
+        return [
+            'Fecha_Cobro' => $Fecha_Cobro,
+            'Num_de_orden_o_referencia_ext' => $session->reference,
+            'Cobro_ID' => $Cobro_ID,
+            'Monto' => $Monto,
+            'Numero_de_cobro' => $Numero_de_cobro,
+            'Origen_Pago' => 'SPP'
+        ];
+    }
+
 }

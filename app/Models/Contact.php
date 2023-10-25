@@ -59,4 +59,33 @@ class Contact extends Model
     {
         return self::$formAttributes;
     }
+
+    public static function mappingDataContact($request, $gateway = null)
+    {
+        if ($gateway == 'Placetopay') {
+            $paymentData = PlaceToPayTransaction::getPaymentDataByRequestId($request['requestId']);
+
+            return [
+                'Identificacion' => $paymentData->document,
+                'Tel_fono_de_facturaci_n' => $paymentData->mobile,
+                'Raz_n_social' => PlaceToPayTransaction::getFullNameFromPaymentData($paymentData),
+            ];
+        }
+
+        $identification = self::getIdentification($request->dni, $request->country);
+
+        return [
+            'Identificacion' => ($request->dni ?? $identification),
+            'Tel_fono_de_facturaci_n' => $request->phone,
+            'Raz_n_social' => $request->fullname,
+        ];
+    }
+    private function getIdentification($identification, $country)
+    {
+        if ($country == "Chile" && strpos(strval($identification), '-') == false) {
+            return substr(strval($identification), 0, -1) . '-' . substr(strval($identification), -1);
+        }
+        return strval($identification);
+    }
+
 }
