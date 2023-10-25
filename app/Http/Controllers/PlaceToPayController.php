@@ -561,11 +561,10 @@ class PlaceToPayController extends Controller
 
         try {
             $sessionStatusInPtp = $this->placeTopayService->getByRequestId($session->requestId, false, $session->isSubscription());
-
             $paymentOfSession = $session->subscriptions->first();
 
             $session->update([
-                'status' => $session->isSubscription() ? $paymentOfSession->status: $session->status ,
+                'status' => $session->isSubscription() ? $paymentOfSession->status : $session->status ,
                 'reason' => $sessionStatusInPtp['status']['reason'],
                 'message' => $sessionStatusInPtp['status']['message'],
                 'date' => $sessionStatusInPtp['status']['date'],
@@ -575,7 +574,8 @@ class PlaceToPayController extends Controller
                 'reference' => $reference,
                 'updateTo' => $sessionStatusInPtp['status']['status'],
                 'ptpResponse' => $sessionStatusInPtp,
-                'payment' => $session->isSubscription() ? $paymentOfSession->status: $session->status
+                'payment' => $session->isSubscription() ? $paymentOfSession->status: $session->status,
+                'paymentOfSession' => $paymentOfSession
             ]);
 
         } catch (\Exception $e) {

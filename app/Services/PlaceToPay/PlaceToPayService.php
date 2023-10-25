@@ -84,7 +84,7 @@ class PlaceToPayService
         if ($renewSub) {
             $subscriptionAmountToPay->total = $request->remaining_installments;
         } else {
-            $subscriptionAmountToPay->total = $transaccion->first_installment ?? $request->remaining_installments;
+            $subscriptionAmountToPay->total = $transaction->first_installment ?? $request->remaining_installments;
         }
 
         $payment = PlaceToPaySubscription::generatePayment($reference, $subscriptionAmountToPay);
@@ -114,7 +114,7 @@ class PlaceToPayService
         $request->nro_quote = $quoteToPay;
 
         if ($renewSub) {
-            $newPayment = PlaceToPaySubscription::updateWith($request, $response, $transaccion->subscriptions->first()->id);
+            $newPayment = PlaceToPaySubscription::updateWith($request, $response, $transaction->subscriptions->first()->id);
         } else {
             $newPayment = PlaceToPaySubscription::createWith($request, $response);
         }
