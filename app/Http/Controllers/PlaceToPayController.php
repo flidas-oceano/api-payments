@@ -463,10 +463,10 @@ class PlaceToPayController extends Controller
 
             $type = $this->placeTopayService->isOneTimePaymentOrQuoteOrSession($request);
 
-            Log::channel("slack")->warning("NotificationUpdate: ".print_r($request->all(), true));
+
             if ($this->placeTopayService->validateSignature($request, $type)) {
             // if (true) {
-
+                Log::channel("slack")->warning("NotificationUpdate: ".print_r($request->all(), true));
                 if ($type !== 'quote' ) {
                     $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->first();
                     $session->update([
@@ -486,6 +486,9 @@ class PlaceToPayController extends Controller
                     if($session->isSubscription()){//deberia ser una requestSubscription
 
                     }
+
+                    Http::post(env("PTP_ZOHO_FLOW"),[$request, $session]);
+
                 }
                 if ( $type === 'quote' ){
                     $subscriptionFromPTP = $this->placeTopayService->getByRequestId($request->requestId, false, true);
@@ -520,6 +523,7 @@ class PlaceToPayController extends Controller
                         }
                     }
 
+                    Http::post(env("PTP_ZOHO_FLOW"),[$request, $subscriptionFromPTP, $quote]);
                 }
 
                 return response()->json([
