@@ -4,6 +4,7 @@ namespace App\Services\Zoho;
 
 use App\Clients\ZohoClient;
 use App\Interfaces\IClient;
+use App\Models\Contract;
 use Illuminate\Support\Facades\Log;
 use zcrmsdk\crm\crud\ZCRMRecord;
 use zcrmsdk\crm\exception\ZCRMException;
@@ -43,7 +44,37 @@ class ZohoService
 
     public function buildTablePaymentDetail($contractId, $detailApprovedPayment)
     {
+
+
         $table = $this->getSaleOrderPaymentDetail($contractId);
+        // Variable para rastrear si se encontró el número de cuota en $table
+
+        $uniqueTable = $this->removeDuplicatesByNumeroCobro($table);
+
+        $foundPayment = false;
+
+        foreach ($uniqueTable as $key => $paymentDetail) {
+            if ($paymentDetail['Numero_de_cobro'] == $detailApprovedPayment['Numero_de_cobro']) {
+                // Reemplazar la entrada existente con $detailApprovedPayment
+                $table[$key] = $detailApprovedPayment;
+                $foundPayment = true;
+                break; // Salir del bucle una vez que se reemplace el valor
+            }
+        }
+
+        // Si no se encontró el número de cuota, agregar $detailApprovedPayment al final de $table
+        if (!$foundPayment) {
+            $uniqueTable[] = $detailApprovedPayment;
+        }
+
+        return $uniqueTable;
+    }
+    public function buildTablePaymentDetailNew($request)
+    {
+
+        $detailApprovedPayment = Contract::buildDetailApprovedPayment($request);
+
+        $table = $this->getSaleOrderPaymentDetail($request->contractId);
         // Variable para rastrear si se encontró el número de cuota en $table
 
         $uniqueTable = $this->removeDuplicatesByNumeroCobro($table);
@@ -176,6 +207,25 @@ class ZohoService
         }
 
         return ($answer);
+    }
+
+    public function getContractZoho($number)
+    {
+        $sale = $this->fetchRecordWithValue('Sales_Orders', 'id', $number);
+
+        if ($sale == 'error') {
+            $sale = $this->fetchRecordWithValue('Sales_Orders', 'SO_Number', $number);
+
+            if ($sale == 'error') {
+                $answer['detail'] = 'Sale not found';
+                $answer['status'] = 'error';
+                return $answer;
+            } else {
+                return $sale;
+            }
+        } else {
+            return $sale;
+        }
     }
 
 }
