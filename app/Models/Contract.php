@@ -132,8 +132,6 @@ class Contract extends Model
         ];
     }
 
-    // self::buildDetailApprovedPayment($request,$gateway,$modoDePago);
-
     public static function buildDetailApprovedPayment($request){
 
         $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->first();
