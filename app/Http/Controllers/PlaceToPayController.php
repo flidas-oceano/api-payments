@@ -191,6 +191,7 @@ class PlaceToPayController extends Controller
                         "payment" => $isApproveSession['payment'],
                         "statusSession" => $statusSession,
                         "sessionPTP" => $sessionSubscription,
+                        "transaction" => $transaction,
                     ]);
             }
 
@@ -208,6 +209,7 @@ class PlaceToPayController extends Controller
                     "payment" => $isApproveSession['payment'],
                     "statusSession" => $statusSession,
                     "sessionPTP" => $sessionSubscription,
+                    "transaction" => $transaction
                 ]);
             }
 
