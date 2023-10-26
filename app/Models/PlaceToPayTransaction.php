@@ -38,8 +38,8 @@ class PlaceToPayTransaction extends Model
         'installments_paid',
         'paymentData',
         'transaction_id',
-        'contract_id'
-
+        'contract_id',
+        'flow_spp'
     ];
     private static $formAttributes = [
         'id',
@@ -62,6 +62,7 @@ class PlaceToPayTransaction extends Model
         'quotes',
         'installments_paid',
         'paymentData',
+
     ];
 
     private static $messageOfPtp = [
