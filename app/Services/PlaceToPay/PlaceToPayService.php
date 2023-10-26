@@ -698,6 +698,7 @@ class PlaceToPayService
                     //Realizar el primer pago.
                     //Creacion de cuotas.
                     $this->createInstallmentsWithoutPay($session);
+
                 }
 
                 //Si pasa a REJECTED cancelar cardToken
@@ -733,7 +734,21 @@ class PlaceToPayService
                 // Guardar el cardToken
                 if ($statusPaymentPTP === "APPROVED") {
                     $zohoService = new ZohoService($this->zohoClient);
+
+                    $contractDataToZoho = (object) [
+                        "is_suscri" => $session->isSubscription(),
+                        "is_advanceSuscription" => boolval($session->first_installment),
+                        "requestId" => $session->requestId
+                    ];
+
+                    $dataToContract = Contract::mappingDataContract($contractDataToZoho,'Placetopay');
+                    $dataToContact = Contact::mappingDataContact($contractDataToZoho->requestId,'Placetopay');
+
+                    $contractUpdated = $zohoService->updateRecord('Sale_Orders',$dataToContract,$session->contract_id);
+                    $contactUpdated = $zohoService->updateRecord('Contracts',$dataToContact,$session->contract_id);
                     $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscription);
+
+
                     $this->createInstallmentsWithoutPay($subscription->transaction);
                 }
 
