@@ -504,6 +504,7 @@ class PlaceToPayController extends Controller
 
                         //Actualizar zoho
                         $this->placeTopayService->updateZoho($quote->transaction, $quote);
+                        $this->placeTopayService->createInstallmentsWithoutPay($quote->transaction);
                     }
                     //Si pasa a REJECTED cancelar cardToken
                     if ($request['status']['status'] === "REJECTED") {
