@@ -14,7 +14,7 @@ class AddForeignKeyToPlacetopayTransactions extends Migration
     public function up()
     {
         Schema::table('placetopay_transactions', function (Blueprint $table) {
-            $table->foreignId('flow_spp')
+            $table->foreignId('flow_spp_id')
                 ->nullable()
                 ->default(null)
                 ->references('id')
@@ -30,8 +30,8 @@ class AddForeignKeyToPlacetopayTransactions extends Migration
     public function down()
     {
         Schema::table('placetopay_transactions', function (Blueprint $table) {
-            $table->dropForeign(['flow_spp']);
-            $table->dropColumn('flow_spp');
+            $table->dropForeign(['flow_spp_id']);
+            $table->dropColumn('flow_spp_id');
         });
     }
 }

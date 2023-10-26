@@ -28,9 +28,9 @@ class FlowSPP extends Model
         'zohoData',
     ];
 
-    public function transaction()
+    public function transactions()
     {
-        return $this->belongsTo(PlaceToPayTransaction::class, 'transactionId');
+        return $this->hasMany(PlaceToPayTransaction::class, 'flow_spp_id');
     }
 
     public static function getFlowSPPFromRequest($request)

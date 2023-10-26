@@ -39,7 +39,7 @@ class PlaceToPayTransaction extends Model
         'paymentData',
         'transaction_id',
         'contract_id',
-        'flow_spp'
+        'flow_spp_id'
     ];
     private static $formAttributes = [
         'id',
@@ -72,6 +72,10 @@ class PlaceToPayTransaction extends Model
         'PENDING' => 'El estado de la peticion de la tarjeta estan pendientes.',
         'DESCONOCIDO' => 'Se desconoce el error. Mire los logs o consulte en PTP.',
     ];
+    public function flow_spp()
+    {
+        return $this->belongsTo(FlowSPP::class, 'flow_spp_id');
+    }
 
     function isSubscription()
     {
@@ -321,4 +325,6 @@ class PlaceToPayTransaction extends Model
 
         return $session;
     }
+
+
 }
