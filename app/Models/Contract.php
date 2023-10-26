@@ -68,7 +68,7 @@ class Contract extends Model
         return $answer;
 
     }
-    public static function mappingDataContract($request, $gateway, $session = null)
+    public static function mappingDataContract($request, $gateway)
     {
         if (boolval($request->is_suscri)) {
             $modoDePago = 'Cobro recurrente';
@@ -98,11 +98,7 @@ class Contract extends Model
         }
 
         if ($gateway == 'Placetopay') {
-            // $detailApprovedPayments = $this->zohoService->buildTablePaymentDetail($request->contractId, $detailApprovedPayment);
-            $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->first();
-            if ($session == null) {
-                return response()->json('No se encontro la session en la DB.', 500);
-            }
+            $session = PlaceToPayTransaction::where(['requestId' => $request->requestId])->first();
 
             if($session->isOneTimePayment()){
                 $Fecha_de_primer_cobro = $session->date;

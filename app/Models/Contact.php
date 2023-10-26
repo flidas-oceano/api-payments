@@ -60,7 +60,7 @@ class Contact extends Model
         return self::$formAttributes;
     }
 
-    public static function mappingDataContact($request, $gateway = null)
+    public static function mappingDataContact($request, $gateway)
     {
         if ($gateway == 'Placetopay') {
             $paymentData = PlaceToPayTransaction::getPaymentDataByRequestId($request['requestId']);
