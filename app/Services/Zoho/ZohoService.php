@@ -144,13 +144,14 @@ class ZohoService
     //actualiza un record, le pasas el id separado
     public function updateRecord($type, $data, $id, $workflow = true)
     {
-        $answer = array();
-
-        $answer['result'] = 'error';
-        $answer['id'] = '';
-        $answer['detail'] = '';
+        $answer = [
+            'result' => 'error',
+            'id' => $id,
+            'detail' => 'No se actualizo'
+        ];
 
         try {
+            $this->client->getClient();
             $zcrmRecordIns = ZCRMRecord::getInstance($type, $id);
 
             foreach ($data as $k => $v)
@@ -164,7 +165,7 @@ class ZohoService
 
             if ($apiResponse->getCode() == 'SUCCESS') {
                 $answer['result'] = 'ok';
-                $answer['id'] = $id;
+                $answer['detail'] = 'Se actualizo';
             }
         } catch (ZCRMException $e) {
             Log::error($e);

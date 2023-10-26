@@ -742,10 +742,10 @@ class PlaceToPayService
                     ];
 
                     $dataToContract = Contract::mappingDataContract($contractDataToZoho,'Placetopay');
-                    $dataToContact = Contact::mappingDataContact($contractDataToZoho->requestId,'Placetopay');
+                    $dataToContact = Contact::mappingDataContact($contractDataToZoho,'Placetopay');
 
-                    $contractUpdated = $zohoService->updateRecord('Sale_Orders',$dataToContract,$session->contract_id);
-                    $contactUpdated = $zohoService->updateRecord('Contracts',$dataToContact,$session->contract_id);
+                    $contractUpdated = $zohoService->updateRecord('Sales_Orders',$dataToContract,$session->contract_id,true);
+                    $contactUpdated = $zohoService->updateRecord('Contacts',$dataToContact,$session->contract_id,true);
                     $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscription);
 
 

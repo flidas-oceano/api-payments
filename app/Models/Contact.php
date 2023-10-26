@@ -63,7 +63,7 @@ class Contact extends Model
     public static function mappingDataContact($request, $gateway)
     {
         if ($gateway == 'Placetopay') {
-            $paymentData = PlaceToPayTransaction::getPaymentDataByRequestId($request['requestId']);
+            $paymentData = PlaceToPayTransaction::getPaymentDataByRequestId($request->requestId);
 
             return [
                 'Identificacion' => $paymentData->document,
