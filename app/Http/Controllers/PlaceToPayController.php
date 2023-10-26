@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\Manage;
 use App\Http\Requests\CreateSessionSubscriptionRequest;
 use App\Models\Contact;
+use App\Models\Contract;
 use App\Models\Lead;
 use App\Models\PlaceToPaySubscription;
 use App\Models\PlaceToPayTransaction;
@@ -41,7 +42,6 @@ class PlaceToPayController extends Controller
 
     public function __construct(PlaceToPayService $placeTopayService)
     {
-
         $this->placeTopayService = $placeTopayService;
         $this->login_pu = env("REACT_APP_PTP_LOGIN_PU");
         $this->secret_pu = env("REACT_APP_PTP_SECRECT_PU");
@@ -496,22 +496,14 @@ class PlaceToPayController extends Controller
                         'date' => $request['status']['date'],
                     ]);
 
+                    $quote->save();
+
                     if ($request['status']['status'] === "APPROVED") {
                         $quote->isApprovedPayment($quote->transaction, $subscriptionFromPTP);
                         //createInstallments
 
-                        $data = [
-                            "is_suscri" => $quote->transaction->isSubscription(),
-                            "requestId" => $quote->transaction->requestId,
-                            "adjustment" => 0,
-                            "contractId" => $quote->transaction->contract_id,
-                            "street" => $quote->transaction->getPaymentData()->address->street,
-                        ];
-
-                        $url = env("APP_URL")."/api/updateZohoPTP";
-                        $response = Http::post($url,$data);
-
-                        // $this->placeTopayService->updateZoho($quote->transaction,$quote);
+                        //Actualizar zoho
+                        $this->placeTopayService->updateZoho($quote->transaction, $quote);
                     }
                     //Si pasa a REJECTED cancelar cardToken
                     if ($request['status']['status'] === "REJECTED") {

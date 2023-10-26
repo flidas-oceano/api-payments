@@ -394,7 +394,6 @@ class ZohoController extends Controller
                 $stripe_subscription_id = $session->reference;
             }
 
-
             $detailApprovedPayment = [
                 'Fecha_Cobro' => $Fecha_Cobro,
                 'Num_de_orden_o_referencia_ext' => $session->reference,
@@ -619,16 +618,15 @@ class ZohoController extends Controller
     public function updateZohoPTPMSK(Request $request)
     {
         try {
-
             $saleZoho = $this->getContractZoho($request->contractId)->getData();
-
             $contactEntityId = $saleZoho['Contact_Name']->getEntityId();
 
-            $dataUpdate = $this->mappingDataContract($request, 'Placetopay');
-            $dataUpdateContact = $this->mappingDataContact($request, 'Placetopay');
+            $dataUpdate = Contract::mappingDataContract($request, 'Placetopay');
+            $dataUpdate['Paso_5_Detalle_pagos'] = $this->zohoService->buildTablePaymentDetailNew($request);
+            $dataUpdateContact = Contact::mappingDataContact($request, 'Placetopay');
 
-            $updateContract = $this->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
-            $updateContact = $this->updateRecord('Contacts', $dataUpdateContact, $contactEntityId, true);
+            $updateContract = $this->zohoService->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
+            $updateContact = $this->zohoService->updateRecord('Contacts', $dataUpdateContact, $contactEntityId, true);
 
             if ($updateContract['result'] == 'error' || $updateContact['result'] == 'error') {
                 return response()->json(["contract" => $updateContract, "contact" => $updateContact], 500);

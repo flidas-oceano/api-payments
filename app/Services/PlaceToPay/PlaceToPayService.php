@@ -845,9 +845,30 @@ class PlaceToPayService
         }
     }
 
-    public function updateZoho($session, $subscriptionToPay = null){
+    public function updateZoho($session, $quote = null){
+
+        $request = (object)[
+            "is_suscri" => $session->isSubscription(),
+            "requestId" => $session->requestId,
+            "adjustment" => 0,
+            "contractId" => $session->contract_id,
+            "street" => $session->getPaymentData()->address->street,
+            "is_advanceSuscription" => $session->isAdvancedSubscription()
+        ];
 
         $zohoService = new ZohoService($this->zohoClient);
-        $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscriptionToPay);
+
+        $saleZoho = $zohoService->getContractZoho($request->contractId)->getData();
+        $contactEntityId = $saleZoho['Contact_Name']->getEntityId();
+
+        $dataUpdate = Contract::mappingDataContract($request, 'Placetopay');
+        $dataUpdate['Paso_5_Detalle_pagos'] = $zohoService->buildTablePaymentDetailNew($request);
+        $dataUpdateContact = Contact::mappingDataContact($request, 'Placetopay');
+
+        $updateContract = $zohoService->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
+        $updateContact = $zohoService->updateRecord('Contacts', $dataUpdateContact, $contactEntityId, true);
+
+        // $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscriptionToPay);
     }
+
 }

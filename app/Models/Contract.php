@@ -134,7 +134,7 @@ class Contract extends Model
 
     public static function buildDetailApprovedPayment($request){
 
-        $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->first();
+        $session = PlaceToPayTransaction::where(['requestId' => $request->requestId])->first();
 
         if($session->isOneTimePayment()){
             $Fecha_Cobro = date('Y-m-d', strtotime($session->date));
@@ -159,5 +159,4 @@ class Contract extends Model
             'Origen_Pago' => 'SPP'
         ];
     }
-
 }
