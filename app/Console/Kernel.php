@@ -63,8 +63,9 @@ class Kernel extends ConsoleKernel
             $schedule->command('sales-order:rebill 100 5')->dailyAt('06:20:06')->timezone('America/Argentina/Buenos_Aires');
             $schedule->command('sales-order:rebill 100 6')->dailyAt('06:35:06')->timezone('America/Argentina/Buenos_Aires');
             $schedule->command('sales-order:stripe')->dailyAt('06:25:06')->timezone('America/Argentina/Buenos_Aires');
+            $schedule->command('p2p:stage')->dailyAt('06:00:00')->timezone('America/Argentina/Buenos_Aires');
+            $schedule->command('p2p:refresh-pendings')->dailyAt('07:00:00')->timezone('America/Argentina/Buenos_Aires');
 
-          $schedule->command('p2p:stage')->dailyAt('06:00:00')->timezone('America/Argentina/Buenos_Aires');
         } else {
             $schedule->command('p2p:refresh-pendings')->everyMinute();
             $schedule->command('p2p:stage')->everyFiveMinutes();
