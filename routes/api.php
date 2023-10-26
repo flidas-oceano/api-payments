@@ -1,10 +1,11 @@
 <?php
 
-use App\Http\Controllers\{ExcelController, PassportAuthController, RebillController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController, PlaceToPayController, PlaceToPayPaymentLinkController};
+use App\Http\Controllers\{ExcelController, PassportAuthController, RebillController, ContactController, StripePaymentController, LeadController, MethodContactController, ProfessionController, PurchasingProcessController, SpecialityController, ZohoController, ContractController, DatafastController, CronosController, FlowSPPController, PlaceToPayController, PlaceToPayPaymentLinkController};
 use App\Http\Controllers\MercadopagoController;
 use App\Http\Controllers\PaymentLinkController;
 use App\Http\Controllers\Webhooks\WebhookGatewayController;
 use App\Http\Controllers\Webhooks\CrmOrderSalesStep5ChargeDetailsController;
+use App\Models\FlowSPP;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
@@ -169,4 +170,11 @@ Route::prefix("/placetopay")->group(function () {
 
 });
 
+// /placetopay/notificationUpdate
+Route::prefix("/flow_spp")->group(function () {
+    Route::post('/create', [FlowSPPController::class, 'create']);
+    Route::get('/getById/{id}', [FlowSPPController::class, 'getById']);
+    Route::get('/getByContractId/{contractId}', [FlowSPPController::class, 'getByContractId']);
+    Route::post('/updateOrCreate', [FlowSPPController::class, 'updateOrCreate']);
 
+});

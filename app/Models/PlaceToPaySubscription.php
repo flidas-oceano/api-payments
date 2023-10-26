@@ -28,7 +28,6 @@ class PlaceToPaySubscription extends Model
         'reference',
         'type',
         'expiration_date',
-        'transactionId',
         'date_to_pay',
         'failed_payment_attempts'
     ];
@@ -55,7 +54,6 @@ class PlaceToPaySubscription extends Model
     {
         return $this->belongsTo(PlaceToPayTransaction::class, 'transactionId');
     }
-
 
     public static function incrementFailedPaymentAttempts($subscriptionId)
     {
