@@ -269,7 +269,7 @@ class PlaceToPayTransaction extends Model
                     }
 
         return [
-            "updateRequestSession" => $transaction,
+            "transaction" => $transaction,
             "payment" => $result, // You may uncomment this if needed
             "paymentDate" => now(),
             "result" => self::$messageOfPtp[$statusPayment],

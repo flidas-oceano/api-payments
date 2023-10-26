@@ -463,10 +463,10 @@ class PlaceToPayController extends Controller
 
             $type = $this->placeTopayService->isOneTimePaymentOrQuoteOrSession($request);
 
-            Log::channel("slack")->warning("NotificationUpdate: ".print_r($request->all(), true));
+
             if ($this->placeTopayService->validateSignature($request, $type)) {
             // if (true) {
-
+                Log::channel("slack")->warning("NotificationUpdate: ".print_r($request->all(), true));
                 if ($type !== 'quote' ) {
                     $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->first();
                     $session->update([

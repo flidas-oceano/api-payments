@@ -159,7 +159,7 @@ class PlaceToPaySubscription extends Model
             "returnUrl" => "https://msklatam.com/ec/gracias",
             "ipAddress" => $request->ip(),
             "userAgent" => $request->header('User-Agent'),
-            // "skipResult" => true
+            "skipResult" => true
         ];
     }
 
@@ -222,13 +222,7 @@ class PlaceToPaySubscription extends Model
     public function isPending($transaction, $subscriptionByRequestId)
     {
         if ($this->status === 'PENDING') {
-            //Actualizar la primer cuota que pasa de PENDING a APPROVED
             return $subscriptionByRequestId['payment'][0]['status']['status'] ?? $subscriptionByRequestId['status']['status'];
-
-            // if($paymentStatus === 'APPROVED'){
-
-            // }
-
         } else {
             return $this->status;
         }
