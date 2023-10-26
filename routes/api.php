@@ -176,5 +176,7 @@ Route::prefix("/flow_spp")->group(function () {
     Route::get('/getById/{id}', [FlowSPPController::class, 'getById']);
     Route::get('/getByContractId/{contractId}', [FlowSPPController::class, 'getByContractId']);
     Route::post('/updateOrCreate', [FlowSPPController::class, 'updateOrCreate']);
+    Route::get('/getZohoData/{id}', [FlowSPPController::class, 'getZohoData']);
+
 
 });

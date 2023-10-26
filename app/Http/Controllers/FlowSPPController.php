@@ -29,6 +29,10 @@ class FlowSPPController extends Controller
         $updatedOrCreated = FlowSPP::updateOrCreate(['id' => $dataFLowSPP['id']],$dataFLowSPP);
         return response()->json($updatedOrCreated);
     }
+    public function getZohoData($id){
+        $zohoData = FlowSPP::find($id)->getZohoData();
+        return response()->json($zohoData);
+    }
 }
 
 
