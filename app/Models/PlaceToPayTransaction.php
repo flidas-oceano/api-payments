@@ -72,6 +72,12 @@ class PlaceToPayTransaction extends Model
         'PENDING' => 'El estado de la peticion de la tarjeta estan pendientes.',
         'DESCONOCIDO' => 'Se desconoce el error. Mire los logs o consulte en PTP.',
     ];
+    public function isPaymentLink(){
+        if($this->paymentLinks()->first() !== null){
+            return true;
+        }
+        return false;
+    }
     public function flow_spp()
     {
         return $this->belongsTo(FlowSPP::class, 'flow_spp_id');
@@ -265,13 +271,13 @@ class PlaceToPayTransaction extends Model
             return ["sessionPtp" => $sessionSubscription, 'transaction' => $transaction];
         }
 
-                    if (isset($result['response']['status']['status'])) {
-                        $statusPayment = $result['response']['status']['status'];
-                    } elseif (isset($result['response']['payment'])) {
-                        $statusPayment = $result['response']['payment'][0]['status']['status'] ;
-                    } elseif (isset($result['message'])) {
-                        $statusPayment = $result['status'];
-                    }
+        if (isset($result['response']['status']['status'])) {
+            $statusPayment = $result['response']['status']['status'];
+        } elseif (isset($result['response']['payment'])) {
+            $statusPayment = $result['response']['payment'][0]['status']['status'] ;
+        } elseif (isset($result['message'])) {
+            $statusPayment = $result['status'];
+        }
 
         return [
             "transaction" => $transaction,
