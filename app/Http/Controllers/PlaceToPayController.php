@@ -360,7 +360,8 @@ class PlaceToPayController extends Controller
                     'expiration_date' => $data['expiration'],
                     'paymentData' => json_encode($payer, JSON_UNESCAPED_SLASHES),
                     'transaction_id' => null,
-                    'contract_id' => $request->contractId
+                    'contract_id' => $request->contractId,
+                    'contact_id' => $request->contactId ?? null
                 ]);
 
                 $getById = $this->placeTopayService->getByRequestId($result['requestId'], $cron = false, $isSubscription = true);
@@ -561,6 +562,23 @@ class PlaceToPayController extends Controller
         try {
             $sessionStatusInPtp = $this->placeTopayService->getByRequestId($session->requestId, false, $session->isSubscription());
             $paymentOfSession = $session->subscriptions->first();
+            if($paymentOfSession == null){
+
+                $session->update([
+                    'status' => $sessionStatusInPtp['status']['status'] ,
+                    'reason' => $sessionStatusInPtp['status']['reason'],
+                    'message' => $sessionStatusInPtp['status']['message'],
+                    'date' => $sessionStatusInPtp['status']['date'],
+                ]);
+
+                return response()->json([
+                    'reference' => $reference,
+                    'updateTo' => $sessionStatusInPtp['status']['status'],
+                    'ptpResponse' => $sessionStatusInPtp,
+                    'payment' => $sessionStatusInPtp['status']['status'],
+                    'paymentOfSession' => $paymentOfSession
+                ]);
+            }
 
             $session->update([
                 'status' => $session->isSubscription() ? $paymentOfSession->status : $session->status ,
@@ -568,6 +586,7 @@ class PlaceToPayController extends Controller
                 'message' => $sessionStatusInPtp['status']['message'],
                 'date' => $sessionStatusInPtp['status']['date'],
             ]);
+
 
             return response()->json([
                 'reference' => $reference,
