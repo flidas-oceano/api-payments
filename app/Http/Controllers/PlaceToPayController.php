@@ -554,17 +554,21 @@ class PlaceToPayController extends Controller
         }
     }
 
-    public function updateStatusSessionPUPaymentLink($reference)
+    public function updateStatusSessionSubscription($reference)
     {
         $session = PlaceToPayTransaction::where('reference', $reference)->first();
 
         try {
             $sessionStatusInPtp = $this->placeTopayService->getByRequestId($session->requestId, false, $session->isSubscription());
 
-            if ($session->isPaymentLink()) {
-                $session->paymentLinks()->first()->setStatus($sessionStatusInPtp['status']['status']);
+            if($session->isSubscription()){
+                $paymentOfSession = $session->subscriptions->first();
+            }else{
+                if ($session->isPaymentLink()) {
+                    $session->paymentLinks()->first()->setStatus($sessionStatusInPtp['status']['status']);
+                }
+                $paymentOfSession = $session;
             }
-            $paymentOfSession = $session;
 
             $session->update([
                 'status' => $sessionStatusInPtp['status']['status'] ,
@@ -578,41 +582,12 @@ class PlaceToPayController extends Controller
                 'updateTo' => $sessionStatusInPtp['status']['status'],
                 'ptpResponse' => $sessionStatusInPtp,
                 'payment' => $paymentOfSession->status,
-                'paymentOfSession' => $session
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json($e, 500);
-        }
-    }
-    public function updateStatusSessionSubscription($reference)
-    {
-        $session = PlaceToPayTransaction::where('reference', $reference)->first();
-
-        try {
-            $sessionStatusInPtp = $this->placeTopayService->getByRequestId($session->requestId, false, $session->isSubscription());
-            $paymentOfSession = $session->subscriptions->first();
-
-            $session->update([
-                'status' => $session->isSubscription() ? $paymentOfSession->status : $session->status ,
-                'reason' => $sessionStatusInPtp['status']['reason'],
-                'message' => $sessionStatusInPtp['status']['message'],
-                'date' => $sessionStatusInPtp['status']['date'],
-            ]);
-
-            return response()->json([
-                'reference' => $reference,
-                'updateTo' => $sessionStatusInPtp['status']['status'],
-                'ptpResponse' => $sessionStatusInPtp,
-                'payment' => $session->isSubscription() ? $paymentOfSession->status: $session->status,
                 'paymentOfSession' => $paymentOfSession
             ]);
 
         } catch (\Exception $e) {
             return response()->json($e, 500);
         }
-
-
     }
 
     // Esto es cuando se ejecuta el create sesion que es la creacion del pago unico. //Se paga a travez de la pasarela.
