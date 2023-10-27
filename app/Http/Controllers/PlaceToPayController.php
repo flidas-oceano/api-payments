@@ -554,6 +554,40 @@ class PlaceToPayController extends Controller
         }
     }
 
+    public function updateStatusSessionPUPaymentLink($reference)
+    {
+        $session = PlaceToPayTransaction::where('reference', $reference)->first();
+
+        try {
+            $sessionStatusInPtp = $this->placeTopayService->getByRequestId($session->requestId, false, $session->isSubscription());
+            if($session->isSubscription()){
+                $paymentOfSession = $session->subscriptions->first();
+            }else{
+                if ($session->isPaymentLink()) {
+                    $session->paymentLinks()->first()->setStatus($sessionStatusInPtp['status']['status']);
+                }
+                $paymentOfSession = $session;
+            }
+
+            $session->update([
+                'status' => $sessionStatusInPtp['status']['status'] ,
+                'reason' => $sessionStatusInPtp['status']['reason'],
+                'message' => $sessionStatusInPtp['status']['message'],
+                'date' => $sessionStatusInPtp['status']['date'],
+            ]);
+
+            return response()->json([
+                'reference' => $reference,
+                'updateTo' => $sessionStatusInPtp['status']['status'],
+                'ptpResponse' => $sessionStatusInPtp,
+                'payment' => $paymentOfSession->status,
+                'paymentOfSession' => $paymentOfSession
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json($e, 500);
+        }
+    }
     public function updateStatusSessionSubscription($reference)
     {
         $session = PlaceToPayTransaction::where('reference', $reference)->first();
