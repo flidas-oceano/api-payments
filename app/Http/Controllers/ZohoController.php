@@ -791,6 +791,7 @@ class ZohoController extends Controller
         $contact = $this->zohoService->fetchRecordWithValue('Contacts', 'id', $contactId, true);
 
         $answer['contact'] = $contact->getData();
+        $answer['contact']['id'] = $contactId;
 
         return response()->json($answer);
     }
