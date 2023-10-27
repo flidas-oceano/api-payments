@@ -360,8 +360,7 @@ class PlaceToPayController extends Controller
                     'expiration_date' => $data['expiration'],
                     'paymentData' => json_encode($payer, JSON_UNESCAPED_SLASHES),
                     'transaction_id' => null,
-                    'contract_id' => $request->contractId,
-                    'contact_id' => $request->contactId ?? null
+                    'contract_id' => $request->contractId
                 ]);
 
                 $getById = $this->placeTopayService->getByRequestId($result['requestId'], $cron = false, $isSubscription = true);
@@ -561,46 +560,34 @@ class PlaceToPayController extends Controller
 
         try {
             $sessionStatusInPtp = $this->placeTopayService->getByRequestId($session->requestId, false, $session->isSubscription());
-            $paymentOfSession = $session->subscriptions->first();
-            if($paymentOfSession == null){
 
-                $session->update([
-                    'status' => $sessionStatusInPtp['status']['status'] ,
-                    'reason' => $sessionStatusInPtp['status']['reason'],
-                    'message' => $sessionStatusInPtp['status']['message'],
-                    'date' => $sessionStatusInPtp['status']['date'],
-                ]);
-
-                return response()->json([
-                    'reference' => $reference,
-                    'updateTo' => $sessionStatusInPtp['status']['status'],
-                    'ptpResponse' => $sessionStatusInPtp,
-                    'payment' => $sessionStatusInPtp['status']['status'],
-                    'paymentOfSession' => $paymentOfSession
-                ]);
+            if($session->isSubscription()){
+                $paymentOfSession = $session->subscriptions->first();
+            }else{
+                if ($session->isPaymentLink()) {
+                    $session->paymentLinks()->first()->setStatus($sessionStatusInPtp['status']['status']);
+                }
+                $paymentOfSession = $session;
             }
 
             $session->update([
-                'status' => $session->isSubscription() ? $paymentOfSession->status : $session->status ,
+                'status' => $sessionStatusInPtp['status']['status'] ,
                 'reason' => $sessionStatusInPtp['status']['reason'],
                 'message' => $sessionStatusInPtp['status']['message'],
                 'date' => $sessionStatusInPtp['status']['date'],
             ]);
 
-
             return response()->json([
                 'reference' => $reference,
                 'updateTo' => $sessionStatusInPtp['status']['status'],
                 'ptpResponse' => $sessionStatusInPtp,
-                'payment' => $session->isSubscription() ? $paymentOfSession->status: $session->status,
+                'payment' => $paymentOfSession->status,
                 'paymentOfSession' => $paymentOfSession
             ]);
 
         } catch (\Exception $e) {
             return response()->json($e, 500);
         }
-
-
     }
 
     // Esto es cuando se ejecuta el create sesion que es la creacion del pago unico. //Se paga a travez de la pasarela.
