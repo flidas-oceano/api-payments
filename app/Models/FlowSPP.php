@@ -32,7 +32,6 @@ class FlowSPP extends Model
     {
         return $this->hasMany(PlaceToPayTransaction::class, 'flow_spp_id');
     }
-
     public static function getFlowSPPFromRequest($request)
     {
         return [
@@ -40,11 +39,18 @@ class FlowSPP extends Model
             'contract_id' => $request->contract_id,
             'contract_so' => $request->contract_so,
             'reference' => $request->reference,
-            'zohoData' => $request->zohoData,
+            'zohoData' => json_encode($request->zohoData, JSON_UNESCAPED_SLASHES)
         ];
     }
-
-
+    public  function saveZohoData($flow_spp_id, $zohoData){
+        $this->update(['id' => $flow_spp_id],[
+            'zohoData' => json_encode($zohoData, JSON_UNESCAPED_SLASHES)
+        ]);
+    }
+    public function getZohoData()
+    {
+        return json_decode($this->zohoData);
+    }
 }
 
 
