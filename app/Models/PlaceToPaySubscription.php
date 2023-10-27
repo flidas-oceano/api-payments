@@ -29,7 +29,8 @@ class PlaceToPaySubscription extends Model
         'type',
         'expiration_date',
         'date_to_pay',
-        'failed_payment_attempts'
+        'failed_payment_attempts',
+        'transactionId'
     ];
     private static $formAttributes = [
         'id',

@@ -141,11 +141,6 @@ class PlaceToPayService
             /** @var PlaceToPaySubscription $firstQuote */
             $isPendingQuote = $firstQuote->isPending($transaction, $subscriptionByRequestId);
 
-            /*
-              return $this->isApprovedPayment($transaction,$subscriptionByRequestId);
-             *
-             * */
-
             if (is_array($isPendingQuote)) {
                 $result = $this->pagarCuotaSuscripcion($transaction, $firstQuote->nro_quote, $renewSuscription);
                 return $result;
