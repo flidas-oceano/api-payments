@@ -110,7 +110,7 @@ class PlaceToPayPaymentLinkController extends Controller
 
             //obtener datos personales
             $ptpTransaction = PlaceToPayTransaction::where('requestId', $request['requestId'])->first();
-            $objetoStdClass = $this->placeToPayService->getByRequestId($request['requestId'], false, true);
+            $objetoStdClass = $this->placeToPayService->getByRequestId($request['requestId'], false, $ptpTransaction->isSubscription());
             // $objetoStdClass = $placeToPayService->getByRequestId(677217);
             // Convertir el objeto stdClass en un objeto PHP
             $transactionByRequestId = json_decode(json_encode($objetoStdClass), false);
