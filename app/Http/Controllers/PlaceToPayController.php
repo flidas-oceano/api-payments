@@ -560,14 +560,11 @@ class PlaceToPayController extends Controller
 
         try {
             $sessionStatusInPtp = $this->placeTopayService->getByRequestId($session->requestId, false, $session->isSubscription());
-            if($session->isSubscription()){
-                $paymentOfSession = $session->subscriptions->first();
-            }else{
-                if ($session->isPaymentLink()) {
-                    $session->paymentLinks()->first()->setStatus($sessionStatusInPtp['status']['status']);
-                }
-                $paymentOfSession = $session;
+
+            if ($session->isPaymentLink()) {
+                $session->paymentLinks()->first()->setStatus($sessionStatusInPtp['status']['status']);
             }
+            $paymentOfSession = $session;
 
             $session->update([
                 'status' => $sessionStatusInPtp['status']['status'] ,
@@ -581,7 +578,7 @@ class PlaceToPayController extends Controller
                 'updateTo' => $sessionStatusInPtp['status']['status'],
                 'ptpResponse' => $sessionStatusInPtp,
                 'payment' => $paymentOfSession->status,
-                'paymentOfSession' => $paymentOfSession
+                'paymentOfSession' => $session
             ]);
 
         } catch (\Exception $e) {
