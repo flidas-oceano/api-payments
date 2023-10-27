@@ -39,6 +39,7 @@ class PlaceToPayTransaction extends Model
         'paymentData',
         'transaction_id',
         'contract_id',
+        'contact_id',
         'flow_spp_id'
     ];
     private static $formAttributes = [
