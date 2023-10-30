@@ -28,8 +28,8 @@ class ContificoInvoiceDto
         $this->orderNumber = $data['order_number'] ?? null;
         $this->invoiceDate = $data['invoice_date'] ?? null;
         $this->methodOfPayment = $data['method_payment'] ?? null;
-        $this->subTotal = $data['sub_total'] ?? 0;
-        $this->subTotalIva = $data['sub_total_iva'] ?? 0;
+        $this->subTotal = $data['sub_total_0'] ?? 0;
+        $this->subTotalIva = $data['sub_total_12'] ?? 0;
         $this->shipping = $data['shipping'] ?? 0;
         $this->iva = $data['iva'] ?? 0;
         $this->adjust = $data['adjust'] ?? 0;
