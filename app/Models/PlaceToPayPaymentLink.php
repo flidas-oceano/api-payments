@@ -26,24 +26,13 @@ class PlaceToPayPaymentLink extends Model
 
     protected $status = [
         'REJECTED' => 'Pago Rechazado',
-        'PENDING' => 'penfing',
+        'PENDING' => 'pending',
         'APPROVED' => 'Contrato Aprobado'
     ];
     public function setStatus($statusPay){
-        return $this->update(['status' => $this->status[$statusPay]]);
+        //cuando este aprobado le sumo a la transaction un paid
+        $this->update(['status' => $this->status[$statusPay]]);
     }
 
-    public function rejectPaymentLink()
-    {
-        $this->update(['status' => 'Pago Rechazado']);
-    }
-    public function leavePendingPaymentlink()
-    {
-        $this->update(['status' => 'penfing']);
-    }
-    public function approvePaymentlink()
-    {
-        $this->update(['status' => 'Contrato Aprobado']);
-    }
 }
 

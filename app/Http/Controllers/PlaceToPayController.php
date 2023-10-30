@@ -184,25 +184,35 @@ class PlaceToPayController extends Controller
             $transaction->save();
 
 
+
             if (isset($isApproveSession['statusPayment']) && $isApproveSession['statusPayment'] == 'PENDING') {
-                    return response()->json([
-                        "result" => $isApproveSession['result'],
-                        "statusPayment" => $isApproveSession['statusPayment'],
-                        "payment" => $isApproveSession['payment'],
-                        "statusSession" => $statusSession,
-                        "sessionPTP" => $sessionSubscription,
-                        "transaction" => $transaction,
-                    ]);
+                if ( $transaction->type === 'payment' ){
+                    $transaction->update(['installments_paid' => -1]);
+                }
+
+                return response()->json([
+                    "result" => $isApproveSession['result'],
+                    "statusPayment" => $isApproveSession['statusPayment'],
+                    "payment" => $isApproveSession['payment'],
+                    "statusSession" => $statusSession,
+                    "sessionPTP" => $sessionSubscription,
+                    "transaction" => $transaction,
+                ]);
             }
 
             if (isset($isApproveSession['statusPayment']) && $isApproveSession['statusPayment'] == 'APPROVED') {
-                if ( $transaction->type === 'payment' )
+                if ( $transaction->type === 'payment' ){
+                    $transaction->update(['installments_paid' => 1]);
                     return response()->json($isApproveSession);
+                }
                 $this->placeTopayService->createRemainingInstallments($isApproveSession['paymentDate'], $transaction);
                 return response()->json($isApproveSession);
             }
 
             if (isset($isApproveSession['statusPayment']) && $isApproveSession['statusPayment'] == 'REJECTED') {
+                if ( $transaction->type === 'payment' ){
+                    $transaction->update(['installments_paid' => -1]);
+                }
                 return response()->json([
                     "result" => $isApproveSession['result'],
                     "statusPayment" => $isApproveSession['statusPayment'],
@@ -487,7 +497,14 @@ class PlaceToPayController extends Controller
 
                     }
 
-                    Http::post(env("PTP_ZOHO_FLOW"),[$request, $session]);
+
+
+                    $body = [
+                        'quote'=> null,
+                        'transaction'=> $quote->transaction->toArray()
+                    ];
+
+                    Http::post(env("PTP_ZOHO_FLOW"),$body);
 
                 }
                 if ( $type === 'quote' ){
@@ -522,8 +539,13 @@ class PlaceToPayController extends Controller
                             PlaceToPayTransaction::suspend($quote->transaction);
                         }
                     }
+                    $body = [
+                        'quote'=> $quote->toArray(),
+                        'transaction'=> $quote->transaction->toArray()
+                    ];
 
-                    Http::post(env("PTP_ZOHO_FLOW"),[$request, $subscriptionFromPTP, $quote]);
+                    //madnar como arreglo
+                    Http::post(env("PTP_ZOHO_FLOW"),$body);
                 }
 
                 return response()->json([
@@ -566,6 +588,12 @@ class PlaceToPayController extends Controller
             }else{
                 if ($session->isPaymentLink()) {
                     $session->paymentLinks()->first()->setStatus($sessionStatusInPtp['status']['status']);
+                    if($sessionStatusInPtp['status']['status'] === 'APPROVED'){
+                        $session->update(['installments_paid' => 1]);
+                    }else{
+                        $session->update(['installments_paid' => -1]);
+                    }
+
                 }
                 $paymentOfSession = $session;
             }
