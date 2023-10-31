@@ -885,13 +885,13 @@ class PlaceToPayService
         $contactEntityId = $saleZoho['Contact_Name']->getEntityId();
 
         $dataUpdate = Contract::mappingDataContract($request, 'Placetopay');
-        $dataUpdate['Paso_5_Detalle_pagos'] = $zohoService->buildTablePaymentDetailNew($request);
         $dataUpdateContact = Contact::mappingDataContact($request, 'Placetopay');
 
         $updateContract = $zohoService->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
         $updateContact = $zohoService->updateRecord('Contacts', $dataUpdateContact, $contactEntityId, true);
-
+        $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $quote);
         // $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscriptionToPay);
+
     }
 
 }
