@@ -488,8 +488,16 @@ class PlaceToPayController extends Controller
                     ]);
 
                     if($session->isOneTimePayment()){
-                        if ($request['status']['status'] === "APPROVED") {
+
+                        if($session->isPaymentLink()){
+                            $session->paymentLinks()->first()->setStatus($request['status']['status']);
+                        }
+
+                        if($request['status']['status'] === 'APPROVED'){
+                            $session->updateInstallmentsPaidToOne();
                             $this->placeTopayService->updateZoho($session, $quote = null);
+                        }else{
+                            $session->updateInstallmentsPaidToMinusOne();
                         }
                     }
 
@@ -497,11 +505,9 @@ class PlaceToPayController extends Controller
 
                     }
 
-
-
                     $body = [
                         'quote'=> null,
-                        'transaction'=> $quote->transaction->toArray()
+                        'transaction'=> $session->toArray()
                     ];
 
                     Http::post(env("PTP_ZOHO_FLOW"),$body);
