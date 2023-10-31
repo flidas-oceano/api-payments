@@ -439,7 +439,8 @@ class PlaceToPayController extends Controller
                     'type' => "payment",
                     'expiration_date' => $data['expiration'],
                     'paymentData' => json_encode($payer, JSON_UNESCAPED_SLASHES),
-                    'contract_id' => $request->contractId
+                    'contract_id' => $request->contractId,
+                    'contact_id' => $request->contactId,
                 ]);
                 $getById = $this->placeTopayService->getByRequestId($result['requestId']);
                 $placeToPayTransaction = PlaceToPayTransaction::where(["requestId" => $result['requestId']])
