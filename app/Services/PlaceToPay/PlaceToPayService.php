@@ -683,7 +683,10 @@ class PlaceToPayService
                 }
                 if ($session->isOneTimePayment()) {
                     if ($statusSessionPTP === "APPROVED") {
-                        $session->update(['installments_paid' => 1]);
+                        if($session->isPaymentLink()){
+                            $session->paymentLinks()->first()->setStatus($sessionFromPTP['status']['status']);
+                        }
+                        $session->updateInstallmentsPaidToOne();
 
                         $zohoService = new ZohoService($this->zohoClient);
 
@@ -704,9 +707,25 @@ class PlaceToPayService
 
                     //Si pasa a REJECTED cancelar cardToken
                     if ($statusSessionPTP === "REJECTED") {
-                        $session->update(['installments_paid' => -1]);
+                        if($session->isPaymentLink()){
+                            $session->paymentLinks()->first()->setStatus($sessionFromPTP['status']['status']);
+                        }
+                        $session->updateInstallmentsPaidToMinusOne();
                     }
-
+                    if (isset($sessionFromPTP['payment'][0]['status']['status'])) {//rechazado manualmnente viene por el payment
+                        if ($sessionFromPTP['payment'][0]['status']['status'] === "REJECTED") {
+                            $session->update([
+                                'status' => $sessionFromPTP['payment'][0]['status']['status'],
+                                'reason' => $sessionFromPTP['payment'][0]['status']['reason'],
+                                'message' => $sessionFromPTP['payment'][0]['status']['message'],
+                                'date' => $sessionFromPTP['payment'][0]['status']['date'],
+                            ]);
+                            if($session->isPaymentLink()){
+                                $session->paymentLinks()->first()->setStatus($sessionFromPTP['payment'][0]['status']['status']);
+                            }
+                            $session->updateInstallmentsPaidToMinusOne();
+                        }
+                    }
                     continue;
                 }
 
