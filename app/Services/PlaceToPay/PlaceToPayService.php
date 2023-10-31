@@ -682,6 +682,34 @@ class PlaceToPayService
                     continue;
                 }
                 if ($session->isOneTimePayment()) {
+                    if ($statusSessionPTP === "APPROVED") {
+                        $session->update(['installments_paid' => 1]);
+
+                        $zohoService = new ZohoService($this->zohoClient);
+
+                        $contractDataToZoho = (object) [
+                            "is_suscri" => $session->isSubscription(),
+                            "is_advanceSuscription" => boolval($session->first_installment),
+                            "requestId" => $session->requestId
+                        ];
+
+                        $saleZoho = $zohoService->getContractZoho($session->contract_id)->getData();
+                        $contactEntityId = $saleZoho['Contact_Name']->getEntityId();
+
+                        $dataToContract = Contract::mappingDataContract($contractDataToZoho,'Placetopay');
+                        $dataToContact = Contact::mappingDataContact($contractDataToZoho,'Placetopay');
+
+                        $contractUpdated = $zohoService->updateRecord('Sales_Orders',$dataToContract,$session->contract_id,true);
+                        $contactUpdated = $zohoService->updateRecord('Contacts',$dataToContact,$session->contract_id,true);
+                        $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, null);
+
+                    }
+
+                    //Si pasa a REJECTED cancelar cardToken
+                    if ($statusSessionPTP === "REJECTED") {
+                        $session->update(['installments_paid' => -1]);
+                    }
+
                     continue;
                 }
 
@@ -857,13 +885,13 @@ class PlaceToPayService
         $contactEntityId = $saleZoho['Contact_Name']->getEntityId();
 
         $dataUpdate = Contract::mappingDataContract($request, 'Placetopay');
-        $dataUpdate['Paso_5_Detalle_pagos'] = $zohoService->buildTablePaymentDetailNew($request);
         $dataUpdateContact = Contact::mappingDataContact($request, 'Placetopay');
 
         $updateContract = $zohoService->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
         $updateContact = $zohoService->updateRecord('Contacts', $dataUpdateContact, $contactEntityId, true);
-
+        $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $quote);
         // $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscriptionToPay);
+
     }
 
 }

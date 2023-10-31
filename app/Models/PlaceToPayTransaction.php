@@ -73,6 +73,12 @@ class PlaceToPayTransaction extends Model
         'PENDING' => 'El estado de la peticion de la tarjeta estan pendientes.',
         'DESCONOCIDO' => 'Se desconoce el error. Mire los logs o consulte en PTP.',
     ];
+    public function updateInstallmentsPaidToOne(){
+        $this->update(['installments_paid' => 1]);
+    }
+    public function updateInstallmentsPaidToMinusOne(){
+        $this->update(['installments_paid' => -1]);
+    }
     public function isPaymentLink(){
         if($this->paymentLinks()->first() !== null){
             return true;
