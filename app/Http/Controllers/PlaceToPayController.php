@@ -598,6 +598,7 @@ class PlaceToPayController extends Controller
                 $paymentOfSession = $session;
             }
 
+
             $session->update([
                 'status' => $sessionStatusInPtp['status']['status'] ,
                 'reason' => $sessionStatusInPtp['status']['reason'],
@@ -605,11 +606,14 @@ class PlaceToPayController extends Controller
                 'date' => $sessionStatusInPtp['status']['date'],
             ]);
 
+            //Cuando el usuario "NO DESEA CONTINUAR"
+            $statusPayment = isset($paymentOfSession) ? $paymentOfSession->status : null;
+
             return response()->json([
                 'reference' => $reference,
                 'updateTo' => $sessionStatusInPtp['status']['status'],
                 'ptpResponse' => $sessionStatusInPtp,
-                'payment' => $paymentOfSession->status,
+                'payment' =>  $statusPayment,
                 'paymentOfSession' => $paymentOfSession
             ]);
 
