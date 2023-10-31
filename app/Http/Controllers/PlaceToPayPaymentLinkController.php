@@ -163,8 +163,9 @@ class PlaceToPayPaymentLinkController extends Controller
             $paymentLinkPTP = PlaceToPayPaymentLink::where('contract_entity_id', $saleId)->first();
 
             if($paymentLinkPTP->transaction->isOneTimePayment()){
-                $paymentOfLink = $paymentLinkPTP->transaction->installments_paid;
-                if($paymentOfLink !== null){
+                $paymentOfLink = null;
+                $installments_paid = $paymentLinkPTP->transaction->installments_paid;
+                if($installments_paid !== null && $installments_paid !== 0 ){
                     $paymentOfLink = $paymentLinkPTP->transaction;
                 }
             }else {
