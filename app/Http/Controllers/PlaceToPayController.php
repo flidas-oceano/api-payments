@@ -619,8 +619,8 @@ class PlaceToPayController extends Controller
                 'reference' => $reference,
                 'updateTo' => $sessionStatusInPtp['status']['status'],
                 'ptpResponse' => $sessionStatusInPtp,
-                'payment' =>  $statusPayment,
-                'paymentOfSession' => $paymentOfSession
+                'payment' =>  $statusPayment ?? $session,
+                'paymentOfSession' => $paymentOfSession ?? $session
             ]);
 
         } catch (\Exception $e) {

@@ -169,6 +169,9 @@ class PlaceToPayPaymentLinkController extends Controller
                 }
             }else {
                 $paymentOfLink = $paymentLinkPTP->transaction->subscriptions->first();
+                if($paymentOfLink === null && $paymentLinkPTP->transaction->status === 'REJECTED'){
+                    $paymentOfLink = $paymentLinkPTP->transaction;
+                }
             }
 
             return response()->json(["payer" => $paymentLinkPTP->transaction->paymentData, "checkout" => $paymentLinkPTP, "payment" => $paymentOfLink]);
