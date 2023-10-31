@@ -25,6 +25,14 @@ class PlaceToPayController extends Controller
     public $secret_su = "";
     public $placeTopayService = null;
 
+    public $statusEmail = [
+        'FAILED' => 'Fallido',
+        'APPROVED' => 'Aprobado',
+        'REJECTED' => 'Rechazado',
+        'PENDING' => 'Pendiente',
+        'DESCONOCIDO' => 'Desconocido',
+    ];
+
     public $status = [
         'FAILED' => 400,
         'APPROVED' => 200,
@@ -506,13 +514,20 @@ class PlaceToPayController extends Controller
                     if($session->isSubscription()){//deberia ser una requestSubscription
 
                     }
-
+                    $sessionBody = $session->toArray();
+                    $paymentDataObject = json_decode($sessionBody['paymentData']);
+                    $sessionBody['paymentData'] = $paymentDataObject;
+                    $sessionBody['status'] = $this->statusEmail[$request['status']['status']];
                     $body = [
-                        'quote'=> null,
-                        'transaction'=> $session->toArray()
+                        'body' => [
+                            'quote'=> null,
+                            'transaction'=> $sessionBody
+                        ]
                     ];
+                    $jsonBody = json_encode($body);
 
-                    Http::post(env("PTP_ZOHO_FLOW"),$body);
+                    // return $jsonBody;
+                    $response = Http::post(env("PTP_ZOHO_FLOW"), $jsonBody);
 
                 }
                 if ( $type === 'quote' ){
@@ -547,13 +562,25 @@ class PlaceToPayController extends Controller
                             PlaceToPayTransaction::suspend($quote->transaction);
                         }
                     }
-                    $body = [
-                        'quote'=> $quote->toArray(),
-                        'transaction'=> $quote->transaction->toArray()
-                    ];
 
-                    //madnar como arreglo
-                    Http::post(env("PTP_ZOHO_FLOW"),$body);
+                    $quoteBody = $quote->toArray();
+                    $quote['status'] = $this->statusEmail[$request['status']['status']];
+
+                    $sessionBody = $quote->transaction->toArray();
+                    $paymentDataObject = json_decode($sessionBody['paymentData']);
+                    $sessionBody['paymentData'] = $paymentDataObject;
+                    $sessionBody['status'] = $this->statusEmail[$request['status']['status']];
+
+                    $body = [
+                        'body'=> [
+                            'quote'=> $quoteBody,
+                            'transaction'=> $sessionBody
+                        ]
+                    ];
+                    $jsonBody = json_encode($body);
+                    // return response()->json($jsonBody);
+
+                    $response = Http::post(env("PTP_ZOHO_FLOW"), $jsonBody);
                 }
 
                 return response()->json([
@@ -605,7 +632,6 @@ class PlaceToPayController extends Controller
                 }
                 $paymentOfSession = $session;
             }
-
 
             $session->update([
                 'status' => $sessionStatusInPtp['status']['status'] ,
