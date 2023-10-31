@@ -693,14 +693,11 @@ class PlaceToPayService
                             "requestId" => $session->requestId
                         ];
 
-                        $saleZoho = $zohoService->getContractZoho($session->contract_id)->getData();
-                        $contactEntityId = $saleZoho['Contact_Name']->getEntityId();
-
                         $dataToContract = Contract::mappingDataContract($contractDataToZoho,'Placetopay');
                         $dataToContact = Contact::mappingDataContact($contractDataToZoho,'Placetopay');
 
                         $contractUpdated = $zohoService->updateRecord('Sales_Orders',$dataToContract,$session->contract_id,true);
-                        $contactUpdated = $zohoService->updateRecord('Contacts',$dataToContact,$session->contract_id,true);
+                        $contactUpdated = $zohoService->updateRecord('Contacts',$dataToContact,$session->contact_id,true);
                         $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, null);
 
                     }
@@ -768,7 +765,7 @@ class PlaceToPayService
                     $dataToContact = Contact::mappingDataContact($contractDataToZoho,'Placetopay');
 
                     $contractUpdated = $zohoService->updateRecord('Sales_Orders',$dataToContract,$session->contract_id,true);
-                    $contactUpdated = $zohoService->updateRecord('Contacts',$dataToContact,$session->contract_id,true);
+                    $contactUpdated = $zohoService->updateRecord('Contacts',$dataToContact,$session->contact_id,true);
                     $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscription);
 
 
@@ -881,14 +878,11 @@ class PlaceToPayService
 
         $zohoService = new ZohoService($this->zohoClient);
 
-        $saleZoho = $zohoService->getContractZoho($request->contractId)->getData();
-        $contactEntityId = $saleZoho['Contact_Name']->getEntityId();
-
         $dataUpdate = Contract::mappingDataContract($request, 'Placetopay');
         $dataUpdateContact = Contact::mappingDataContact($request, 'Placetopay');
 
         $updateContract = $zohoService->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);
-        $updateContact = $zohoService->updateRecord('Contacts', $dataUpdateContact, $contactEntityId, true);
+        $updateContact = $zohoService->updateRecord('Contacts', $dataUpdateContact, $session->contact_id, true);
         $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $quote);
         // $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscriptionToPay);
 
