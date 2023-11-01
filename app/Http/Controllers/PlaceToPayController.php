@@ -606,7 +606,6 @@ class PlaceToPayController extends Controller
                     }else{
                         $session->update(['installments_paid' => -1]);
                     }
-                    $this->placeTopayService->sendEmailOneTimePayment($session);
                 }
                 $paymentOfSession = $session;
             }
