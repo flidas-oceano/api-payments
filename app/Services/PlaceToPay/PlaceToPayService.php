@@ -25,6 +25,13 @@ class PlaceToPayService
     private $secret_su;
     private $zohoClient;
 
+    public $statusEmail = [
+        'FAILED' => 'Fallido',
+        'APPROVED' => 'Aprobado',
+        'REJECTED' => 'Rechazado',
+        'PENDING' => 'Pendiente',
+        'DESCONOCIDO' => 'Desconocido',
+    ];
 
     public function __construct(ZohoClient $client)
     {
@@ -905,6 +912,47 @@ class PlaceToPayService
         $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $quote);
         // $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscriptionToPay);
 
+    }
+    public function buildBodyOneTimePayment($session){
+        $sessionBody = $session;
+        $paymentDataObject = json_decode($sessionBody['paymentData']);
+        $sessionBody['paymentData'] = $paymentDataObject;
+
+        $carbonDate = Carbon::parse($session->date);
+        $sessionBody['date'] = $carbonDate->format('d/m/Y H:i');
+
+        $sessionBody['status'] = $this->statusEmail[$session->status];
+        $body = [
+            'body' => [
+                'quote'=> null,
+                'transaction'=> $sessionBody
+            ]
+        ];
+        // return $body;
+        $response = Http::post(env("PTP_ZOHO_FLOW"), $body);
+    }
+    public function sendEmailSubscriptionPayment($quote){
+
+        $quoteBody = $quote;
+        $quote['status'] = $this->statusEmail[$quote->status];
+
+        $sessionBody = $quote->transaction;
+
+        $carbonDate = Carbon::parse($sessionBody->date);
+        $sessionBody['date'] = $carbonDate->format('d/m/Y H:i');
+
+        $paymentDataObject = json_decode($sessionBody['paymentData']);
+        $sessionBody['paymentData'] = $paymentDataObject;
+        $sessionBody['status'] = $this->statusEmail[$quote->status];
+
+        $body = [
+            'body'=> [
+                'quote'=> $quoteBody,
+                'transaction'=> $sessionBody
+            ]
+        ];
+
+        $response = Http::post(env("PTP_ZOHO_FLOW"), $body);
     }
 
 }
