@@ -636,6 +636,7 @@ class PlaceToPayController extends Controller
                     $session->paymentLinks()->first()->setStatus($sessionStatusInPtp['status']['status']);
                     if($sessionStatusInPtp['status']['status'] === 'APPROVED'){
                         $session->update(['installments_paid' => 1]);
+                        $this->placeTopayService->buildBodyOneTimePayment($session);
                     }else{
                         $session->update(['installments_paid' => -1]);
                     }
