@@ -517,6 +517,10 @@ class PlaceToPayController extends Controller
                     $sessionBody = $session;
                     $paymentDataObject = json_decode($sessionBody['paymentData']);
                     $sessionBody['paymentData'] = $paymentDataObject;
+
+                    $carbonDate = Carbon::parse($session->date);
+                    $sessionBody['date'] = $carbonDate->format('d/m/Y H:i');
+
                     $sessionBody['status'] = $this->statusEmail[$request['status']['status']];
                     $body = [
                         'body' => [
@@ -525,8 +529,6 @@ class PlaceToPayController extends Controller
                         ]
                     ];
 
-                    // return $jsonBody;
-                    // $response = Http::post(env("PTP_ZOHO_FLOW_TEST"), $body);
                     $response = Http::post(env("PTP_ZOHO_FLOW"), $body);
                 }
                 if ( $type === 'quote' ){
@@ -576,8 +578,7 @@ class PlaceToPayController extends Controller
                             'transaction'=> $sessionBody
                         ]
                     ];
-                    // return response()->json($jsonBody);
-                    // $response = Http::post(env("PTP_ZOHO_FLOW_TEST"), $body);
+
                     $response = Http::post(env("PTP_ZOHO_FLOW"), $body);
                 }
 
