@@ -514,7 +514,7 @@ class PlaceToPayController extends Controller
                     if($session->isSubscription()){//deberia ser una requestSubscription
 
                     }
-                    $sessionBody = $session->toArray();
+                    $sessionBody = $session;
                     $paymentDataObject = json_decode($sessionBody['paymentData']);
                     $sessionBody['paymentData'] = $paymentDataObject;
                     $sessionBody['status'] = $this->statusEmail[$request['status']['status']];
@@ -524,11 +524,10 @@ class PlaceToPayController extends Controller
                             'transaction'=> $sessionBody
                         ]
                     ];
-                    $jsonBody = json_encode($body);
 
                     // return $jsonBody;
-                    $response = Http::post(env("PTP_ZOHO_FLOW"), $jsonBody);
-
+                    // $response = Http::post(env("PTP_ZOHO_FLOW_TEST"), $body);
+                    $response = Http::post(env("PTP_ZOHO_FLOW"), $body);
                 }
                 if ( $type === 'quote' ){
                     $subscriptionFromPTP = $this->placeTopayService->getByRequestId($request->requestId, false, true);
@@ -563,10 +562,10 @@ class PlaceToPayController extends Controller
                         }
                     }
 
-                    $quoteBody = $quote->toArray();
+                    $quoteBody = $quote;
                     $quote['status'] = $this->statusEmail[$request['status']['status']];
 
-                    $sessionBody = $quote->transaction->toArray();
+                    $sessionBody = $quote->transaction;
                     $paymentDataObject = json_decode($sessionBody['paymentData']);
                     $sessionBody['paymentData'] = $paymentDataObject;
                     $sessionBody['status'] = $this->statusEmail[$request['status']['status']];
@@ -577,10 +576,9 @@ class PlaceToPayController extends Controller
                             'transaction'=> $sessionBody
                         ]
                     ];
-                    $jsonBody = json_encode($body);
                     // return response()->json($jsonBody);
-
-                    $response = Http::post(env("PTP_ZOHO_FLOW"), $jsonBody);
+                    // $response = Http::post(env("PTP_ZOHO_FLOW_TEST"), $body);
+                    $response = Http::post(env("PTP_ZOHO_FLOW"), $body);
                 }
 
                 return response()->json([
