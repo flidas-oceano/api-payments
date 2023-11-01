@@ -222,13 +222,12 @@ class PlaceToPayController extends Controller
             //Cuando la session esta APRROVED.
             $isApproveSession = PlaceToPayTransaction::checkApprovedSessionTryPay($sessionSubscription, $transaction, $this->placeTopayService, $request->renewSuscription);
 
-            $transaction->save();
-
-
-
             if (isset($isApproveSession['statusPayment']) && $isApproveSession['statusPayment'] == 'PENDING') {
                 if ( $transaction->type === 'payment' ){
                     $transaction->update(['installments_paid' => -1]);
+                    $this->placeTopayService->sendEmailOneTimePayment($transaction);
+                }else{
+                    $this->placeTopayService->sendEmailSubscriptionPayment($transaction);
                 }
 
                 return response()->json([
@@ -512,7 +511,7 @@ class PlaceToPayController extends Controller
     public function notificationUpdate(Request $request)
     {
         try{
-            // Log::channel('placetopay')->info("Payment request failed: Reason: $errorReason, Message: $errorMessage, Date: $errorDate, Data: $dataAsString");
+            Log::info("notificationUpdate request: Reason: ". $request);
 
             $type = $this->placeTopayService->isOneTimePaymentOrQuoteOrSession($request);
 
@@ -542,25 +541,17 @@ class PlaceToPayController extends Controller
                         }else{
                             $session->updateInstallmentsPaidToMinusOne();
                         }
+                        $this->placeTopayService->sendEmailOneTimePayment($session);
                     }
 
                     if($session->isSubscription()){//deberia ser una requestSubscription
 
                     }
-                    $sessionBody = $session->toArray();
-                    $paymentDataObject = json_decode($sessionBody['paymentData']);
-                    $sessionBody['paymentData'] = $paymentDataObject;
-                    $sessionBody['status'] = $this->statusEmail[$request['status']['status']];
-                    $body = [
-                        'body' => [
-                            'quote'=> null,
-                            'transaction'=> $sessionBody
-                        ]
-                    ];
-                    $jsonBody = json_encode($body);
 
-                    // return $jsonBody;
-                    $response = Http::post(env("PTP_ZOHO_FLOW"), $jsonBody);
+                    // use Carbon\Carbon;
+                    // $date = PlaceToPayTransaction::find(6)->date;
+                    // $carbonDate = Carbon::parse($date);
+                    // $sessionBody['date'] = $carbonDate->format('d/m/Y H:i');
 
                 }
                 if ( $type === 'quote' ){
@@ -596,24 +587,7 @@ class PlaceToPayController extends Controller
                         }
                     }
 
-                    $quoteBody = $quote->toArray();
-                    $quote['status'] = $this->statusEmail[$request['status']['status']];
-
-                    $sessionBody = $quote->transaction->toArray();
-                    $paymentDataObject = json_decode($sessionBody['paymentData']);
-                    $sessionBody['paymentData'] = $paymentDataObject;
-                    $sessionBody['status'] = $this->statusEmail[$request['status']['status']];
-
-                    $body = [
-                        'body'=> [
-                            'quote'=> $quoteBody,
-                            'transaction'=> $sessionBody
-                        ]
-                    ];
-                    $jsonBody = json_encode($body);
-                    // return response()->json($jsonBody);
-
-                    $response = Http::post(env("PTP_ZOHO_FLOW"), $jsonBody);
+                    $this->placeTopayService->sendEmailSubscriptionPayment($quote);
                 }
 
                 return response()->json([
@@ -651,6 +625,13 @@ class PlaceToPayController extends Controller
         try {
             $sessionStatusInPtp = $this->placeTopayService->getByRequestId($session->requestId, false, $session->isSubscription());
 
+            $session->update([
+                'status' => $sessionStatusInPtp['status']['status'] ,
+                'reason' => $sessionStatusInPtp['status']['reason'],
+                'message' => $sessionStatusInPtp['status']['message'],
+                'date' => $sessionStatusInPtp['status']['date'],
+            ]);
+
             if($session->isSubscription()){
                 $paymentOfSession = $session->subscriptions->first();
             }else{
@@ -661,17 +642,9 @@ class PlaceToPayController extends Controller
                     }else{
                         $session->update(['installments_paid' => -1]);
                     }
-
                 }
                 $paymentOfSession = $session;
             }
-
-            $session->update([
-                'status' => $sessionStatusInPtp['status']['status'] ,
-                'reason' => $sessionStatusInPtp['status']['reason'],
-                'message' => $sessionStatusInPtp['status']['message'],
-                'date' => $sessionStatusInPtp['status']['date'],
-            ]);
 
             //Cuando el usuario "NO DESEA CONTINUAR"
             $statusPayment = isset($paymentOfSession) ? $paymentOfSession->status : null;
