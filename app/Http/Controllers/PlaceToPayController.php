@@ -514,6 +514,13 @@ class PlaceToPayController extends Controller
                     if($session->isSubscription()){//deberia ser una requestSubscription
 
                     }
+
+                    // use Carbon\Carbon;
+                    // $date = PlaceToPayTransaction::find(6)->date;
+                    // $carbonDate = Carbon::parse($date);
+                    // $sessionBody['date'] = $carbonDate->format('d/m/Y H:i');
+
+                    // $body = $this->placeTopayService->buildBodyOneTimePayment($session);
                     $sessionBody = $session;
                     $paymentDataObject = json_decode($sessionBody['paymentData']);
                     $sessionBody['paymentData'] = $paymentDataObject;
@@ -564,6 +571,7 @@ class PlaceToPayController extends Controller
                         }
                     }
 
+                    // $this->placeTopayService->sendEmailSubscriptionPayment($quote);
                     $quoteBody = $quote;
                     $quote['status'] = $this->statusEmail[$request['status']['status']];
 
