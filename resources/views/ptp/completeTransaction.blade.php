@@ -1,8 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
+     <div class="container">
         <h1 class="text-center">Listado de pagos de {{ $completeTransaction->reference }}</h1>
+        <div class="row justify-content-center">
+            <form action="{{ route('ptp.delete.sub', ['id' => $completeTransaction->id]) }}" method="POST">
+                @csrf
+                <button type="submit" class="btn btn-danger my-3">Cancelar Suscripcion</button>
+            </form>
+        </div>
         <div class="accordion" id="subscriptionAccordion">
             @php
                 // Ordena las suscripciones primero por estado ('APPROVED' primero)
@@ -24,18 +30,18 @@
 
             @foreach ($sortedSubscriptions as $key => $subscription)
                 @php
-                    
+
                     $siguienteFechaPago = Carbon\Carbon::parse($subscription->date_to_pay);
                     $hoy = Carbon\Carbon::now();
                     // Define una variable para la clase CSS de la tarjeta (card)
                     $cardClass = '';
-                    
+
                     if ($siguienteFechaPago->isToday() && $subscription->status === null) {
                         $cardClass .= 'bg-warning '; // Fondo amarillo para la fecha de pago hoy
                     } else {
                         $cardClass .= 'bg-gray '; // Fondo gris para fechas de pago pasadas
                     }
-                    
+
                     if ($subscription->status === 'APPROVED') {
                         $cardClass .= 'bg-success'; // Fondo verde para Aprobado
                     } elseif ($subscription->status === 'REJECTED') {

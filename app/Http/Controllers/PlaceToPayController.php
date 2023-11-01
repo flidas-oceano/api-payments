@@ -63,6 +63,39 @@ class PlaceToPayController extends Controller
         return view('ptp.subs', compact('transactions'));
     }
 
+    public function buscarTransacciones(Request $request)
+    {
+        $reference = $request->input('ref');
+
+        // Realiza la búsqueda de transacciones en función del número de referencia
+        $transactions = PlaceToPayTransaction::where('reference', 'like', '%' . $reference . '%')->get();
+
+        return view('ptp.subs', compact('transactions'));
+    }
+
+    public function darDeBajaTransaccion($id)
+{
+    // Buscar la transacción por su ID
+    $transaction = PlaceToPayTransaction::findOrFail($id);
+
+    // Cambiar el estado de la transacción a "REJECTED"
+    $transaction->status = 'REJECTED';
+    $transaction->token_collect_para_el_pago = null;
+    $transaction->save();
+
+    foreach ($transaction->subscriptions as $subscription) {
+        if($subscription->status === null){
+            $subscription->status = 'REJECTED';
+            $subscription->date_to_pay = null; // Elimina la fecha de pago
+            $subscription->save();
+        }
+    }
+
+    // Redirigir a la página de listado de transacciones
+    return redirect("/ptp")->with('success', 'La transacción <strong>'.$transaction->reference.'</strong>  ha sido cancelada exitosamente.');
+}
+
+
     public function showPaymentsOfTransaction($reference)
     {
         $completeTransaction = PlaceToPayTransaction::where('reference', $reference)->first();

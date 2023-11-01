@@ -14,11 +14,12 @@ class Authenticate extends Middleware
      */
     protected function redirectTo($request)
     {
-        if (! $request->expectsJson()) {
-            return response()->json([
+        if (!$request->expectsJson()) {
+           /*  return response()->json([
                 "message" => "Usted no tiene permisos. Debe logearse primero.",
                 "login" => "http://localhost:8000/api/login"
-            ]);
+            ]); */
+            return '/login';
         }
     }
 }
