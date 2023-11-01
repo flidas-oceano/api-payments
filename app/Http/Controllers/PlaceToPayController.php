@@ -505,6 +505,7 @@ class PlaceToPayController extends Controller
                         }else{
                             $session->updateInstallmentsPaidToMinusOne();
                         }
+                        $this->placeTopayService->sendEmailOneTimePayment($session);
                     }
 
                     if($session->isSubscription()){//deberia ser una requestSubscription
@@ -516,7 +517,6 @@ class PlaceToPayController extends Controller
                     // $carbonDate = Carbon::parse($date);
                     // $sessionBody['date'] = $carbonDate->format('d/m/Y H:i');
 
-                    $body = $this->placeTopayService->sendEmailOneTimePayment($session);
                 }
                 if ( $type === 'quote' ){
                     $subscriptionFromPTP = $this->placeTopayService->getByRequestId($request->requestId, false, true);
