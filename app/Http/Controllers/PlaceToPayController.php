@@ -188,11 +188,9 @@ class PlaceToPayController extends Controller
 
             //Cuando la session esta APRROVED.
             $isApproveSession = PlaceToPayTransaction::checkApprovedSessionTryPay($sessionSubscription, $transaction, $this->placeTopayService, $request->renewSuscription);
-
-            $transaction->save();
-
-
-
+            if ( $transaction->type === 'payment' ){
+                $this->placeTopayService->sendEmailOneTimePayment($transaction);
+            }
             if (isset($isApproveSession['statusPayment']) && $isApproveSession['statusPayment'] == 'PENDING') {
                 if ( $transaction->type === 'payment' ){
                     $transaction->update(['installments_paid' => -1]);
@@ -629,6 +627,13 @@ class PlaceToPayController extends Controller
         try {
             $sessionStatusInPtp = $this->placeTopayService->getByRequestId($session->requestId, false, $session->isSubscription());
 
+            $session->update([
+                'status' => $sessionStatusInPtp['status']['status'] ,
+                'reason' => $sessionStatusInPtp['status']['reason'],
+                'message' => $sessionStatusInPtp['status']['message'],
+                'date' => $sessionStatusInPtp['status']['date'],
+            ]);
+
             if($session->isSubscription()){
                 $paymentOfSession = $session->subscriptions->first();
             }else{
@@ -636,21 +641,13 @@ class PlaceToPayController extends Controller
                     $session->paymentLinks()->first()->setStatus($sessionStatusInPtp['status']['status']);
                     if($sessionStatusInPtp['status']['status'] === 'APPROVED'){
                         $session->update(['installments_paid' => 1]);
-                        $this->placeTopayService->buildBodyOneTimePayment($session);
                     }else{
                         $session->update(['installments_paid' => -1]);
                     }
-
+                    $this->placeTopayService->sendEmailOneTimePayment($session);
                 }
                 $paymentOfSession = $session;
             }
-
-            $session->update([
-                'status' => $sessionStatusInPtp['status']['status'] ,
-                'reason' => $sessionStatusInPtp['status']['reason'],
-                'message' => $sessionStatusInPtp['status']['message'],
-                'date' => $sessionStatusInPtp['status']['date'],
-            ]);
 
             //Cuando el usuario "NO DESEA CONTINUAR"
             $statusPayment = isset($paymentOfSession) ? $paymentOfSession->status : null;
