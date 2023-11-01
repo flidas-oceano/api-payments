@@ -479,6 +479,7 @@ class PlaceToPayController extends Controller
     public function notificationUpdate(Request $request)
     {
         try{
+            Log::channel('placetopay')->info("notificationUpdate request: Reason: ". $request);
 
             $type = $this->placeTopayService->isOneTimePaymentOrQuoteOrSession($request);
 
