@@ -516,23 +516,7 @@ class PlaceToPayController extends Controller
                     // $carbonDate = Carbon::parse($date);
                     // $sessionBody['date'] = $carbonDate->format('d/m/Y H:i');
 
-                    // $body = $this->placeTopayService->buildBodyOneTimePayment($session);
-                    $sessionBody = $session;
-                    $paymentDataObject = json_decode($sessionBody['paymentData']);
-                    $sessionBody['paymentData'] = $paymentDataObject;
-
-                    $carbonDate = Carbon::parse($session->date);
-                    $sessionBody['date'] = $carbonDate->format('d/m/Y H:i');
-
-                    $sessionBody['status'] = $this->statusEmail[$request['status']['status']];
-                    $body = [
-                        'body' => [
-                            'quote'=> null,
-                            'transaction'=> $sessionBody
-                        ]
-                    ];
-
-                    $response = Http::post(env("PTP_ZOHO_FLOW"), $body);
+                    $body = $this->placeTopayService->sendEmailOneTimePayment($session);
                 }
                 if ( $type === 'quote' ){
                     $subscriptionFromPTP = $this->placeTopayService->getByRequestId($request->requestId, false, true);
@@ -567,27 +551,7 @@ class PlaceToPayController extends Controller
                         }
                     }
 
-                    // $this->placeTopayService->sendEmailSubscriptionPayment($quote);
-                    $quoteBody = $quote;
-                    $quote['status'] = $this->statusEmail[$request['status']['status']];
-
-                    $sessionBody = $quote->transaction;
-
-                    $carbonDate = Carbon::parse($sessionBody->date);
-                    $sessionBody['date'] = $carbonDate->format('d/m/Y H:i');
-
-                    $paymentDataObject = json_decode($sessionBody['paymentData']);
-                    $sessionBody['paymentData'] = $paymentDataObject;
-                    $sessionBody['status'] = $this->statusEmail[$request['status']['status']];
-
-                    $body = [
-                        'body'=> [
-                            'quote'=> $quoteBody,
-                            'transaction'=> $sessionBody
-                        ]
-                    ];
-
-                    $response = Http::post(env("PTP_ZOHO_FLOW"), $body);
+                    $this->placeTopayService->sendEmailSubscriptionPayment($quote);
                 }
 
                 return response()->json([
