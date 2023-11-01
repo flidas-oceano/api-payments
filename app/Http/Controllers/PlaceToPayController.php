@@ -567,6 +567,10 @@ class PlaceToPayController extends Controller
                     $quote['status'] = $this->statusEmail[$request['status']['status']];
 
                     $sessionBody = $quote->transaction;
+
+                    $carbonDate = Carbon::parse($sessionBody->date);
+                    $sessionBody['date'] = $carbonDate->format('d/m/Y H:i');
+
                     $paymentDataObject = json_decode($sessionBody['paymentData']);
                     $sessionBody['paymentData'] = $paymentDataObject;
                     $sessionBody['status'] = $this->statusEmail[$request['status']['status']];
