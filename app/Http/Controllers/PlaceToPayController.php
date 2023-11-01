@@ -192,6 +192,9 @@ class PlaceToPayController extends Controller
             if (isset($isApproveSession['statusPayment']) && $isApproveSession['statusPayment'] == 'PENDING') {
                 if ( $transaction->type === 'payment' ){
                     $transaction->update(['installments_paid' => -1]);
+                    $this->placeTopayService->sendEmailOneTimePayment($transaction);
+                }else{
+                    $this->placeTopayService->sendEmailSubscriptionPayment($transaction);
                 }
 
                 return response()->json([
