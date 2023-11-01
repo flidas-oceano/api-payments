@@ -601,12 +601,18 @@ class PlaceToPayController extends Controller
 
             if($session->isSubscription()){
                 $paymentOfSession = $session->subscriptions->first();
+                if($sessionStatusInPtp['status']['status'] === 'PENDING'){
+                    $this->placeTopayService->sendEmailSubscriptionPayment($session);
+                }
             }else{
                 if ($session->isPaymentLink()) {
                     $session->paymentLinks()->first()->setStatus($sessionStatusInPtp['status']['status']);
                     if($sessionStatusInPtp['status']['status'] === 'APPROVED'){
                         $session->update(['installments_paid' => 1]);
                     }else{
+                        if($sessionStatusInPtp['status']['status'] === 'PENDING'){
+                            $this->placeTopayService->sendEmailOneTimePayment($session);
+                        }
                         $session->update(['installments_paid' => -1]);
                     }
                 }
