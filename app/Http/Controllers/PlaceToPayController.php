@@ -188,9 +188,7 @@ class PlaceToPayController extends Controller
 
             //Cuando la session esta APRROVED.
             $isApproveSession = PlaceToPayTransaction::checkApprovedSessionTryPay($sessionSubscription, $transaction, $this->placeTopayService, $request->renewSuscription);
-            if ( $transaction->type === 'payment' ){
-                $this->placeTopayService->sendEmailOneTimePayment($transaction);
-            }
+
             if (isset($isApproveSession['statusPayment']) && $isApproveSession['statusPayment'] == 'PENDING') {
                 if ( $transaction->type === 'payment' ){
                     $transaction->update(['installments_paid' => -1]);
