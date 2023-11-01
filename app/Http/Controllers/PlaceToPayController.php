@@ -479,7 +479,6 @@ class PlaceToPayController extends Controller
     public function notificationUpdate(Request $request)
     {
         try{
-            // Log::channel('placetopay')->info("Payment request failed: Reason: $errorReason, Message: $errorMessage, Date: $errorDate, Data: $dataAsString");
 
             $type = $this->placeTopayService->isOneTimePaymentOrQuoteOrSession($request);
 
