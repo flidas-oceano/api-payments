@@ -733,6 +733,7 @@ class PlaceToPayService
                             $session->updateInstallmentsPaidToMinusOne();
                         }
                     }
+
                     continue;
                 }
 
@@ -913,7 +914,7 @@ class PlaceToPayService
         // $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscriptionToPay);
 
     }
-    public function buildBodyOneTimePayment($session){
+    public function sendEmailOneTimePayment($session){
         $sessionBody = $session;
         $paymentDataObject = json_decode($sessionBody['paymentData']);
         $sessionBody['paymentData'] = $paymentDataObject;
