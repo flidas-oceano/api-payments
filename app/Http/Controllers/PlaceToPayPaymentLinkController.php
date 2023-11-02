@@ -121,7 +121,7 @@ class PlaceToPayPaymentLinkController extends Controller
 
             $paymentLinks = PlaceToPayPaymentLink::where([
                 ["contract_so", $paymentLinkData["contract_so"]],
-                ["status", "!=", "Contrato Efectivo"]
+                ["status", "!=", "Contrato Aprobado"]
             ])->get();
 
             if ($paymentLinks->count() > 0) {
