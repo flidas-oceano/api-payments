@@ -66,6 +66,8 @@ class Contact extends Model
             $paymentData = PlaceToPayTransaction::getPaymentDataByRequestId( $request->requestId );
 
             return [
+                'Calle' => $paymentData->address->street,
+                'Tipo_de_Documento' => $paymentData->documentType,
                 'Identificacion' => $paymentData->document,
                 'Tel_fono_de_facturaci_n' => $paymentData->mobile,
                 'Raz_n_social' => PlaceToPayTransaction::getFullNameFromPaymentData($paymentData),
