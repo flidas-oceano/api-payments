@@ -550,10 +550,6 @@ class PlaceToPayController extends Controller
 
                     }
 
-                    // use Carbon\Carbon;
-                    // $date = PlaceToPayTransaction::find(6)->date;
-                    // $carbonDate = Carbon::parse($date);
-                    // $sessionBody['date'] = $carbonDate->format('d/m/Y H:i');
 
                 }
                 if ( $type === 'quote' ){
