@@ -272,6 +272,7 @@ class PlaceToPayTransaction extends Model
                 }
             }
         } elseif ($transaction->type === 'payment') {
+            $transaction->update(['authorization' => $sessionSubscription['authorization'][0]['authorization']]);
             $result = ['response' => $sessionSubscription];
         } else {
             // Handle the default case
