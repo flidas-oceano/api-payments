@@ -631,6 +631,7 @@ class PlaceToPayController extends Controller
                 'message' => $sessionStatusInPtp['status']['message'],
                 'date' => $sessionStatusInPtp['status']['date'],
             ]);
+            $session->save();
 
             if($session->isSubscription()){
                 $paymentOfSession = $session->subscriptions->first();
@@ -646,10 +647,11 @@ class PlaceToPayController extends Controller
                     if($sessionStatusInPtp['status']['status'] === 'APPROVED'){
                         $session->update(['installments_paid' => 1]);
                     }else{
+                        // "Object of class stdClass could not be converted to string"
+                        $session->updateInstallmentsPaidToMinusOne();
                         if($sessionStatusInPtp['status']['status'] === 'PENDING'){
                             $this->placeTopayService->sendEmailOneTimePayment($session);
                         }
-                        $session->update(['installments_paid' => -1]);
                     }
                 }
                 $paymentOfSession = $session;
