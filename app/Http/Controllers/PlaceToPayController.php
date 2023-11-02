@@ -640,6 +640,9 @@ class PlaceToPayController extends Controller
             }else{
                 if ($session->isPaymentLink()) {
                     $session->paymentLinks()->first()->setStatus($sessionStatusInPtp['status']['status']);
+
+                    $session->update(['authorization' => $sessionStatusInPtp['payment'][0]['authorization']]);
+
                     if($sessionStatusInPtp['status']['status'] === 'APPROVED'){
                         $session->update(['installments_paid' => 1]);
                     }else{
