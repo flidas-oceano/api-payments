@@ -689,6 +689,8 @@ class PlaceToPayService
                     continue;
                 }
                 if ($session->isOneTimePayment()) {
+                    $session->update([ 'authorization' => $sessionFromPTP['payment'][0]['authorization'] ?? null ]);
+
                     if ($statusSessionPTP === "APPROVED") {
                         if($session->isPaymentLink()){
                             $session->paymentLinks()->first()->setStatus($sessionFromPTP['status']['status']);
