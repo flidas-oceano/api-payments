@@ -446,7 +446,7 @@ class PlaceToPayController extends Controller
 
             $reference = $this->placeTopayService->getNameReferenceSession($request['so']);
             $payment = PlaceToPaySubscription::generateDetailPaymentSession($reference);
-            $payment["description"] = "Prueba Pago Unico de OceanoMedicina";
+            $payment["description"] = "Prueba Pago Unico de MSK";
             $payment["amount"] = [
                 "currency" => "USD",
                 "total" => $request['payment']['total'],
