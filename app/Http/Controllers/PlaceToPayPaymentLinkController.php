@@ -160,22 +160,51 @@ class PlaceToPayPaymentLinkController extends Controller
     public function getPaymentLink(Request $request, $saleId)
     {
         try {
-            $paymentLinkPTP = PlaceToPayPaymentLink::where('contract_entity_id', $saleId)->first();
+            // tinker // $lastPaymentPTP = PlaceToPayPaymentLink::where('contract_entity_id', "5344455000021157034")->latest()->first();
+            // $previusPaymentsPTP = PlaceToPayPaymentLink::where('contract_entity_id', "5344455000021157034")->where('id', '!=', $lastPaymentPTP->id)->get();
 
-            if($paymentLinkPTP->transaction->isOneTimePayment()){
-                $paymentOfLink = null;
-                $installments_paid = $paymentLinkPTP->transaction->installments_paid;
-                if($installments_paid !== null && $installments_paid !== 0 ){
-                    $paymentOfLink = $paymentLinkPTP->transaction;
+            // Obtener el registro más nuevo primero
+            $lastPaymentPTP = PlaceToPayPaymentLink::where('contract_entity_id', $saleId)
+                ->latest() // Ordenar por el campo temporal más reciente (created_at, updated_at, etc.)
+                ->first(); // Obtener el registro más nuevo
+
+            $responseJson = ["payer" => null, "checkout" => null, "payment" => null, 'previusPayment' => null];
+
+            $responseJson['payer'] = $lastPaymentPTP->transaction->paymentData;
+            $responseJson['checkout'] = $lastPaymentPTP;
+
+            if($lastPaymentPTP->transaction->installments_paid === 0){////No tiene pago
+                if($lastPaymentPTP->transaction->isOneTimePayment()){
+                    $responseJson['payment'] = $lastPaymentPTP->transaction;
+                }else{
+                    $responseJson['payment'] = $lastPaymentPTP->transaction->subscriptions->first();
                 }
-            }else {
-                $paymentOfLink = $paymentLinkPTP->transaction->subscriptions->first();
-                if($paymentOfLink === null && $paymentLinkPTP->transaction->status === 'REJECTED'){
-                    $paymentOfLink = $paymentLinkPTP->transaction;
+            }else{//tiene pago
+                if($lastPaymentPTP->transaction->isOneTimePayment()){
+                    $installments_paid = $lastPaymentPTP->transaction->installments_paid;
+                    if($installments_paid !== null && $installments_paid !== 0 ){
+                        $responseJson['payment'] = $lastPaymentPTP->transaction;
+                    }
+                }else {
+                    $paymentOfLink = $lastPaymentPTP->transaction->subscriptions->first();
+                    if($paymentOfLink === null && $lastPaymentPTP->transaction->status === 'REJECTED'){
+                        $responseJson['payment'] = $lastPaymentPTP->transaction;
+                    }
                 }
             }
 
-            return response()->json(["payer" => $paymentLinkPTP->transaction->paymentData, "checkout" => $paymentLinkPTP, "payment" => $paymentOfLink]);
+             // Obtener todos los registros excepto el más nuevo
+            $previusPaymentsPTP = PlaceToPayPaymentLink::where('contract_entity_id', $saleId)
+             ->where('id', '!=', $lastPaymentPTP->id)
+             ->get();
+
+            if($previusPaymentsPTP !== null ){
+                foreach($previusPaymentsPTP as $paymentLink){
+                    $responseJson['previusPayment'][] = $paymentLink->transaction;
+                }
+            }
+
+            return response()->json($responseJson);
 
         } catch (\Exception $e) {
             $err = [
