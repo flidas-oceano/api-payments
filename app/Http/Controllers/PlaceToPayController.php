@@ -529,7 +529,9 @@ class PlaceToPayController extends Controller
                         'date' => $request['status']['date'],
                     ]);
 
+                    $sessionFromPTP = $this->placeTopayService->getByRequestId($request->requestId, false, $session->isSubscription());
                     if($session->isOneTimePayment()){
+                        $session->update(['authorization' => $sessionFromPTP['payment'][0]['authorization']]);
 
                         if($session->isPaymentLink()){
                             $session->paymentLinks()->first()->setStatus($request['status']['status']);
