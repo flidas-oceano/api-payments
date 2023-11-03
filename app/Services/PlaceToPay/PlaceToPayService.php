@@ -936,12 +936,12 @@ class PlaceToPayService
     public function sendEmailSubscriptionPayment($quote){
 
         $quoteBody = $quote;
-        $quote['status'] = $this->statusEmail[$quote->status];
+        $quoteBody['status'] = $this->statusEmail[$quote->status];
 
         $sessionBody = $quote->transaction;
 
-        $carbonDate = Carbon::parse($sessionBody->date);
-        $sessionBody['date'] = $carbonDate->format('d/m/Y H:i');
+        $carbonDate = Carbon::parse($quoteBody->date);
+        $quoteBody['date'] = $carbonDate->format('d/m/Y H:i');
 
         $paymentDataObject = json_decode($sessionBody['paymentData']);
         $sessionBody['paymentData'] = $paymentDataObject;
