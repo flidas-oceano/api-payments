@@ -119,20 +119,7 @@ class PlaceToPayPaymentLinkController extends Controller
             $paymentLinkData = $request->only(['gateway', 'type', 'contract_entity_id', 'contract_so', 'status', 'quotes', 'country']);
             $paymentLinkData['transactionId'] = $ptpTransaction->id;
 
-            $paymentLinks = PlaceToPayPaymentLink::where([
-                ["contract_so", $paymentLinkData["contract_so"]],
-                ["status", "!=", "Contrato Aprobado"]
-            ])->get();
-
-            if ($paymentLinks->count() > 0) {
-                $paymentLinks->first()->update($paymentLinkData);
-                $paymentLink = PlaceToPayPaymentLink::where(
-                    "contract_so",
-                    $paymentLinkData["contract_so"]
-                )->get()->first();
-            } else {
-                $paymentLink = PlaceToPayPaymentLink::create($paymentLinkData);
-            }
+            $paymentLink = PlaceToPayPaymentLink::create($paymentLinkData);
 
             return response()->json([
                 "transactionByRequestId" => $transactionByRequestId,
@@ -160,7 +147,6 @@ class PlaceToPayPaymentLinkController extends Controller
     public function getPaymentLink(Request $request, $saleId)
     {
         try {
-
             // Obtener el registro más nuevo primero
             $lastPaymentPTP = PlaceToPayPaymentLink::where('contract_entity_id', $saleId)
                 ->latest() // Ordenar por el campo temporal más reciente (created_at, updated_at, etc.)
@@ -173,7 +159,7 @@ class PlaceToPayPaymentLinkController extends Controller
 
             if($lastPaymentPTP->transaction->installments_paid === 0){////No tiene pago
                 if($lastPaymentPTP->transaction->isOneTimePayment()){
-                    // $responseJson['payment'] = $lastPaymentPTP->transaction;
+                    $responseJson['payment'] = $lastPaymentPTP->transaction;
                 }else{
                     $responseJson['payment'] = $lastPaymentPTP->transaction->subscriptions->first();
                 }
