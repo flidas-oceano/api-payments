@@ -610,17 +610,15 @@ class PlaceToPayService
         $reference = $this->getNameReferenceSubscription($subscriptionToPay->nro_quote, $session->requestId, $session->reference);
         $payment = PlaceToPaySubscription::generatePayment($reference, $subscriptionToPay);
 
-        $auth = $this->generateAuthentication();
-        $expiration = $this->generateAuthentication();
+        $auth = $this->generateAuthentication($session->isSubscription());
+        $expiration = $this->getDateExpiration();
         $data = PlaceToPaySubscription::generateDataPayment($auth, $paymentData, $payment, $session->token_collect_para_el_pago, $expiration);
 
         $responsePayment = $this->billSubscription($data, $cron = true);
 
-        //$responsePaymentStatus = $responsePayment['payment'][0]['status']['status'];
-        $responseZohoUpdate = false;
-        $responsePaymentStatus = 'REJECTED';
-
-
+        $responsePaymentStatus = $responsePayment['payment'][0]['status']['status'];
+        // $responseZohoUpdate = false;
+        // $responsePaymentStatus = 'REJECTED';
 
         if ($responsePaymentStatus === 'APPROVED') {
             // Actualizo el transactions, campo: installments_paid
