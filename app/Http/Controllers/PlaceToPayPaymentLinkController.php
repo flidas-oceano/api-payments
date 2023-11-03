@@ -159,7 +159,7 @@ class PlaceToPayPaymentLinkController extends Controller
 
             if($lastPaymentPTP->transaction->installments_paid === 0){////No tiene pago
                 if($lastPaymentPTP->transaction->isOneTimePayment()){
-                    $responseJson['payment'] = $lastPaymentPTP->transaction;
+                    // $responseJson['payment'] = $lastPaymentPTP->transaction;
                 }else{
                     $responseJson['payment'] = $lastPaymentPTP->transaction->subscriptions->first();
                 }
