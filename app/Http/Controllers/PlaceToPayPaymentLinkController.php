@@ -111,7 +111,7 @@ class PlaceToPayPaymentLinkController extends Controller
             //obtener datos personales
             $ptpTransaction = PlaceToPayTransaction::where('requestId', $request['requestId'])->first();
             $objetoStdClass = $this->placeToPayService->getByRequestId($request['requestId'], false, $ptpTransaction->isSubscription());
-            // $objetoStdClass = $placeToPayService->getByRequestId(677217);
+
             // Convertir el objeto stdClass en un objeto PHP
             $transactionByRequestId = json_decode(json_encode($objetoStdClass), false);
 
@@ -119,20 +119,7 @@ class PlaceToPayPaymentLinkController extends Controller
             $paymentLinkData = $request->only(['gateway', 'type', 'contract_entity_id', 'contract_so', 'status', 'quotes', 'country']);
             $paymentLinkData['transactionId'] = $ptpTransaction->id;
 
-            $paymentLinks = PlaceToPayPaymentLink::where([
-                ["contract_so", $paymentLinkData["contract_so"]],
-                ["status", "!=", "Contrato Aprobado"]
-            ])->get();
-
-            if ($paymentLinks->count() > 0) {
-                $paymentLinks->first()->update($paymentLinkData);
-                $paymentLink = PlaceToPayPaymentLink::where(
-                    "contract_so",
-                    $paymentLinkData["contract_so"]
-                )->get()->first();
-            } else {
-                $paymentLink = PlaceToPayPaymentLink::create($paymentLinkData);
-            }
+            $paymentLink = PlaceToPayPaymentLink::create($paymentLinkData);
 
             return response()->json([
                 "transactionByRequestId" => $transactionByRequestId,
@@ -160,9 +147,6 @@ class PlaceToPayPaymentLinkController extends Controller
     public function getPaymentLink(Request $request, $saleId)
     {
         try {
-            // tinker // $lastPaymentPTP = PlaceToPayPaymentLink::where('contract_entity_id', "5344455000021157034")->latest()->first();
-            // $previusPaymentsPTP = PlaceToPayPaymentLink::where('contract_entity_id', "5344455000021157034")->where('id', '!=', $lastPaymentPTP->id)->get();
-
             // Obtener el registro más nuevo primero
             $lastPaymentPTP = PlaceToPayPaymentLink::where('contract_entity_id', $saleId)
                 ->latest() // Ordenar por el campo temporal más reciente (created_at, updated_at, etc.)
