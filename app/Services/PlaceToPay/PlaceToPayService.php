@@ -642,10 +642,10 @@ class PlaceToPayService
             } else {
                 PlaceToPayTransaction::suspend($session);
             }
-
         }
 
         $updatedSubscription = PlaceToPaySubscription::updateSubscription($subscriptionToPay->id, $responsePayment, $payment);
+        $this->sendEmailSubscriptionPayment($updatedSubscription);
 
         return [
             "zohoUpdate" => $responseZohoUpdate,
