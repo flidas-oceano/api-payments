@@ -622,7 +622,9 @@ class ZohoController extends Controller
             $contactEntityId = $saleZoho['Contact_Name']->getEntityId();
 
             $dataUpdate = Contract::mappingDataContract($request, 'Placetopay');
-            $dataUpdate['Paso_5_Detalle_pagos'] = $this->zohoService->buildTablePaymentDetailNew($request);
+
+            $detailApprovedPayment = Contract::buildDetailApprovedPayment($request);
+            $dataUpdate['Paso_5_Detalle_pagos'] = $this->zohoService->buildTablePaymentDetail($request->contractId,$detailApprovedPayment);
             $dataUpdateContact = Contact::mappingDataContact($request, 'Placetopay');
 
             $updateContract = $this->zohoService->updateRecord('Sales_Orders', $dataUpdate, $request->contractId, true);

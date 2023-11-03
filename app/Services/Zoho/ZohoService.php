@@ -45,7 +45,6 @@ class ZohoService
     public function buildTablePaymentDetail($contractId, $detailApprovedPayment)
     {
 
-
         $table = $this->getSaleOrderPaymentDetail($contractId);
         // Variable para rastrear si se encontró el número de cuota en $table
 
@@ -56,35 +55,7 @@ class ZohoService
         foreach ($uniqueTable as $key => $paymentDetail) {
             if ($paymentDetail['Numero_de_cobro'] == $detailApprovedPayment['Numero_de_cobro']) {
                 // Reemplazar la entrada existente con $detailApprovedPayment
-                $table[$key] = $detailApprovedPayment;
-                $foundPayment = true;
-                break; // Salir del bucle una vez que se reemplace el valor
-            }
-        }
-
-        // Si no se encontró el número de cuota, agregar $detailApprovedPayment al final de $table
-        if (!$foundPayment) {
-            $uniqueTable[] = $detailApprovedPayment;
-        }
-
-        return $uniqueTable;
-    }
-    public function buildTablePaymentDetailNew($request)
-    {
-
-        $detailApprovedPayment = Contract::buildDetailApprovedPayment($request);
-
-        $table = $this->getSaleOrderPaymentDetail($request->contractId);
-        // Variable para rastrear si se encontró el número de cuota en $table
-
-        $uniqueTable = $this->removeDuplicatesByNumeroCobro($table);
-
-        $foundPayment = false;
-
-        foreach ($uniqueTable as $key => $paymentDetail) {
-            if ($paymentDetail['Numero_de_cobro'] == $detailApprovedPayment['Numero_de_cobro']) {
-                // Reemplazar la entrada existente con $detailApprovedPayment
-                $table[$key] = $detailApprovedPayment;
+                $uniqueTable[$key] = $detailApprovedPayment;
                 $foundPayment = true;
                 break; // Salir del bucle una vez que se reemplace el valor
             }
