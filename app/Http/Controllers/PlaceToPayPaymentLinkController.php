@@ -160,8 +160,6 @@ class PlaceToPayPaymentLinkController extends Controller
     public function getPaymentLink(Request $request, $saleId)
     {
         try {
-            // tinker // $lastPaymentPTP = PlaceToPayPaymentLink::where('contract_entity_id', "5344455000021157034")->latest()->first();
-            // $previusPaymentsPTP = PlaceToPayPaymentLink::where('contract_entity_id', "5344455000021157034")->where('id', '!=', $lastPaymentPTP->id)->get();
 
             // Obtener el registro más nuevo primero
             $lastPaymentPTP = PlaceToPayPaymentLink::where('contract_entity_id', $saleId)
