@@ -623,9 +623,7 @@ class PlaceToPayService
         if ($responsePaymentStatus === 'APPROVED') {
             // Actualizo el transactions, campo: installments_paid
             PlaceToPayTransaction::incrementInstallmentsPaid($session->id);
-            $subscriptionToPay->update(['reference' => $responsePayment]);
             //Actualizo zoho
-
             $zohoService = new ZohoService($this->zohoClient);
             $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscriptionToPay);
         }
