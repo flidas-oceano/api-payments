@@ -529,7 +529,9 @@ class PlaceToPayController extends Controller
                         'date' => $request['status']['date'],
                     ]);
 
+                    $sessionFromPTP = $this->placeTopayService->getByRequestId($request->requestId, false, $session->isSubscription());
                     if($session->isOneTimePayment()){
+                        $session->update(['authorization' => $sessionFromPTP['payment'][0]['authorization']]);
 
                         if($session->isPaymentLink()){
                             $session->paymentLinks()->first()->setStatus($request['status']['status']);
@@ -548,10 +550,6 @@ class PlaceToPayController extends Controller
 
                     }
 
-                    // use Carbon\Carbon;
-                    // $date = PlaceToPayTransaction::find(6)->date;
-                    // $carbonDate = Carbon::parse($date);
-                    // $sessionBody['date'] = $carbonDate->format('d/m/Y H:i');
 
                 }
                 if ( $type === 'quote' ){

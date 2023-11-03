@@ -689,6 +689,8 @@ class PlaceToPayService
                     continue;
                 }
                 if ($session->isOneTimePayment()) {
+                    $session->update([ 'authorization' => $sessionFromPTP['payment'][0]['authorization'] ?? null ]);
+
                     if ($statusSessionPTP === "APPROVED") {
                         if($session->isPaymentLink()){
                             $session->paymentLinks()->first()->setStatus($sessionFromPTP['status']['status']);
@@ -934,16 +936,16 @@ class PlaceToPayService
     public function sendEmailSubscriptionPayment($quote){
 
         $quoteBody = $quote;
-        $quote['status'] = $this->statusEmail[$quote->status];
+        $quoteBody['status'] = $this->statusEmail[$quote->status];
 
         $sessionBody = $quote->transaction;
 
-        $carbonDate = Carbon::parse($sessionBody->date);
-        $sessionBody['date'] = $carbonDate->format('d/m/Y H:i');
+        $carbonDate = Carbon::parse($quoteBody->date);
+        $quoteBody['date'] = $carbonDate->format('d/m/Y H:i');
 
         $paymentDataObject = json_decode($sessionBody['paymentData']);
         $sessionBody['paymentData'] = $paymentDataObject;
-        $sessionBody['status'] = $this->statusEmail[$quote->status];
+        $sessionBody['status'] = $this->statusEmail[$quote->transaction->status];
 
         $body = [
             'body'=> [
