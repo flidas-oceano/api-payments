@@ -945,7 +945,7 @@ class PlaceToPayService
 
         $paymentDataObject = json_decode($sessionBody['paymentData']);
         $sessionBody['paymentData'] = $paymentDataObject;
-        $sessionBody['status'] = $this->statusEmail[$quote->status];
+        $sessionBody['status'] = $this->statusEmail[$quote->transaction->status];
 
         $body = [
             'body'=> [
