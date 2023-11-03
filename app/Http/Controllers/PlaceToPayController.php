@@ -74,27 +74,25 @@ class PlaceToPayController extends Controller
     }
 
     public function darDeBajaTransaccion($id)
-{
-    // Buscar la transacción por su ID
-    $transaction = PlaceToPayTransaction::findOrFail($id);
+    {
+        // Buscar la transacción por su ID
+        $transaction = PlaceToPayTransaction::findOrFail($id);
 
-    // Cambiar el estado de la transacción a "REJECTED"
-    $transaction->status = 'REJECTED';
-    $transaction->token_collect_para_el_pago = null;
-    $transaction->save();
+        // Cambiar el estado de la transacción a "REJECTED"
+        $transaction->status = 'REJECTED';
+        $transaction->token_collect_para_el_pago = null;
+        $transaction->save();
 
-    foreach ($transaction->subscriptions as $subscription) {
-        if($subscription->status === null){
-            $subscription->status = 'REJECTED';
-            $subscription->date_to_pay = null; // Elimina la fecha de pago
-            $subscription->save();
+        foreach ($transaction->subscriptions as $subscription) {
+            if($subscription->status === null){
+                $subscription->status = 'REJECTED';
+                $subscription->date_to_pay = null; // Elimina la fecha de pago
+                $subscription->save();
+            }
         }
+        // Redirigir a la página de listado de transacciones
+        return redirect("/ptp")->with('success', 'La transacción <strong>'.$transaction->reference.'</strong>  ha sido cancelada exitosamente.');
     }
-
-    // Redirigir a la página de listado de transacciones
-    return redirect("/ptp")->with('success', 'La transacción <strong>'.$transaction->reference.'</strong>  ha sido cancelada exitosamente.');
-}
-
 
     public function showPaymentsOfTransaction($reference)
     {
