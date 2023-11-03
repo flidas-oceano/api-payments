@@ -189,6 +189,8 @@ class PlaceToPayPaymentLinkController extends Controller
                     $paymentOfLink = $lastPaymentPTP->transaction->subscriptions->first();
                     if($paymentOfLink === null && $lastPaymentPTP->transaction->status === 'REJECTED'){
                         $responseJson['payment'] = $lastPaymentPTP->transaction;
+                    }else{
+                        $responseJson['payment'] = $paymentOfLink;
                     }
                 }
             }
