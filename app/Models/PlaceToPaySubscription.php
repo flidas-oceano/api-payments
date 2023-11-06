@@ -83,7 +83,9 @@ class PlaceToPaySubscription extends Model
     {
         $sub = self::find($id);
         // Obtener la fecha actual de date_to_pay y sumar un día
-        $newDateToPay = date('Y-m-d 00:00:00', strtotime($sub->date_to_pay . ' +1 day'));
+        if($response['payment'][0]['status']['status'] === 'REJECTED'){
+            $newDateToPay = date('Y-m-d 00:00:00', strtotime($sub->date_to_pay . ' +1 day'));
+        }
         $sub->update([
             'status' => $response['payment'][0]['status']['status'],
             'message' => $response['payment'][0]['status']['message'],
@@ -94,7 +96,7 @@ class PlaceToPaySubscription extends Model
             'requestId' => $response['requestId'],
             'currency' => $payment['amount']['currency'],
             'total' => $payment['amount']['total'],
-            'date_to_pay' => $newDateToPay
+            'date_to_pay' => $newDateToPay ?? $sub->date_to_pay
         ]);
         return $sub;
     }
