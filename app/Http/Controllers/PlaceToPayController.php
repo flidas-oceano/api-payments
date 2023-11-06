@@ -458,7 +458,8 @@ class PlaceToPayController extends Controller
                 "returnUrl" => "https://msklatam.com/ec/gracias",
                 "ipAddress" => $request->ip(),
                 // Usar la dirección IP del cliente
-                "userAgent" => $request->header('User-Agent')
+                "userAgent" => $request->header('User-Agent'),
+                "skipResult" => true
             ];
 
             $result = $this->placeTopayService->create($data);
