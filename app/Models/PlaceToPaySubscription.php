@@ -30,7 +30,8 @@ class PlaceToPaySubscription extends Model
         'expiration_date',
         'date_to_pay',
         'failed_payment_attempts',
-        'transactionId'
+        'transactionId',
+        'last_sent_status'
     ];
     private static $formAttributes = [
         'id',
@@ -266,5 +267,10 @@ class PlaceToPaySubscription extends Model
         ]);
 
         return $payment;
+    }
+
+    public function updateSentStatus()
+    {
+        self::update(['last_sent_status' => $this->status]);
     }
 }

@@ -40,7 +40,8 @@ class PlaceToPayTransaction extends Model
         'transaction_id',
         'contract_id',
         'contact_id',
-        'flow_spp_id'
+        'flow_spp_id',
+        'last_sent_status'
     ];
     private static $formAttributes = [
         'id',
@@ -340,5 +341,9 @@ class PlaceToPayTransaction extends Model
         return $session;
     }
 
-
+    public function updateSentStatus()
+    {
+        $this->last_sent_status = $this->status;
+        $this->save();
+    }
 }

@@ -912,45 +912,56 @@ class PlaceToPayService
         // $responseZohoUpdate = $zohoService->updateTablePaymentsDetails($session->contract_id, $session, $subscriptionToPay);
 
     }
+    public function isStateAlreadySent($payment)
+    {
+        return $payment->last_sent_status === $payment->status;
+    }
+
     public function sendEmailOneTimePayment($session){
-        $sessionBody = $session;
-        $paymentDataObject = json_decode($sessionBody['paymentData']);
-        $sessionBody['paymentData'] = $paymentDataObject;
+        if(!$this->isStateAlreadySent($session)){
+            $session->updateSentStatus();
 
-        $carbonDate = Carbon::parse($session->date);
-        $sessionBody['date'] = $carbonDate->format('d/m/Y H:i');
+            $sessionBody = $session;
+            $paymentDataObject = json_decode($sessionBody['paymentData']);
+            $sessionBody['paymentData'] = $paymentDataObject;
 
-        $sessionBody['status'] = $this->statusEmail[$session->status];
-        $body = [
-            'body' => [
-                'quote'=> null,
-                'transaction'=> $sessionBody
-            ]
-        ];
-        $response = Http::post(env("PTP_ZOHO_FLOW"), $body);
+            $carbonDate = Carbon::parse($session->date);
+            $sessionBody['date'] = $carbonDate->format('d/m/Y H:i');
+
+            $sessionBody['status'] = $this->statusEmail[$session->status];
+            $body = [
+                'body' => [
+                    'quote'=> null,
+                    'transaction'=> $sessionBody
+                ]
+            ];
+            $response = Http::post(env("PTP_ZOHO_FLOW"), $body);
+        }
     }
     public function sendEmailSubscriptionPayment($quote){
+         if(!$this->isStateAlreadySent($quote)){
+            $quote->updateSentStatus();
+            $quoteBody = $quote;
+            $quoteBody['status'] = $this->statusEmail[$quote->status];
 
-        $quoteBody = $quote;
-        $quoteBody['status'] = $this->statusEmail[$quote->status];
+            $sessionBody = $quote->transaction;
 
-        $sessionBody = $quote->transaction;
+            $carbonDate = Carbon::parse($quoteBody->date);
+            $quoteBody['date'] = $carbonDate->format('d/m/Y H:i');
 
-        $carbonDate = Carbon::parse($quoteBody->date);
-        $quoteBody['date'] = $carbonDate->format('d/m/Y H:i');
+            $paymentDataObject = json_decode($sessionBody['paymentData']);
+            $sessionBody['paymentData'] = $paymentDataObject;
+            $sessionBody['status'] = $this->statusEmail[$quote->transaction->status];
 
-        $paymentDataObject = json_decode($sessionBody['paymentData']);
-        $sessionBody['paymentData'] = $paymentDataObject;
-        $sessionBody['status'] = $this->statusEmail[$quote->transaction->status];
+            $body = [
+                'body'=> [
+                    'quote'=> $quoteBody,
+                    'transaction'=> $sessionBody
+                ]
+            ];
+            $response = Http::post(env("PTP_ZOHO_FLOW"), $body);
+        }
 
-        $body = [
-            'body'=> [
-                'quote'=> $quoteBody,
-                'transaction'=> $sessionBody
-            ]
-        ];
-
-        $response = Http::post(env("PTP_ZOHO_FLOW"), $body);
     }
 
 }
