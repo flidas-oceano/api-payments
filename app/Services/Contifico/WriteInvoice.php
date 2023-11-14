@@ -60,8 +60,10 @@ class WriteInvoice
         ];
         /** @var  Response $response */
         $response = $this->client->post('/sistema/api/v1/documento', $body);
+        $responseArray = json_decode($response->getBody()->getContents(), true);
+        $invoiceDto->setId($responseArray['id'] ?? null);
 
-        return json_decode($response->getBody()->getContents(), true);
+        return $responseArray;
     }
 
     /**
@@ -84,5 +86,15 @@ class WriteInvoice
             ];
         }
         return $response;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function send2SRI(ContificoInvoiceDto $invoiceDto)
+    {
+        $response = $this->client->put('/sistema/api/v1/documento/'.$invoiceDto->getId().'/sri');
+        $responseArray = json_decode($response->getBody()->getContents(), true);
+        $invoiceDto->setResponseSri($responseArray);
     }
 }

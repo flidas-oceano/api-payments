@@ -78,4 +78,23 @@ class ContificoClient implements IClient
             throw new \Exception($resp);
         }
     }
+
+    public function put($uri, $body = [])
+    {
+        try {
+            $url = self::URL . $uri . '/?pos='.env('CONTIFICO_APIT');
+            $request = new Request(
+                'PUT',
+                $url,
+                $this->getHeaders(),
+                json_encode($body)
+            );
+            $client = new Client();
+            \Log::info("ACCESSING WS CONTIFICO -> PUT", [$url]);
+
+            return $client->sendAsync($request)->wait();
+        } catch (\Exception $e) {
+            throw new \Exception($e->getResponse()->getBody()->getContents());
+        }
+    }
 }

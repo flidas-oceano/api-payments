@@ -20,6 +20,7 @@ class ContificoInvoiceDto
     protected ?float $adjust;
     protected ?float $total;
     protected ?string $authorization;
+    protected ?array $responseSri;
 
     public function __construct($data)
     {
@@ -41,7 +42,6 @@ class ContificoInvoiceDto
         $this->status = $data['status'] ?? null;
         $this->authorization = $data['authorization'] ?? null;
     }
-
     public function constructProducts($products): array
     {
         $response = [];
@@ -128,5 +128,20 @@ class ContificoInvoiceDto
     public function getAuthorization(): ?string
     {
         return $this->authorization;
+    }
+
+    public function setId(?string $id): void
+    {
+        $this->id = $id;
+    }
+
+    public function getResponseSri(): ?array
+    {
+        return $this->responseSri;
+    }
+
+    public function setResponseSri(?array $responseSri): void
+    {
+        $this->responseSri = $responseSri;
     }
 }

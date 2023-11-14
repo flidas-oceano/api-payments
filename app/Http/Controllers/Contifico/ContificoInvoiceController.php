@@ -32,6 +32,7 @@ class ContificoInvoiceController extends Controller
             ContificoInvoiceValidator::create($requested);
             $contificoDto = new ContificoInvoiceDto($requested);
             $data = $this->writeInvoice->save($contificoDto);
+            $this->writeInvoice->send2SRI($contificoDto);
 
             return Responser::success($data, 201);
         } catch (\Exception | GuzzleException $e) {
