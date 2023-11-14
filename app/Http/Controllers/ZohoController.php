@@ -1370,4 +1370,17 @@ class ZohoController extends Controller
 
     }
 
+    public function uploadPDFDiploma(Request $request)
+    {
+        // 5344455000010440004 -contacto facu
+        $this->getcontractZohoBySO();
+        $contractSO = $request->input('contractSO');
+        $urlDiploma = $request->input('urlDiploma');
+
+        // Mandar data a zoho
+        $saleZoho = $this->getContractZoho($request->contractId)->getData();
+        $updateContact = $this->zohoService->updateRecord('Sales_Orders', $urlDiploma, $saleZoho->Id, true);
+
+        return response()->json(['message' => 'Datos recibidos correctamente']);
+    }
 }

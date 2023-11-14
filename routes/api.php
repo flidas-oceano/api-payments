@@ -68,6 +68,8 @@ Route::post('/updateZohoStripeZohoCRM', [ZohoController::class, 'updateZohoStrip
 Route::post('/updateZohoMPZohoCRM', [ZohoController::class, 'updateZohoMPMSK']);
 Route::post('/updateZohoPTP', [ZohoController::class, 'updateZohoPTPMSK']);
 Route::post('/setContractStatus', [ContractController::class, 'setContractStatus']);
+Route::post('/uploadPDFDiploma', [ZohoController::class, 'uploadPDFDiploma']);
+
 
 Route::get('/db', [PurchasingProcessController::class, 'index']);
 
