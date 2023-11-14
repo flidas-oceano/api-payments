@@ -21,6 +21,7 @@ use zcrmsdk\crm\setup\restclient\ZCRMRestClient;
 use App\Models\{Contact, Lead, Profession, PurchaseProgress, Speciality, MethodContact, PlaceToPaySubscription, PlaceToPayTransaction, SourceLead};
 use App\Services\PlaceToPay\PlaceToPayService;
 use App\Services\Zoho\ZohoService;
+use Illuminate\Http\JsonResponse;
 
 class ZohoController extends Controller
 {
@@ -55,7 +56,6 @@ class ZohoController extends Controller
 
         } catch (Exception $e) {
             Log::error($e);
-
         }
     }
 
@@ -1372,15 +1372,24 @@ class ZohoController extends Controller
 
     public function uploadPDFDiploma(Request $request)
     {
-        // 5344455000010440004 -contacto facu
-        $this->getcontractZohoBySO();
-        $contractSO = $request->input('contractSO');
-        $urlDiploma = $request->input('urlDiploma');
+        try {
+            $contractSO = $request->input('contractSO');
+            $urlDiploma = $request->input('urlDiploma');
 
-        // Mandar data a zoho
-        $saleZoho = $this->getContractZoho($request->contractId)->getData();
-        $updateContact = $this->zohoService->updateRecord('Sales_Orders', $urlDiploma, $saleZoho->Id, true);
+            $body = [
+                'URL_diploma' => $urlDiploma,
+            ];
 
-        return response()->json(['message' => 'Datos recibidos correctamente']);
+            $saleZoho = $this->zohoService->fetchRecordWithValue('Sales_Orders', 'SO_Number', $contractSO, false);
+            $updatedContract = $this->zohoService->updateRecord('Sales_Orders', $body, $saleZoho->getEntityId(), false);
+
+            return response()->json(['updatedContract' => $updatedContract]);
+        } catch (\Exception $e) {
+            // Manejar la excepción y enviar una respuesta de error
+            $errorMessage = $e->getMessage();
+            $errorCode = $e->getCode(); // Puedes usar esto si la excepción tiene un código específico
+
+            return response()->json(['error' => $errorMessage, 'code' => $errorCode], JsonResponse::HTTP_BAD_REQUEST);
+        }
     }
 }
