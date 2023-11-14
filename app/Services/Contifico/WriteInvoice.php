@@ -45,6 +45,7 @@ class WriteInvoice
             "iva" => $invoiceDto->getIva(),
             "ice" => $invoiceDto->getShipping(),
             "total" => $invoiceDto->getTotal(),
+            "electronico" => true,
             "cliente" => [
                 "ruc"=> $invoiceDto->getCustomer()->getRuc(),
                 "cedula"=> $invoiceDto->getCustomer()->getIdentificationCard(),
