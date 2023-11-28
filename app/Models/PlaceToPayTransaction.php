@@ -81,10 +81,7 @@ class PlaceToPayTransaction extends Model
         $this->update(['installments_paid' => -1]);
     }
     public function isPaymentLink(){
-        if($this->paymentLinks()->first() !== null){
-            return true;
-        }
-        return false;
+        return $this->paymentLinks()->first() !== null;
     }
     public function flow_spp()
     {
@@ -344,6 +341,17 @@ class PlaceToPayTransaction extends Model
     public function updateSentStatus()
     {
         $this->last_sent_status = $this->status;
+        $this->save();
+    }
+
+    public function updateSessionStatus($sessionStatusInPtp){
+        $this->update([
+            'status' => $sessionStatusInPtp['status']['status'] ,
+            'reason' => $sessionStatusInPtp['status']['reason'],
+            'message' => $sessionStatusInPtp['status']['message'],
+            'date' => $sessionStatusInPtp['status']['date'],
+        ]);
+
         $this->save();
     }
 }

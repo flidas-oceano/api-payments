@@ -19,16 +19,18 @@ class PlaceToPayPaymentLink extends Model
         'country',
         'quotes'
     ];
-    public function transaction()
-    {
-        return $this->belongsTo(PlaceToPayTransaction::class, 'transactionId');
-    }
 
     protected $status = [
         'REJECTED' => 'Pago Rechazado',
         'PENDING' => 'pending',
         'APPROVED' => 'Contrato Aprobado'
     ];
+
+    public function transaction()
+    {
+        return $this->belongsTo(PlaceToPayTransaction::class, 'transactionId');
+    }
+
     public function setStatus($statusPay){
         //cuando este aprobado le sumo a la transaction un paid
         $this->update(['status' => $this->status[$statusPay]]);

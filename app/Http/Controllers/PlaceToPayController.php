@@ -622,40 +622,18 @@ class PlaceToPayController extends Controller
         try {
             $sessionStatusInPtp = $this->placeTopayService->getByRequestId($session->requestId, false, $session->isSubscription());
 
-            $session->update([
-                'status' => $sessionStatusInPtp['status']['status'] ,
-                'reason' => $sessionStatusInPtp['status']['reason'],
-                'message' => $sessionStatusInPtp['status']['message'],
-                'date' => $sessionStatusInPtp['status']['date'],
-            ]);
-            $session->save();
+            $session->updateSessionStatus($sessionStatusInPtp);
 
-            if($session->isSubscription()){
-                $paymentOfSession = $session->subscriptions->first();
-                if($sessionStatusInPtp['status']['status'] === 'PENDING'){
-                    $this->placeTopayService->sendEmailSubscriptionPayment($session);
-                }
-            }else{
-                if ($session->isPaymentLink()) {
-                    $session->paymentLinks()->first()->setStatus($sessionStatusInPtp['status']['status']);
-
-                    $session->update(['authorization' => $sessionStatusInPtp['payment'][0]['authorization']]);
-
-                    if($sessionStatusInPtp['status']['status'] === 'APPROVED'){
-                        $session->update(['installments_paid' => 1]);
-                    }else{
-                        // "Object of class stdClass could not be converted to string"
-                        $session->updateInstallmentsPaidToMinusOne();
-                        if($sessionStatusInPtp['status']['status'] === 'PENDING'){
-                            $this->placeTopayService->sendEmailOneTimePayment($session);
-                        }
-                    }
-                }
-                $paymentOfSession = $session;
+            if($session->isSubscription() && $sessionStatusInPtp['status']['status'] === 'PENDING'){
+                $this->placeTopayService->sendEmailSubscriptionPayment($session);
             }
 
-            //Cuando el usuario "NO DESEA CONTINUAR"
-            $statusPayment = isset($paymentOfSession) ? $paymentOfSession->status : null;
+            if($session->isPaymentLink()) {
+              $this->handlePaymentLinkStatus($session, $sessionStatusInPtp);
+            }
+
+            $paymentOfSession = $session;
+            $statusPayment = $paymentOfSession->status ;
 
             return response()->json([
                 'reference' => $reference,
@@ -667,6 +645,21 @@ class PlaceToPayController extends Controller
 
         } catch (\Exception $e) {
             return response()->json($e, 500);
+        }
+    }
+
+    private function handlePaymentLinkStatus($session, $sessionStatusInPtp){
+        $paymentLinkOfSession = $session->paymentLinks()->first();
+        $paymentLinkOfSession->setStatus($sessionStatusInPtp['status']['status']);
+        $session->update(['authorization' => $sessionStatusInPtp['payment'][0]['authorization'] ?? null]);
+
+        if($sessionStatusInPtp['status']['status'] === 'APPROVED'){
+            $session->update(['installments_paid' => 1]);
+        }else{
+            $session->updateInstallmentsPaidToMinusOne();
+            if($sessionStatusInPtp['status']['status'] === 'PENDING'){
+                $this->placeTopayService->sendEmailOneTimePayment($session);
+            }
         }
     }
 

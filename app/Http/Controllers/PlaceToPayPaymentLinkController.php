@@ -144,20 +144,20 @@ class PlaceToPayPaymentLinkController extends Controller
         }
     }
 
-    public function getPaymentLink(Request $request, $saleId)
+    public function getPaymentLink($saleId)
     {
         try {
-            // Obtener el registro más nuevo primero
+            // Obtener el ultimo registro
             $lastPaymentPTP = PlaceToPayPaymentLink::where('contract_entity_id', $saleId)
-                ->latest() // Ordenar por el campo temporal más reciente (created_at, updated_at, etc.)
-                ->first(); // Obtener el registro más nuevo
+                ->latest()
+                ->first();
 
             $responseJson = ["payer" => null, "checkout" => null, "payment" => null, 'previusPayment' => null];
 
             $responseJson['payer'] = $lastPaymentPTP->transaction->paymentData;
             $responseJson['checkout'] = $lastPaymentPTP;
 
-            if($lastPaymentPTP->transaction->installments_paid === 0){////No tiene pago
+            if($lastPaymentPTP->transaction->installments_paid === 0){//No tiene pago
                 if($lastPaymentPTP->transaction->isOneTimePayment()){
                     // $responseJson['payment'] = $lastPaymentPTP->transaction;
                 }else{
