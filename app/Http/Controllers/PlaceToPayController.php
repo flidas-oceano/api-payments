@@ -510,15 +510,15 @@ class PlaceToPayController extends Controller
     public function notificationUpdate(Request $request)
     {
         try{
-            Log::info("notificationUpdate request: Reason: ". $request);
+            Log::channel("slack")->debug("notificationUpdate request: Reason: ". print_r($request->all(), true));
 
             $type = $this->placeTopayService->isOneTimePaymentOrQuoteOrSession($request);
+            Log::channel("slack")->debug("notificationUpdate type: ". print_r($type, true));
 
 
             if ($this->placeTopayService->validateSignature($request, $type)) {
             // if (true) {
-                Log::channel("slack")->warning("NotificationUpdate: ".print_r($request->all(), true));
-                if ($type !== 'quote' ) {
+                if ($type !== 'quote') {
                     $session = PlaceToPayTransaction::where(['requestId' => $request['requestId']])->first();
                     $session->update([
                         'requestId' => $request['requestId'],
